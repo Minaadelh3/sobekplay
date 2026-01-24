@@ -16,9 +16,10 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
     { name: 'Movies', path: '/movies' },
     { name: 'Series', path: '/series' },
     { name: 'Kids', path: '/kids' },
-    { name: 'Originals', path: '/originals' },
     { name: 'Trip Anthem', path: '/she3ar-al-re7la' },
     { name: 'Program', path: '/program' },
+    { name: 'Rooms', path: '/rooms' },
+    { name: 'الصلوات', path: '/prayers' },
     { name: 'Subscription', path: '/subscription' },
     { name: 'Coming Soon', path: '/coming-soon' },
     { name: 'News', path: '/news' },
@@ -45,7 +46,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
               <li key={link.path}>
                 <Link 
                   to={link.path} 
-                  className={`text-sm font-medium transition-colors ${link.name === 'Subscription' ? 'text-accent-gold hover:text-white' : 'text-main-text hover:text-accent-green'}`}
+                  className={`text-sm transition-colors ${link.name === 'Subscription' ? 'text-accent-gold hover:text-white font-medium' : link.name === 'الصلوات' ? 'text-accent-green hover:text-white font-bold' : 'text-main-text hover:text-accent-green font-medium'}`}
                 >
                   {link.name}
                 </Link>
