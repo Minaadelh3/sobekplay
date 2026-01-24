@@ -20,7 +20,7 @@ const TripAnthem: React.FC = () => {
         <h1 className="text-4xl md:text-6xl font-black text-accent-gold mb-12 drop-shadow-lg tracking-tight">شعار الرحلة</h1>
         
         <div className="max-w-3xl w-full bg-black/30 p-8 md:p-12 rounded-2xl backdrop-blur-md border border-white/5 shadow-2xl hover:border-accent-gold/20 transition-colors duration-500">
-          <div className="text-xl md:text-3xl text-white leading-loose font-medium" dir="rtl">
+          <div className="text-xl md:text-3xl text-white leading-loose font-medium font-sans" dir="rtl">
             <p className="mb-8">
               صحينا وإبتدت رحلتنا<br/>
               وأسوان هي محطتنا<br/>
@@ -49,9 +49,14 @@ const TripAnthem: React.FC = () => {
               إيكادولي يا كيميت ياكيميت
             </p>
 
-            <p className="text-accent-green font-bold text-2xl md:text-4xl mt-12 drop-shadow-md">
-              إيكادولي يا كيميت ياكيميت
-            </p>
+            <div className="mt-12 space-y-2">
+              <p className="text-accent-green font-bold text-2xl md:text-4xl drop-shadow-md">
+                إيكادولي يا كيميت ياكيميت
+              </p>
+              <p className="text-accent-green font-bold text-2xl md:text-4xl drop-shadow-md opacity-80">
+                إيكادولي يا كيميت ياكيميت
+              </p>
+            </div>
           </div>
         </div>
       </motion.div>

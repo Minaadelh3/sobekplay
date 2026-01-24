@@ -22,7 +22,6 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
     { name: 'Coming Soon', path: '/coming-soon' },
     { name: 'News', path: '/news' },
     { name: 'Community', path: '/community' },
-    { name: 'Photos', path: '/photos' },
     { name: 'Shop', path: '/shop' },
     { name: 'About', path: '/about' },
     { name: 'Help', path: '/help' },

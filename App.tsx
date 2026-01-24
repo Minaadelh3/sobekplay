@@ -1,6 +1,6 @@
 
 import React, { useMemo, useState } from 'react';
-import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, useLocation, Link } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Carousel from './components/Carousel';
@@ -15,7 +15,7 @@ import NewsPage from './pages/NewsPage';
 import ShopPage from './pages/ShopPage';
 import AboutPage from './pages/AboutPage';
 import CommunityPage from './pages/CommunityPage';
-import PhotosPage from './pages/PhotosPage';
+import PolicyPage from './pages/PolicyPage';
 import { motion } from 'framer-motion';
 
 const Home: React.FC<{ posters: any[] }> = ({ posters }) => {
@@ -50,10 +50,9 @@ const Footer: React.FC = () => (
     <div className="mb-6">
       <img src="/assets/brand/logo.png" alt="Sobek Play" className="h-6 mx-auto grayscale opacity-50" onError={(e) => e.currentTarget.style.display = 'none'} />
     </div>
-    <div className="text-muted text-sm space-x-6 mb-8">
-      <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-      <a href="#" className="hover:text-white transition-colors">Terms of Use</a>
-      <a href="#" className="hover:text-white transition-colors">Contact Us</a>
+    <div className="text-muted text-sm space-x-6 mb-8 flex justify-center">
+      <Link to="/policy" className="hover:text-white transition-colors">Trip Policy</Link>
+      <Link to="/help" className="hover:text-white transition-colors">Contact Us</Link>
     </div>
     <p className="text-xs text-muted/60 uppercase tracking-[0.2em] font-medium">By Spark Team</p>
   </footer>
@@ -105,7 +104,7 @@ const MainLayout: React.FC = () => {
           <Route path="/watch/:id" element={<WatchPlayer posters={analyzedPosters} />} />
           <Route path="/she3ar-al-re7la" element={<TripAnthem />} />
           <Route path="/program" element={<Program />} />
-          <Route path="/photos" element={<PhotosPage />} />
+          <Route path="/policy" element={<PolicyPage />} />
           <Route path="/news" element={<NewsPage />} />
           <Route path="/shop" element={<ShopPage />} />
           <Route path="/about" element={<AboutPage />} />
