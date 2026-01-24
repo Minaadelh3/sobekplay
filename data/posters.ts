@@ -2,8 +2,14 @@
 import { PosterItem } from '../types';
 import { descriptionMap } from './descriptions';
 
-// Manual list of filenames present in /public/posters/
-// Ensure these files exist in your public/posters folder
+// ============================================================================
+// POSTER CONFIGURATION
+// ============================================================================
+// 1. Ensure a folder exists at: public/posters/
+// 2. Place all the images listed below into that folder.
+// 3. The app will automatically serve them from /posters/<filename>
+// ============================================================================
+
 const filenames = [
   "bakkar.png", 
   "crocodile_gangster.png", 
@@ -77,13 +83,12 @@ const humanize = (filename: string): string => {
 
   if (manualMap[base]) return manualMap[base];
 
-  // Default humanize logic
+  // Default humanize logic: replace underscores with spaces and capitalize
   return base.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 };
 
 const determineType = (filename: string): 'movie' | 'series' => {
   const lower = filename.toLowerCase();
-  // Simple heuristic based on known items or keywords
   if (lower.includes('bakkar') || lower.includes('grand_hotel') || lower.includes('series') || lower.includes('mosalsal') || lower.includes('la_casa')) {
     return 'series';
   }
@@ -95,11 +100,11 @@ export const posters: PosterItem[] = filenames.map((filename) => {
   
   return {
     id: filename.replace(/\.[^/.]+$/, ""),
-    // Point to /posters/ directory at root (Vite public folder)
+    // IMPORTANT: In Vite, files in public/posters are served at /posters/
     src: `/posters/${filename}`,
     filename: filename,
     title: title,
-    description: descriptionMap[title] || "Experience the journey.",
+    description: descriptionMap[title] || "Experience the journey along the Nile.",
     type: determineType(filename),
     isOriginal: filename.toLowerCase().includes('sobek') || filename.toLowerCase().includes('teaser'),
     isComingSoon: filename.toLowerCase().includes('soon') || filename.toLowerCase().includes('coming'),
