@@ -1,14 +1,16 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { siteConfig } from '../config/site';
-import { posters } from '../data/manifest';
+import { posters } from '../data/posters';
 import ImageWithFallback from '../components/ImageWithFallback';
 import Toast from '../components/Toast';
 
 const PhotosPage: React.FC = () => {
-  // We use a subset of posters to simulate the gallery experience
-  const galleryImages = posters.slice(0, 15).sort(() => Math.random() - 0.5);
+  // Use all posters for the gallery, randomized once on mount
+  const galleryImages = useMemo(() => {
+    return [...posters].sort(() => Math.random() - 0.5);
+  }, []);
 
   const [isUploading, setIsUploading] = useState(false);
   const [toast, setToast] = useState<{ visible: boolean; message: string; type: 'success' | 'error' }>({
@@ -134,11 +136,11 @@ const PhotosPage: React.FC = () => {
                 >
                     <ImageWithFallback
                         src={img.src}
-                        alt="Gallery Memory"
+                        alt={img.title || "Gallery Memory"}
                         className="w-full h-auto object-cover transform group-hover:scale-110 transition-transform duration-700 grayscale-[20%] group-hover:grayscale-0"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
-                        <span className="text-white font-bold text-sm tracking-widest uppercase">Memory #{idx + 1}</span>
+                        <span className="text-white font-bold text-sm tracking-widest uppercase">{img.title}</span>
                     </div>
                 </motion.div>
             ))}

@@ -32,7 +32,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
         <div className="flex items-center space-x-10">
           <Link to="/">
             <img 
-              src="/public/assets/brand/logo.png" 
+              src="/assets/brand/logo.png" 
               alt="Sobek Play" 
               className="h-10 w-auto object-contain hover:opacity-80 transition-opacity"
             />

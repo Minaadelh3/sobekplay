@@ -18,6 +18,7 @@ export interface PosterItem {
   isOriginal?: boolean;
   isComingSoon?: boolean;
   isClassic?: boolean;
+  type?: 'movie' | 'series';
 }
 
 export interface NewsItem {

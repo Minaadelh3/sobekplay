@@ -5,7 +5,7 @@ import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Carousel from './components/Carousel';
 import SearchModal from './components/SearchModal';
-import { posters } from './data/manifest';
+import { posters } from './data/posters';
 import { usePosterMetrics } from './hooks/usePosterMetrics';
 import TitleDetails from './pages/TitleDetails';
 import WatchPlayer from './pages/WatchPlayer';
@@ -21,14 +21,14 @@ import { motion } from 'framer-motion';
 const Home: React.FC<{ posters: any[] }> = ({ posters }) => {
   const rows = useMemo(() => {
     return [
-      { title: "Trending Now on Sobek Play", items: posters.sort((a, b) => b.metrics.impactScore - a.metrics.impactScore).slice(0, 10) },
+      { title: "Trending Now on Sobek Play", items: posters.sort((a, b) => (b.metrics?.impactScore || 0) - (a.metrics?.impactScore || 0)).slice(0, 10) },
       { title: "Sobek Originals", items: posters.filter(p => p.isOriginal) },
-      { title: "Action & Chaos", items: posters.filter(p => p.metrics.edgeDensity > 0.6 && p.metrics.contrast > 0.5) },
-      { title: "Crime & Power", items: posters.filter(p => p.metrics.brightness < 0.4 && p.metrics.contrast > 0.6) },
-      { title: "Epic Worlds & Magic", items: posters.filter(p => p.metrics.saturation > 0.7) },
-      { title: "Drama by the Nile", items: posters.filter(p => p.metrics.hue === 'warm' && p.metrics.saturation < 0.8) },
+      { title: "Action & Chaos", items: posters.filter(p => p.metrics && p.metrics.edgeDensity > 0.6 && p.metrics.contrast > 0.5) },
+      { title: "Crime & Power", items: posters.filter(p => p.metrics && p.metrics.brightness < 0.4 && p.metrics.contrast > 0.6) },
+      { title: "Epic Worlds & Magic", items: posters.filter(p => p.metrics && p.metrics.saturation > 0.7) },
+      { title: "Drama by the Nile", items: posters.filter(p => p.metrics && p.metrics.hue === 'warm' && p.metrics.saturation < 0.8) },
       { title: "Egyptian Classics Reimagined", items: posters.filter(p => p.isClassic) },
-      { title: "Comedy Nights", items: posters.filter(p => p.metrics.brightness > 0.6 && p.metrics.edgeDensity < 0.5) },
+      { title: "Comedy Nights", items: posters.filter(p => p.metrics && p.metrics.brightness > 0.6 && p.metrics.edgeDensity < 0.5) },
       { title: "Coming Soon", items: posters.filter(p => p.isComingSoon) },
     ];
   }, [posters]);
@@ -48,7 +48,7 @@ const Home: React.FC<{ posters: any[] }> = ({ posters }) => {
 const Footer: React.FC = () => (
   <footer className="py-12 border-t border-white/5 bg-nearblack text-center">
     <div className="mb-6">
-      <img src="/public/assets/brand/logo.png" alt="Sobek Play" className="h-6 mx-auto grayscale opacity-50" />
+      <img src="/assets/brand/logo.png" alt="Sobek Play" className="h-6 mx-auto grayscale opacity-50" onError={(e) => e.currentTarget.style.display = 'none'} />
     </div>
     <div className="text-muted text-sm space-x-6 mb-8">
       <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
@@ -68,7 +68,7 @@ const MainLayout: React.FC = () => {
     return (
       <div className="min-h-screen bg-nearblack flex items-center justify-center">
         <div className="text-accent-green animate-pulse flex flex-col items-center">
-          <img src="/public/assets/brand/logo.png" className="h-12 mb-4" alt="Loading..." />
+          <div className="text-xl font-black mb-4 tracking-widest">SOBEK PLAY</div>
           <div className="w-12 h-1 bg-white/10 rounded-full overflow-hidden">
             <motion.div 
               initial={{ x: '-100%' }}
