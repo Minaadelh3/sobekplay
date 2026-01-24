@@ -3,61 +3,58 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 const TripAnthem: React.FC = () => {
-  const lyrics = [
-    "صحينا وإبتدت رحلتنا",
-    "وأسوان هي محطتنا",
-    "فيها هنعرف حكايتنا",
-    "ومعاكوا هتكمل فرحتنا",
-    "",
-    "هنتعرف علي الأسرار",
-    "وعين سوبيك بتطق شرار",
-    "وإزاي النيل نازل هزار",
-    "والدنيا بتحلي بعد مرار",
-    "",
-    "حدوتة مثيرة ومحبوبة",
-    "ماشية من أسوان للنوبة",
-    "فيها لعنة وكنوز منهوبة",
-    "وقوالب صارت مقلوبة",
-    "",
-    "ياما قلت وياما حكيت",
-    "وبصوت عالي أنا غنيت",
-    "ياحبيبتى يامصر أنا جيت",
-    "إيكادولي يا كيميت ياكيميت",
-    "",
-    "إيكادولي يا كيميت ياكيميت"
-  ];
-
   return (
-    <div className="min-h-screen bg-nearblack pt-32 pb-24 overflow-hidden relative">
-      <div className="absolute inset-0 z-0">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent-green/20 blur-[150px] rounded-full" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent-gold/10 blur-[120px] rounded-full" />
+    <div className="min-h-screen bg-nearblack pt-32 px-4 md:px-12 flex flex-col items-center text-center relative overflow-hidden pb-24">
+      {/* Background Ambience */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent-green/10 blur-[150px] rounded-full" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent-gold/5 blur-[120px] rounded-full" />
       </div>
 
-      <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1 }}
-        >
-          <p className="text-accent-gold uppercase tracking-[0.3em] font-bold text-sm mb-4">The Anthem</p>
-          <h1 className="text-5xl md:text-7xl font-black mb-16 tracking-tight text-white">شعار الرحلة</h1>
-          
-          <div dir="rtl" className="space-y-6">
-            {lyrics.map((line, i) => (
-              <motion.p
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 + (i * 0.05) }}
-                className={`text-2xl md:text-3xl font-bold leading-relaxed ${line === "" ? "h-8" : "text-main-text/90"}`}
-              >
-                {line}
-              </motion.p>
-            ))}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="relative z-10 w-full flex flex-col items-center"
+      >
+        <h1 className="text-4xl md:text-6xl font-black text-accent-gold mb-12 drop-shadow-lg tracking-tight">شعار الرحلة</h1>
+        
+        <div className="max-w-3xl w-full bg-black/30 p-8 md:p-12 rounded-2xl backdrop-blur-md border border-white/5 shadow-2xl hover:border-accent-gold/20 transition-colors duration-500">
+          <div className="text-xl md:text-3xl text-white leading-loose font-medium" dir="rtl">
+            <p className="mb-8">
+              صحينا وإبتدت رحلتنا<br/>
+              وأسوان هي محطتنا<br/>
+              فيها هنعرف حكايتنا<br/>
+              ومعاكوا هتكمل فرحتنا
+            </p>
+
+            <p className="mb-8">
+              هنتعرف علي الأسرار<br/>
+              وعين سوبيك بتطق شرار<br/>
+              وإزاي النيل نازل هزار<br/>
+              والدنيا بتحلي بعد مرار
+            </p>
+
+            <p className="mb-8">
+              حدوتة مثيرة ومحبوبة<br/>
+              ماشية من أسوان للنوبة<br/>
+              فيها لعنة وكنوز منهوبة<br/>
+              وقوالب صارت مقلوبة
+            </p>
+
+            <p className="mb-8">
+              ياما قلت وياما حكيت<br/>
+              وبصوت عالي أنا غنيت<br/>
+              ياحبيبتى يامصر أنا جيت<br/>
+              إيكادولي يا كيميت ياكيميت
+            </p>
+
+            <p className="text-accent-green font-bold text-2xl md:text-4xl mt-12 drop-shadow-md">
+              إيكادولي يا كيميت ياكيميت
+            </p>
           </div>
-        </motion.div>
-      </div>
+        </div>
+      </motion.div>
     </div>
   );
 };
