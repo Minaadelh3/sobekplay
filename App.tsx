@@ -21,6 +21,7 @@ import PolicyPage from './pages/PolicyPage';
 import SubscriptionPage from './pages/SubscriptionPage';
 import HelpPage from './pages/HelpPage';
 import { motion } from 'framer-motion';
+import BrandLogo from './components/BrandLogo';
 
 const Home: React.FC<{ posters: any[] }> = ({ posters }) => {
   const rows = useMemo(() => {
@@ -69,8 +70,8 @@ const Home: React.FC<{ posters: any[] }> = ({ posters }) => {
 
 const Footer: React.FC = () => (
   <footer className="py-12 border-t border-white/5 bg-nearblack text-center">
-    <div className="mb-6">
-      <img src="/assets/brand/logo.png" alt="Sobek Play" className="h-6 mx-auto grayscale opacity-50" onError={(e) => e.currentTarget.style.display = 'none'} />
+    <div className="mb-6 flex justify-center">
+      <BrandLogo className="h-6 w-auto text-white opacity-50 grayscale" />
     </div>
     <div className="text-muted text-sm space-x-6 mb-8 flex justify-center">
       <Link to="/policy" className="hover:text-white transition-colors">Trip Policy</Link>

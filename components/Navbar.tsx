@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import BrandLogo from './BrandLogo';
 
 interface NavbarProps {
   onSearchOpen?: () => void;
@@ -34,11 +35,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
         <div className="h-20 flex items-center justify-between">
           <div className="flex items-center space-x-10">
             <Link to="/">
-              <img 
-                src="/assets/brand/logo.png" 
-                alt="Sobek Play" 
-                className="h-10 w-auto object-contain hover:opacity-80 transition-opacity"
-              />
+              <BrandLogo className="h-10 w-auto text-white hover:opacity-80 transition-opacity" />
             </Link>
             
             <ul className="hidden xl:flex items-center space-x-6">
