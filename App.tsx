@@ -20,8 +20,12 @@ import CommunityPage from './pages/CommunityPage';
 import PolicyPage from './pages/PolicyPage';
 import SubscriptionPage from './pages/SubscriptionPage';
 import HelpPage from './pages/HelpPage';
+import PhotosPage from './pages/PhotosPage';
+import ImageGenPage from './pages/ImageGenPage';
+import VeoPage from './pages/VeoPage';
 import { motion } from 'framer-motion';
 import BrandLogo from './components/BrandLogo';
+import SobekChatbot from './components/SobekChatbot';
 
 const Home: React.FC<{ posters: any[] }> = ({ posters }) => {
   const rows = useMemo(() => {
@@ -119,7 +123,6 @@ const MainLayout: React.FC = () => {
           <Route path="/" element={<Home posters={analyzedPosters} />} />
           <Route path="/movies" element={<Home posters={analyzedPosters.filter(p => !p.title.includes('مسلسل'))} />} />
           <Route path="/series" element={<Home posters={analyzedPosters.filter(p => p.title.includes('مسلسل'))} />} />
-          {/* Originals route removed */}
           <Route path="/kids" element={<Home posters={analyzedPosters.filter(p => p.metrics && p.metrics.brightness > 0.6)} />} />
           <Route path="/coming-soon" element={<Home posters={analyzedPosters.filter(p => p.isComingSoon)} />} />
           <Route path="/title/:id" element={<TitleDetails posters={analyzedPosters} />} />
@@ -135,8 +138,12 @@ const MainLayout: React.FC = () => {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/community" element={<CommunityPage />} />
           <Route path="/help" element={<HelpPage />} />
+          <Route path="/gallery" element={<PhotosPage />} />
+          <Route path="/art" element={<ImageGenPage />} />
+          <Route path="/veo" element={<VeoPage />} />
         </Routes>
       </main>
+      <SobekChatbot />
       {!isWatchPage && <Footer />}
     </div>
   );
