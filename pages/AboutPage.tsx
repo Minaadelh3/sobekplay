@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 const AboutPage: React.FC = () => {
   return (
@@ -39,9 +40,13 @@ const AboutPage: React.FC = () => {
             <p className="text-muted mb-10 max-w-lg mx-auto">
                 Our journey is more than just digital. Join our physical expeditions to the heart of Upper Egypt. 
             </p>
-            <div className="space-y-2">
-                <p className="text-xs uppercase tracking-[0.3em] font-bold text-muted/60">Subscription & Info</p>
-                <p className="text-3xl font-black text-white">+20 10 20707076</p>
+            <div className="space-y-4">
+               <Link 
+                 to="/subscription"
+                 className="inline-block bg-accent-green text-white font-bold py-3 px-8 rounded-full hover:bg-opacity-90 transition-colors"
+               >
+                 View Booking Details
+               </Link>
             </div>
         </div>
       </div>

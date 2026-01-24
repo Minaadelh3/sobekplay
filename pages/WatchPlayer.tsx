@@ -88,11 +88,6 @@ const WatchPlayer: React.FC<WatchPlayerProps> = ({ posters }) => {
                 </div>
             </div>
 
-            <div className="text-center">
-                <p className="text-[10px] text-muted uppercase tracking-widest mb-1">Subscription Support</p>
-                <p className="text-xs font-bold text-accent-gold">+20 10 20707076</p>
-            </div>
-
             <div className="flex items-center space-x-6">
                 <button className="text-white/80 hover:text-white"><svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
                 <button className="text-white/80 hover:text-white"><svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M7 19h10V7H7v12zm2-10h6v8H9V9z"/></svg></button>

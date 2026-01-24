@@ -19,6 +19,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
     { name: 'Originals', path: '/originals' },
     { name: 'Trip Anthem', path: '/she3ar-al-re7la' },
     { name: 'Program', path: '/program' },
+    { name: 'Subscription', path: '/subscription' },
     { name: 'Coming Soon', path: '/coming-soon' },
     { name: 'News', path: '/news' },
     { name: 'Community', path: '/community' },
@@ -44,7 +45,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
               <li key={link.path}>
                 <Link 
                   to={link.path} 
-                  className="text-sm font-medium text-main-text hover:text-accent-green transition-colors"
+                  className={`text-sm font-medium transition-colors ${link.name === 'Subscription' ? 'text-accent-gold hover:text-white' : 'text-main-text hover:text-accent-green'}`}
                 >
                   {link.name}
                 </Link>
@@ -98,11 +99,6 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
             </AnimatePresence>
           </div>
         </div>
-      </div>
-      
-      {/* Subscription Bar */}
-      <div className="bg-accent-green text-center py-1 text-[10px] md:text-xs font-bold tracking-widest uppercase">
-        For subscription please call +20 10 20707076
       </div>
     </nav>
   );

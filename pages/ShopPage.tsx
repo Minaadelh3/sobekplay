@@ -21,10 +21,6 @@ const ShopPage: React.FC = () => {
             <h1 className="text-4xl md:text-6xl font-black mb-2 tracking-tight">Sobek Merch</h1>
             <p className="text-muted text-lg">Official gear for the modern explorer</p>
           </div>
-          <div className="bg-accent-gold/10 border border-accent-gold/20 p-4 rounded-xl">
-             <p className="text-[10px] text-accent-gold uppercase tracking-[0.2em] font-bold mb-1">Orders & Inquiries</p>
-             <p className="text-lg font-black text-white">+20 10 20707076</p>
-          </div>
         </header>
 
         {merch.length > 0 ? (

@@ -16,6 +16,7 @@ import ShopPage from './pages/ShopPage';
 import AboutPage from './pages/AboutPage';
 import CommunityPage from './pages/CommunityPage';
 import PolicyPage from './pages/PolicyPage';
+import SubscriptionPage from './pages/SubscriptionPage';
 import { motion } from 'framer-motion';
 
 const Home: React.FC<{ posters: any[] }> = ({ posters }) => {
@@ -105,6 +106,7 @@ const MainLayout: React.FC = () => {
           <Route path="/she3ar-al-re7la" element={<TripAnthem />} />
           <Route path="/program" element={<Program />} />
           <Route path="/policy" element={<PolicyPage />} />
+          <Route path="/subscription" element={<SubscriptionPage />} />
           <Route path="/news" element={<NewsPage />} />
           <Route path="/shop" element={<ShopPage />} />
           <Route path="/about" element={<AboutPage />} />
