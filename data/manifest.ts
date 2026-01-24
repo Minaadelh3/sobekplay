@@ -16,7 +16,7 @@ const posterFilenames = [
   "sobek_harry_potter_lower.png",
   "sobek_lost_jungle.png", 
   "sobek_secret_eye.png", 
-  // "sobek_future.png" removed as requested
+  "sobek_future.png", 
   "sobek_main_movie.png",
   "sobek_play_teaser.png", 
   "sobek_aswan_affair.png", 

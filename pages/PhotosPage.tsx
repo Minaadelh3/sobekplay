@@ -2,14 +2,14 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { siteConfig } from '../config/site';
-import { tripPhotos } from '../data/photos';
+import { posters } from '../data/posters';
 import ImageWithFallback from '../components/ImageWithFallback';
 import Toast from '../components/Toast';
 
 const PhotosPage: React.FC = () => {
-  // Use the curated trip photos
+  // Use all posters for the gallery, randomized once on mount
   const galleryImages = useMemo(() => {
-    return [...tripPhotos].sort(() => Math.random() - 0.5);
+    return [...posters].sort(() => Math.random() - 0.5);
   }, []);
 
   const [isUploading, setIsUploading] = useState(false);
@@ -132,7 +132,7 @@ const PhotosPage: React.FC = () => {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: idx * 0.05 }}
-                    className="break-inside-avoid relative group rounded-xl overflow-hidden cursor-pointer shadow-lg bg-charcoal"
+                    className="break-inside-avoid relative group rounded-xl overflow-hidden cursor-pointer shadow-lg"
                 >
                     <ImageWithFallback
                         src={img.src}
@@ -140,8 +140,7 @@ const PhotosPage: React.FC = () => {
                         className="w-full h-auto object-cover transform group-hover:scale-110 transition-transform duration-700 grayscale-[20%] group-hover:grayscale-0"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
-                        <span className="text-white font-bold text-base">{img.title}</span>
-                        <span className="text-accent-green text-xs tracking-wider uppercase">{img.location}</span>
+                        <span className="text-white font-bold text-sm tracking-widest uppercase">{img.title}</span>
                     </div>
                 </motion.div>
             ))}

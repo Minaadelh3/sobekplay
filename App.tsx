@@ -1,6 +1,6 @@
 
 import React, { useMemo, useState } from 'react';
-import { HashRouter as Router, Routes, Route, useLocation, Link } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Carousel from './components/Carousel';
@@ -11,45 +11,23 @@ import TitleDetails from './pages/TitleDetails';
 import WatchPlayer from './pages/WatchPlayer';
 import TripAnthem from './pages/TripAnthem';
 import Program from './pages/Program';
-import RoomsPage from './pages/RoomsPage';
-import PrayersPage from './pages/PrayersPage';
 import NewsPage from './pages/NewsPage';
 import ShopPage from './pages/ShopPage';
 import AboutPage from './pages/AboutPage';
 import CommunityPage from './pages/CommunityPage';
-import PolicyPage from './pages/PolicyPage';
-import SubscriptionPage from './pages/SubscriptionPage';
-import HelpPage from './pages/HelpPage';
+import PhotosPage from './pages/PhotosPage';
 import { motion } from 'framer-motion';
 
 const Home: React.FC<{ posters: any[] }> = ({ posters }) => {
   const rows = useMemo(() => {
-    // Filter strictly for Egyptian content
-    const topEgyptianContent = posters.filter(p => {
-        const t = p.title.toLowerCase();
-        const f = p.filename.toLowerCase();
-
-        // 1. Explicitly Exclude International IPs
-        if (t.includes('harry potter') || t.includes('lord of rings') || t.includes('la casa')) return false;
-
-        // 2. Exclude Sobek Originals (Platform branding/Fantasy)
-        if (p.isOriginal || t.includes('sobek')) return false;
-
-        // 3. Inclusion Criteria: Arabic Titles OR Known Egyptian Productions
-        const hasArabic = /[\u0600-\u06FF]/.test(p.title);
-        const knownEgyptianFiles = ['grand_hotel', 'crocodile_gangster', 'project_x', 'nubanji', 'bakkar'];
-        
-        return hasArabic || knownEgyptianFiles.some(k => f.includes(k));
-    }).sort((a, b) => (b.metrics?.impactScore || 0) - (a.metrics?.impactScore || 0)).slice(0, 10);
-
     return [
-      { title: "Top in Egypt", items: topEgyptianContent },
-      // Removed "Sobek Originals" row as requested previously
+      { title: "Trending Now on Sobek Play", items: posters.sort((a, b) => (b.metrics?.impactScore || 0) - (a.metrics?.impactScore || 0)).slice(0, 10) },
+      { title: "Sobek Originals", items: posters.filter(p => p.isOriginal) },
       { title: "Action & Chaos", items: posters.filter(p => p.metrics && p.metrics.edgeDensity > 0.6 && p.metrics.contrast > 0.5) },
       { title: "Crime & Power", items: posters.filter(p => p.metrics && p.metrics.brightness < 0.4 && p.metrics.contrast > 0.6) },
       { title: "Epic Worlds & Magic", items: posters.filter(p => p.metrics && p.metrics.saturation > 0.7) },
       { title: "Drama by the Nile", items: posters.filter(p => p.metrics && p.metrics.hue === 'warm' && p.metrics.saturation < 0.8) },
-      { title: "Egyptian Classics Reimagined", items: posters.filter(p => p.isClassic && !p.isOriginal && !p.title.toLowerCase().includes('harry')) },
+      { title: "Egyptian Classics Reimagined", items: posters.filter(p => p.isClassic) },
       { title: "Comedy Nights", items: posters.filter(p => p.metrics && p.metrics.brightness > 0.6 && p.metrics.edgeDensity < 0.5) },
       { title: "Coming Soon", items: posters.filter(p => p.isComingSoon) },
     ];
@@ -72,9 +50,10 @@ const Footer: React.FC = () => (
     <div className="mb-6">
       <img src="/assets/brand/logo.png" alt="Sobek Play" className="h-6 mx-auto grayscale opacity-50" onError={(e) => e.currentTarget.style.display = 'none'} />
     </div>
-    <div className="text-muted text-sm space-x-6 mb-8 flex justify-center">
-      <Link to="/policy" className="hover:text-white transition-colors">Trip Policy</Link>
-      <Link to="/subscription" className="hover:text-white transition-colors">Contact Us</Link>
+    <div className="text-muted text-sm space-x-6 mb-8">
+      <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
+      <a href="#" className="hover:text-white transition-colors">Terms of Use</a>
+      <a href="#" className="hover:text-white transition-colors">Contact Us</a>
     </div>
     <p className="text-xs text-muted/60 uppercase tracking-[0.2em] font-medium">By Spark Team</p>
   </footer>
@@ -116,24 +95,22 @@ const MainLayout: React.FC = () => {
       <main className={!isWatchPage ? "pt-0" : ""}>
         <Routes>
           <Route path="/" element={<Home posters={analyzedPosters} />} />
+          <Route path="/browse" element={<Home posters={analyzedPosters} />} />
           <Route path="/movies" element={<Home posters={analyzedPosters.filter(p => !p.title.includes('مسلسل'))} />} />
           <Route path="/series" element={<Home posters={analyzedPosters.filter(p => p.title.includes('مسلسل'))} />} />
-          {/* Originals route removed */}
+          <Route path="/originals" element={<Home posters={analyzedPosters.filter(p => p.isOriginal)} />} />
           <Route path="/kids" element={<Home posters={analyzedPosters.filter(p => p.metrics && p.metrics.brightness > 0.6)} />} />
           <Route path="/coming-soon" element={<Home posters={analyzedPosters.filter(p => p.isComingSoon)} />} />
           <Route path="/title/:id" element={<TitleDetails posters={analyzedPosters} />} />
           <Route path="/watch/:id" element={<WatchPlayer posters={analyzedPosters} />} />
           <Route path="/she3ar-al-re7la" element={<TripAnthem />} />
           <Route path="/program" element={<Program />} />
-          <Route path="/rooms" element={<RoomsPage />} />
-          <Route path="/prayers" element={<PrayersPage />} />
-          <Route path="/policy" element={<PolicyPage />} />
-          <Route path="/subscription" element={<SubscriptionPage />} />
+          <Route path="/photos" element={<PhotosPage />} />
           <Route path="/news" element={<NewsPage />} />
           <Route path="/shop" element={<ShopPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/community" element={<CommunityPage />} />
-          <Route path="/help" element={<HelpPage />} />
+          <Route path="/help" element={<AboutPage />} />
         </Routes>
       </main>
       {!isWatchPage && <Footer />}

@@ -12,17 +12,15 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
   const navigate = useNavigate();
 
   const navLinks = [
+    { name: 'Browse', path: '/' },
     { name: 'Movies', path: '/movies' },
     { name: 'Series', path: '/series' },
     { name: 'Kids', path: '/kids' },
-    { name: 'El She3ar', path: '/she3ar-al-re7la' },
-    { name: 'Program', path: '/program' },
-    { name: 'Rooms', path: '/rooms' },
-    { name: 'El Agpeya', path: '/prayers' },
-    { name: 'Subscription', path: '/subscription' },
+    { name: 'Originals', path: '/originals' },
     { name: 'Coming Soon', path: '/coming-soon' },
     { name: 'News', path: '/news' },
     { name: 'Community', path: '/community' },
+    { name: 'Photos', path: '/photos' },
     { name: 'Shop', path: '/shop' },
     { name: 'About', path: '/about' },
     { name: 'Help', path: '/help' },
@@ -37,7 +35,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
               <img 
                 src="/assets/brand/logo.png" 
                 alt="Sobek Play" 
-                className="h-10 w-auto object-contain hover:opacity-80 transition-opacity"
+                className="w-[101px] h-[41px] object-contain hover:opacity-80 transition-opacity"
               />
             </Link>
             
@@ -46,7 +44,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
                 <li key={link.path}>
                   <Link 
                     to={link.path} 
-                    className={`text-sm transition-colors ${link.name === 'Subscription' ? 'text-accent-gold hover:text-white font-medium' : link.name === 'El Agpeya' ? 'text-accent-green hover:text-white font-bold' : 'text-main-text hover:text-accent-green font-medium'}`}
+                    className="text-sm font-medium text-main-text hover:text-accent-green transition-colors"
                   >
                     {link.name}
                   </Link>
@@ -85,13 +83,12 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="absolute right-0 mt-2 w-48 bg-charcoal border border-white/10 rounded-lg shadow-2xl py-2 overflow-hidden max-h-[80vh] overflow-y-auto"
+                    className="absolute right-0 mt-2 w-48 bg-charcoal border border-white/10 rounded-lg shadow-2xl py-2 overflow-hidden"
                   >
                     <div className="px-4 py-2 border-b border-white/5">
                       <p className="text-sm font-semibold text-main-text">Joy</p>
                       <p className="text-xs text-muted">Premium Member</p>
                     </div>
-
                     <button className="w-full text-left px-4 py-2 text-sm hover:bg-accent-green/20 transition-colors">My List</button>
                     <button className="w-full text-left px-4 py-2 text-sm hover:bg-accent-green/20 transition-colors">Kids Mode</button>
                     <button className="w-full text-left px-4 py-2 text-sm hover:bg-accent-green/20 transition-colors">Settings</button>
@@ -110,7 +107,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
               <li key={link.path}>
                 <Link 
                   to={link.path} 
-                  className={`text-sm whitespace-nowrap transition-colors ${link.name === 'Subscription' ? 'text-accent-gold hover:text-white font-medium' : link.name === 'El Agpeya' ? 'text-accent-green hover:text-white font-bold' : 'text-main-text hover:text-accent-green font-medium'}`}
+                  className="text-sm whitespace-nowrap font-medium text-main-text hover:text-accent-green transition-colors"
                 >
                   {link.name}
                 </Link>
@@ -118,6 +115,11 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
             ))}
            </ul>
         </div>
+      </div>
+      
+      {/* Subscription Bar */}
+      <div className="bg-accent-green text-center py-1 text-[10px] md:text-xs font-bold tracking-widest uppercase">
+        For subscription please call +20 10 20707076
       </div>
     </nav>
   );
