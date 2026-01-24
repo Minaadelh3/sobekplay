@@ -12,14 +12,13 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
   const navigate = useNavigate();
 
   const navLinks = [
-    { name: 'Browse', path: '/' },
     { name: 'Movies', path: '/movies' },
     { name: 'Series', path: '/series' },
     { name: 'Kids', path: '/kids' },
-    { name: 'Trip Anthem', path: '/she3ar-al-re7la' },
+    { name: 'El She3ar', path: '/she3ar-al-re7la' },
     { name: 'Program', path: '/program' },
     { name: 'Rooms', path: '/rooms' },
-    { name: 'الصلوات', path: '/prayers' },
+    { name: 'El Agpeya', path: '/prayers' },
     { name: 'Subscription', path: '/subscription' },
     { name: 'Coming Soon', path: '/coming-soon' },
     { name: 'News', path: '/news' },
@@ -46,7 +45,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
               <li key={link.path}>
                 <Link 
                   to={link.path} 
-                  className={`text-sm transition-colors ${link.name === 'Subscription' ? 'text-accent-gold hover:text-white font-medium' : link.name === 'الصلوات' ? 'text-accent-green hover:text-white font-bold' : 'text-main-text hover:text-accent-green font-medium'}`}
+                  className={`text-sm transition-colors ${link.name === 'Subscription' ? 'text-accent-gold hover:text-white font-medium' : link.name === 'El Agpeya' ? 'text-accent-green hover:text-white font-bold' : 'text-main-text hover:text-accent-green font-medium'}`}
                 >
                   {link.name}
                 </Link>

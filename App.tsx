@@ -116,7 +116,6 @@ const MainLayout: React.FC = () => {
       <main className={!isWatchPage ? "pt-0" : ""}>
         <Routes>
           <Route path="/" element={<Home posters={analyzedPosters} />} />
-          <Route path="/browse" element={<Home posters={analyzedPosters} />} />
           <Route path="/movies" element={<Home posters={analyzedPosters.filter(p => !p.title.includes('مسلسل'))} />} />
           <Route path="/series" element={<Home posters={analyzedPosters.filter(p => p.title.includes('مسلسل'))} />} />
           {/* Originals route removed */}
