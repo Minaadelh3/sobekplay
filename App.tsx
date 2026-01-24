@@ -74,7 +74,7 @@ const Footer: React.FC = () => (
     </div>
     <div className="text-muted text-sm space-x-6 mb-8 flex justify-center">
       <Link to="/policy" className="hover:text-white transition-colors">Trip Policy</Link>
-      <Link to="/help" className="hover:text-white transition-colors">Contact Us</Link>
+      <Link to="/subscription" className="hover:text-white transition-colors">Contact Us</Link>
     </div>
     <p className="text-xs text-muted/60 uppercase tracking-[0.2em] font-medium">By Spark Team</p>
   </footer>
