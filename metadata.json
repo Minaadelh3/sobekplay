@@ -1,0 +1,7 @@
+{
+  "name": "Sobek Play",
+  "description": "A production-ready cinematic streaming platform with a dark Egyptian aesthetic, featuring auto-categorized content, trip programs, and immersive visuals.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
