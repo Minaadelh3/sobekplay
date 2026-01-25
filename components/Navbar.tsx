@@ -43,7 +43,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
                 <li key={link.path}>
                   <Link 
                     to={link.path} 
-                    className={`text-sm transition-colors ${link.name === 'Subscription' ? 'text-accent-gold hover:text-white font-medium' : link.name === 'El Agpeya' ? 'text-accent-green hover:text-white font-bold' : 'text-main-text hover:text-accent-green font-medium'}`}
+                    className={`text-sm transition-colors ${link.name === 'Subscription' ? 'text-accent-gold hover:text-white font-medium' : link.name === 'El Agpeya' ? 'text-accent-green hover:text-white font-black' : 'text-main-text hover:text-accent-green font-medium'}`}
                   >
                     {link.name}
                   </Link>
@@ -107,7 +107,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
               <li key={link.path}>
                 <Link 
                   to={link.path} 
-                  className={`text-sm whitespace-nowrap transition-colors ${link.name === 'Subscription' ? 'text-accent-gold hover:text-white font-medium' : link.name === 'El Agpeya' ? 'text-accent-green hover:text-white font-bold' : 'text-main-text hover:text-accent-green font-medium'}`}
+                  className={`text-sm whitespace-nowrap transition-colors ${link.name === 'Subscription' ? 'text-accent-gold hover:text-white font-medium' : link.name === 'El Agpeya' ? 'text-accent-green hover:text-white font-black' : 'text-main-text hover:text-accent-green font-medium'}`}
                 >
                   {link.name}
                 </Link>

@@ -73,8 +73,8 @@ const Home: React.FC<{ posters: any[] }> = ({ posters }) => {
 };
 
 const Footer: React.FC = () => (
-  <footer className="py-12 border-t border-white/5 bg-nearblack text-center w-full relative z-10">
-    <div className="flex justify-center items-center gap-8 mb-6">
+  <footer className="py-8 bg-nearblack border-t border-white/5 w-full relative z-10">
+    <div className="flex justify-center items-center gap-8">
       {/* Facebook */}
       <a 
         href="https://www.facebook.com/profile.php?id=61553908212285" 
@@ -101,7 +101,6 @@ const Footer: React.FC = () => (
         </svg>
       </a>
     </div>
-    <p className="text-xs text-muted/60 uppercase tracking-[0.2em] font-medium">By Spark Team</p>
   </footer>
 );
 
