@@ -52,7 +52,7 @@ const SobekChatbot: React.FC = () => {
 
     المحتوى المتاح على المنصة حصراً هو:
     [${availableTitles}]
-    
+
     قاعدة ذهبية:
     لو المستخدم كتب حاجة جديدة → رد جديد.
     ممنوع التكرار.
@@ -96,7 +96,8 @@ const SobekChatbot: React.FC = () => {
         model: 'gemini-3-flash-preview',
         config: {
           systemInstruction: SYSTEM_INSTRUCTION,
-          temperature: 0.8,
+          temperature: 1.1, // Increased temperature for variety
+          topK: 40,
         },
         contents: [
           ...recentHistory,
@@ -108,7 +109,9 @@ const SobekChatbot: React.FC = () => {
       const text = response?.text;
       
       if (!text) {
-        throw new Error("No text returned from model");
+        // Log for debugging but return friendly message
+        console.warn("AI returned empty text");
+        return "معلش، الشبكة فيها عفريت صغير 👻 جرب تقول تاني؟";
       }
       
       return text;
@@ -167,7 +170,7 @@ const SobekChatbot: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-bold text-white text-lg leading-tight font-sans">{BOT_NAME}</h3>
-                  <p className="text-[10px] text-[#BFA05A] uppercase tracking-wider font-medium">Online Guide</p>
+                  <p className="text-[10px] text-[#BFA05A] uppercase tracking-wider font-medium">Cinema Guide</p>
                 </div>
               </div>
               <button 

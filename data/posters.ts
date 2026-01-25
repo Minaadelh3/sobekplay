@@ -41,7 +41,17 @@ const filenames = [
   "aros_el_nil.png", 
   "el_mamar.png", 
   "kira_wal_gin.png",
-  "coming_soon.png"
+  "coming_soon.png",
+  "blue_elephant.png",
+  "the_choice.png",
+  "diamond_dust.png",
+  "welad_rizk.png",
+  "ibrahim_labyad.png",
+  "sobek_return.png",
+  "guardians_nile.png",
+  "cairo_30.png",
+  "yacoubian_building.png",
+  "paranormal.png"
 ];
 
 const humanize = (filename: string): string => {
@@ -78,7 +88,17 @@ const humanize = (filename: string): string => {
     "sobek_nile_god": "Sobek the nile God",
     "sobek_sorcerer": "Sobek the sorcerer",
     "sobek_nile_friends": "Sobek's Nile Friends",
-    "coming_soon": "Coming Soon"
+    "coming_soon": "Coming Soon",
+    "blue_elephant": "Blue Elephant",
+    "the_choice": "The Choice",
+    "diamond_dust": "Diamond Dust",
+    "welad_rizk": "Welad Rizk",
+    "ibrahim_labyad": "Ibrahim Labyad",
+    "sobek_return": "Sobek's Return",
+    "guardians_nile": "Guardians of the Nile",
+    "cairo_30": "Cairo 30",
+    "yacoubian_building": "The Yacoubian Building",
+    "paranormal": "Paranormal"
   };
 
   if (manualMap[base]) return manualMap[base];
@@ -89,7 +109,13 @@ const humanize = (filename: string): string => {
 
 const determineType = (filename: string): 'movie' | 'series' => {
   const lower = filename.toLowerCase();
-  if (lower.includes('bakkar') || lower.includes('grand_hotel') || lower.includes('series') || lower.includes('mosalsal') || lower.includes('la_casa')) {
+  if (lower.includes('bakkar') || 
+      lower.includes('grand_hotel') || 
+      lower.includes('series') || 
+      lower.includes('mosalsal') || 
+      lower.includes('la_casa') ||
+      lower.includes('the_choice') ||
+      lower.includes('paranormal')) {
     return 'series';
   }
   return 'movie';
@@ -106,8 +132,8 @@ export const posters: PosterItem[] = filenames.map((filename) => {
     title: title,
     description: descriptionMap[title] || "Experience the journey along the Nile.",
     type: determineType(filename),
-    isOriginal: filename.toLowerCase().includes('sobek') || filename.toLowerCase().includes('teaser'),
+    isOriginal: filename.toLowerCase().includes('sobek') || filename.toLowerCase().includes('teaser') || filename.toLowerCase().includes('return') || filename.toLowerCase().includes('guardians'),
     isComingSoon: filename.toLowerCase().includes('soon') || filename.toLowerCase().includes('coming'),
-    isClassic: /[\u0600-\u06FF]/.test(title) || filename.includes('classic') || filename.includes('masr') || filename.includes('army') || filename.includes('nil')
+    isClassic: /[\u0600-\u06FF]/.test(title) || filename.includes('classic') || filename.includes('masr') || filename.includes('army') || filename.includes('nil') || filename.includes('cairo')
   };
 });
