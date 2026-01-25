@@ -1,9 +1,10 @@
-import FeedbackSection from "../components/FeedbackSection";
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { PosterItem } from '../types';
 import ImageWithFallback from '../components/ImageWithFallback';
+import FeedbackSection from '../components/FeedbackSection';
 
 interface TitleDetailsProps {
   posters: PosterItem[];
@@ -33,7 +34,7 @@ const TitleDetails: React.FC<TitleDetailsProps> = ({ posters }) => {
       </div>
 
       <div className="relative z-10 pt-32 px-4 md:px-24 pb-20">
-        <div className="flex flex-col md:flex-row gap-12 items-start">
+        <div className="flex flex-col md:flex-row gap-12 items-start mb-24">
           <motion.div 
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
@@ -76,6 +77,11 @@ const TitleDetails: React.FC<TitleDetailsProps> = ({ posters }) => {
               </button>
             </div>
           </motion.div>
+        </div>
+
+        {/* Feedback Section */}
+        <div className="max-w-4xl mx-auto border-t border-white/5 pt-12">
+            <FeedbackSection movieId={poster.id} />
         </div>
       </div>
     </div>

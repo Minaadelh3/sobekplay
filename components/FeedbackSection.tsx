@@ -1,84 +1,254 @@
-import { useEffect, useState } from "react";
-import {
-  collection,
-  addDoc,
-  query,
-  where,
-  orderBy,
-  onSnapshot,
-  serverTimestamp,
-} from "firebase/firestore";
-import { db } from "../config/firebase";
 
-interface Feedback {
-  id: string;
-  name: string;
-  comment: string;
+import React, { useState, useEffect } from 'react';
+import { db } from '../config/firebase';
+import { 
+  collection, 
+  addDoc, 
+  query, 
+  where, 
+  orderBy, 
+  onSnapshot, 
+  serverTimestamp,
+  updateDoc,
+  doc,
+  increment,
+  Timestamp
+} from 'firebase/firestore';
+import { motion, AnimatePresence } from 'framer-motion';
+
+interface FeedbackSectionProps {
+  movieId: string;
 }
 
-export default function FeedbackSection({ movieId }: { movieId: string }) {
-  const [name, setName] = useState("");
-  const [comment, setComment] = useState("");
-  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
+interface Comment {
+  id: string;
+  movieId: string;
+  name: string;
+  text: string;
+  createdAt: Timestamp | null;
+  reactions: {
+    like: number;
+    love: number;
+    funny: number;
+  };
+}
 
+const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [name, setName] = useState('');
+  const [text, setText] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  // Subscribe to comments for this movie
   useEffect(() => {
-    const q = query(
-      collection(db, "feedback"),
-      where("movieId", "==", movieId),
-      orderBy("createdAt", "desc")
-    );
+    if (!db) return;
 
-    const unsub = onSnapshot(q, (snapshot) => {
-      setFeedbacks(
-        snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...(doc.data() as Omit<Feedback, "id">),
-        }))
+    try {
+      const q = query(
+        collection(db, 'comments'),
+        where('movieId', '==', movieId),
+        orderBy('createdAt', 'desc')
       );
-    });
 
-    return () => unsub();
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const loadedComments = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Comment[];
+        setComments(loadedComments);
+      }, (err) => {
+        console.error("Firebase error:", err);
+        // Fail silently or show UI error if config is missing
+        if (err.code === 'permission-denied' || err.code === 'failed-precondition') {
+             // Likely missing config or indexes
+        }
+      });
+
+      return () => unsubscribe();
+    } catch (e) {
+      console.error("Error setting up listener", e);
+    }
   }, [movieId]);
 
-  const submitComment = async () => {
-    if (!name || !comment) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    
+    if (!name.trim() || !text.trim()) {
+      setError('Please fill in both name and comment.');
+      return;
+    }
 
-    await addDoc(collection(db, "feedback"), {
-      movieId,
-      name,
-      comment,
-      createdAt: serverTimestamp(),
-    });
+    setIsSubmitting(true);
 
-    setComment("");
+    try {
+      await addDoc(collection(db, 'comments'), {
+        movieId,
+        name: name.trim(),
+        text: text.trim(),
+        createdAt: serverTimestamp(),
+        reactions: {
+          like: 0,
+          love: 0,
+          funny: 0
+        }
+      });
+      setText('');
+      // Keep name for convenience
+    } catch (err: any) {
+      console.error(err);
+      if (err.code === 'unavailable' || err.message.includes('api key')) {
+         setError('Database not configured. Please check config/firebase.ts');
+      } else {
+         setError('Failed to post comment. Try again.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleReaction = async (commentId: string, type: 'like' | 'love' | 'funny') => {
+    const storageKey = `reacted_${commentId}`;
+    if (localStorage.getItem(storageKey)) {
+      // User already reacted to this comment
+      // Optional: Add UI feedback like a shake animation
+      return;
+    }
+
+    try {
+      const commentRef = doc(db, 'comments', commentId);
+      await updateDoc(commentRef, {
+        [`reactions.${type}`]: increment(1)
+      });
+      localStorage.setItem(storageKey, 'true');
+    } catch (err) {
+      console.error("Error updating reaction:", err);
+    }
+  };
+
+  const formatDate = (timestamp: Timestamp | null) => {
+    if (!timestamp) return 'Just now';
+    const date = timestamp.toDate();
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
   };
 
   return (
-    <div style={{ marginTop: 40 }}>
-      <h3>Feedback</h3>
+    <div className="bg-charcoal/30 border border-white/5 rounded-2xl p-6 md:p-8 backdrop-blur-sm">
+      <h3 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
+        <span className="text-accent-gold">Community</span> Feedback
+      </h3>
 
-      <input
-        placeholder="Your name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
-
-      <textarea
-        placeholder="Write your comment..."
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-      />
-
-      <button onClick={submitComment}>Send</button>
-
-      <div>
-        {feedbacks.map((f) => (
-          <div key={f.id}>
-            <strong>{f.name}</strong>
-            <p>{f.comment}</p>
+      {/* Input Form */}
+      <form onSubmit={handleSubmit} className="mb-12 space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="md:col-span-1">
+            <input
+              type="text"
+              placeholder="Your Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full bg-nearblack border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-accent-green transition-colors"
+              maxLength={20}
+            />
           </div>
-        ))}
+          <div className="md:col-span-3">
+            <input
+              type="text"
+              placeholder="Share your thoughts on this title..."
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              className="w-full bg-nearblack border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-accent-green transition-colors"
+              maxLength={200}
+            />
+          </div>
+        </div>
+        
+        <div className="flex justify-between items-center">
+          <p className="text-red-400 text-sm h-5">{error}</p>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className={`px-8 py-2 rounded-lg font-bold transition-all flex items-center gap-2 ${
+              isSubmitting 
+                ? 'bg-white/10 text-white/50 cursor-not-allowed' 
+                : 'bg-accent-green text-white hover:bg-opacity-90'
+            }`}
+          >
+            {isSubmitting ? 'Posting...' : 'Post Comment'}
+          </button>
+        </div>
+      </form>
+
+      {/* Comments List */}
+      <div className="space-y-4">
+        <AnimatePresence mode="popLayout">
+          {comments.map((comment) => (
+            <motion.div
+              key={comment.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              layout
+              className="bg-charcoal p-4 rounded-xl border border-white/5 hover:border-white/10 transition-colors"
+            >
+              <div className="flex justify-between items-start mb-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent-green to-accent-gold flex items-center justify-center text-xs font-bold text-white">
+                    {comment.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <span className="font-bold text-white block leading-none">{comment.name}</span>
+                    <span className="text-xs text-muted">{formatDate(comment.createdAt)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-white/90 leading-relaxed mb-4 pl-11">
+                {comment.text}
+              </p>
+
+              {/* Reactions */}
+              <div className="flex gap-4 pl-11">
+                <button 
+                  onClick={() => handleReaction(comment.id, 'like')}
+                  className="flex items-center gap-1.5 text-xs font-medium text-muted hover:text-white transition-colors bg-white/5 px-2 py-1 rounded-md hover:bg-white/10"
+                >
+                  <span>👍</span>
+                  <span>{comment.reactions?.like || 0}</span>
+                </button>
+                <button 
+                  onClick={() => handleReaction(comment.id, 'love')}
+                  className="flex items-center gap-1.5 text-xs font-medium text-muted hover:text-pink-400 transition-colors bg-white/5 px-2 py-1 rounded-md hover:bg-white/10"
+                >
+                  <span>❤️</span>
+                  <span>{comment.reactions?.love || 0}</span>
+                </button>
+                <button 
+                  onClick={() => handleReaction(comment.id, 'funny')}
+                  className="flex items-center gap-1.5 text-xs font-medium text-muted hover:text-yellow-400 transition-colors bg-white/5 px-2 py-1 rounded-md hover:bg-white/10"
+                >
+                  <span>😂</span>
+                  <span>{comment.reactions?.funny || 0}</span>
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+        
+        {comments.length === 0 && (
+          <div className="text-center py-12 text-muted/40">
+            <p>No comments yet. Be the first to share your thoughts!</p>
+          </div>
+        )}
       </div>
     </div>
   );
-}
+};
+
+export default FeedbackSection;
