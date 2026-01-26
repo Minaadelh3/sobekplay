@@ -6,12 +6,21 @@ import { useScrollDirection } from '../hooks/useScrollDirection';
 
 interface NavbarProps {
   onSearchOpen?: () => void;
+  isMobileMenuOpen?: boolean;
+  setIsMobileMenuOpen?: (isOpen: boolean) => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
+const Navbar: React.FC<NavbarProps> = ({ 
+  onSearchOpen, 
+  isMobileMenuOpen: externalIsMobileMenuOpen, 
+  setIsMobileMenuOpen: externalSetIsMobileMenuOpen 
+}) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [internalIsMobileMenuOpen, setInternalIsMobileMenuOpen] = useState(false);
+  
+  const isMobileMenuOpen = externalIsMobileMenuOpen !== undefined ? externalIsMobileMenuOpen : internalIsMobileMenuOpen;
+  const setIsMobileMenuOpen = externalSetIsMobileMenuOpen || setInternalIsMobileMenuOpen;
   
   const { scrollDirection, isAtTop } = useScrollDirection();
   const location = useLocation();
@@ -37,7 +46,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
     }
   }, [isMobileMenuOpen]);
 
-  // Navigation Data Structure
+  // Desktop Navigation Data Structure
   const primaryTabs = [
     { name: 'Movies', path: '/movies' },
     { name: 'Series', path: '/series' },
@@ -59,6 +68,23 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
     { name: 'About', path: '/about' },
   ];
 
+  // Mobile Navigation Flat List
+  const mobileLinks = [
+    { name: 'Movies', path: '/movies' },
+    { name: 'Series', path: '/series' },
+    { name: 'Kids', path: '/kids' },
+    { name: 'El She3ar', path: '/she3ar-al-re7la' },
+    { name: 'Program', path: '/program' },
+    { name: 'Rooms', path: '/rooms' },
+    { name: 'El Agpeya', path: '/prayers' },
+    { name: 'Subscription', path: '/subscription' },
+    { name: 'Coming Soon', path: '/coming-soon' },
+    { name: 'News', path: '/news' },
+    { name: 'Community', path: '/community' },
+    { name: 'Shop', path: '/shop' },
+    { name: 'About', path: '/about' },
+  ];
+
   return (
     <>
       <motion.nav 
@@ -73,7 +99,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
               {/* Hamburger Menu Button (Mobile) */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="lg:hidden text-white p-2 focus:outline-none"
+                className="lg:hidden text-white p-2 focus:outline-none z-[60] relative"
                 aria-label="Toggle menu"
               >
                 <div className="w-6 flex flex-col items-start gap-1.5">
@@ -252,94 +278,55 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
-             />
-             <motion.div
-                initial={{ x: '-100%' }}
-                animate={{ x: 0 }}
-                exit={{ x: '-100%' }}
-                transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                className="fixed top-0 left-0 bottom-0 w-[85%] max-w-[320px] bg-nearblack z-50 lg:hidden border-r border-white/10 overflow-y-auto"
+                transition={{ duration: 0.3 }}
+                className="fixed inset-0 bg-nearblack z-40 lg:hidden overflow-hidden flex flex-col pt-20"
              >
-                <div className="p-6 pt-8 flex flex-col h-full">
-                   <div className="mb-8 flex justify-between items-center">
-                      <Link to="/" onClick={handleNavClick}>
-                         <BrandLogo className="h-8 w-auto" />
-                      </Link>
-                      <button 
-                         onClick={() => setIsMobileMenuOpen(false)} 
-                         className="p-2 text-white/50 hover:text-white"
-                      >
-                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                      </button>
-                   </div>
-
-                   <div className="flex-1 space-y-1">
-                      {primaryTabs.map((tab) => (
-                         <Link
-                            key={tab.path}
-                            to={tab.path}
-                            onClick={handleNavClick}
-                            className={`block px-4 py-3 rounded-xl text-lg font-medium transition-colors ${
-                               isLinkActive(tab.path) 
-                                  ? 'bg-white/10 text-accent-green font-bold' 
-                                  : 'text-white hover:bg-white/5'
-                            }`}
-                         >
-                            {tab.name}
-                         </Link>
-                      ))}
-
-                      <div className="pt-4 pb-2">
-                         <p className="px-4 text-xs font-bold text-muted uppercase tracking-widest">Explore</p>
-                      </div>
-                      
-                      {exploreDropdown.map((item) => (
-                         <Link
-                            key={item.path}
-                            to={item.path}
-                            onClick={handleNavClick}
-                            className={`block px-4 py-3 rounded-xl text-base font-medium transition-colors ${
-                               isLinkActive(item.path) 
-                                  ? 'bg-white/10 text-accent-green font-bold' 
-                                  : 'text-white/80 hover:bg-white/5'
-                            }`}
-                         >
-                            {item.name}
-                         </Link>
-                      ))}
-
-                      <div className="pt-4 pb-2">
-                         <p className="px-4 text-xs font-bold text-muted uppercase tracking-widest">More</p>
-                      </div>
-
-                      {moreDropdown.map((item) => (
-                         <Link
-                            key={item.path}
-                            to={item.path}
-                            onClick={handleNavClick}
-                            className={`block px-4 py-3 rounded-xl text-base font-medium transition-colors ${
-                               isLinkActive(item.path) 
-                                  ? 'bg-white/10 text-accent-green font-bold' 
-                                  : 'text-white/80 hover:bg-white/5'
-                            }`}
-                         >
-                            {item.name}
-                         </Link>
-                      ))}
-                   </div>
-
-                   <div className="pt-8 mt-4 border-t border-white/5">
+               <motion.div
+                 initial={{ opacity: 0, y: 20 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 exit={{ opacity: 0, y: 20 }}
+                 transition={{ delay: 0.1, duration: 0.4 }}
+                 className="flex-1 overflow-y-auto px-6 pb-24"
+               >
+                 <div className="flex flex-col space-y-2">
+                   {mobileLinks.map((link, index) => (
+                     <React.Fragment key={link.path}>
+                        {/* Add dividers between logical groups roughly based on provided list */}
+                        {index === 3 && <div className="h-px bg-white/5 my-2" />}
+                        {index === 6 && <div className="h-px bg-white/5 my-2" />}
+                        {index === 8 && <div className="h-px bg-white/5 my-2" />}
+                        
+                        <Link
+                          to={link.path}
+                          onClick={handleNavClick}
+                          className={`flex items-center justify-between px-4 py-4 rounded-xl text-lg transition-all ${
+                            isLinkActive(link.path)
+                              ? 'bg-white/10 text-accent-green font-bold'
+                              : 'text-white/80 hover:bg-white/5 hover:text-white'
+                          }`}
+                        >
+                          <span>{link.name}</span>
+                          {isLinkActive(link.path) && (
+                            <motion.div
+                              layoutId="active-pill"
+                              className="w-2 h-2 rounded-full bg-accent-green"
+                            />
+                          )}
+                        </Link>
+                     </React.Fragment>
+                   ))}
+                   
+                   <div className="pt-6 mt-4">
                       <Link
                          to="/subscription"
                          onClick={handleNavClick}
-                         className="block w-full text-center bg-accent-gold text-black font-bold py-4 rounded-xl text-lg"
+                         className="block w-full text-center bg-accent-gold text-black font-bold py-4 rounded-xl text-lg shadow-lg"
                       >
                          Subscribe Now
                       </Link>
                    </div>
-                </div>
+                 </div>
+               </motion.div>
              </motion.div>
           </>
         )}

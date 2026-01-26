@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GoogleGenAI } from "@google/genai";
@@ -10,7 +9,11 @@ interface Message {
   sender: 'user' | 'bot';
 }
 
-const SobekChatbot: React.FC = () => {
+interface SobekChatbotProps {
+  isHidden?: boolean;
+}
+
+const SobekChatbot: React.FC<SobekChatbotProps> = ({ isHidden = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
@@ -100,7 +103,7 @@ const SobekChatbot: React.FC = () => {
       }));
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview', // Switched to Flash for better stability and reliability
+        model: 'gemini-3-flash-preview', 
         config: {
           systemInstruction: SYSTEM_INSTRUCTION,
           temperature: 0.9, 
@@ -154,9 +157,9 @@ const SobekChatbot: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end pointer-events-none">
+    <div className={`fixed bottom-6 right-6 z-[100] flex flex-col items-end transition-opacity duration-300 ${isHidden ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
       <AnimatePresence>
-        {isOpen && (
+        {isOpen && !isHidden && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}

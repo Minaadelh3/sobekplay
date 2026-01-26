@@ -103,6 +103,7 @@ const Footer: React.FC = () => (
 const MainLayout: React.FC = () => {
   const { analyzedPosters, isAnalyzing } = usePosterMetrics(posters);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
 
   if (isAnalyzing) {
@@ -127,7 +128,13 @@ const MainLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen selection:bg-accent-green selection:text-white">
-      {!isWatchPage && <Navbar onSearchOpen={() => setIsSearchOpen(true)} />}
+      {!isWatchPage && (
+        <Navbar 
+          onSearchOpen={() => setIsSearchOpen(true)} 
+          isMobileMenuOpen={isMobileMenuOpen} 
+          setIsMobileMenuOpen={setIsMobileMenuOpen} 
+        />
+      )}
       {!isWatchPage && <MobileBottomNav />}
       
       <SearchModal 
@@ -163,7 +170,7 @@ const MainLayout: React.FC = () => {
         </Routes>
       </main>
       
-      <SobekChatbot />
+      <SobekChatbot isHidden={isMobileMenuOpen} />
       {!isWatchPage && <Footer />}
     </div>
   );
