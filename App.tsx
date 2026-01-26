@@ -26,6 +26,7 @@ import VeoPage from './pages/VeoPage';
 import { motion } from 'framer-motion';
 import BrandLogo from './components/BrandLogo';
 import SobekChatbot from './components/SobekChatbot';
+import ScrollToTop from './components/ScrollToTop';
 
 const Home: React.FC<{ posters: any[] }> = ({ posters }) => {
   const rows = useMemo(() => {
@@ -171,6 +172,7 @@ const MainLayout: React.FC = () => {
 const App: React.FC = () => {
   return (
     <Router>
+      <ScrollToTop />
       <MainLayout />
     </Router>
   );

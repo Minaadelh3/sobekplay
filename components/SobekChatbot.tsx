@@ -20,42 +20,50 @@ const SobekChatbot: React.FC = () => {
   // Bot Identity
   const BOT_NAME = "ابن أخو سوبك";
   
-  // Context for the AI
-  const availableTitles = posters.map(p => p.title).join(", ");
+  // Context for the AI: Enriched with descriptions for smarter recommendations
+  const libraryContext = posters.map(p => `• "${p.title}": ${p.description || 'تجربة سينمائية مميزة'}`).join('\n');
   
   const SYSTEM_INSTRUCTION = `
-    أنت ابن أخو سوبك.
-    شخصية مصرية ذكية وخفيفة دم، عايشة جوه موقع Sobek Play.
+    أنت شات بوت الموقع الرسمي Sobek Play.
+    اسمك: ابن أخو سوبك 🐊
+    
+    هويتك وشخصيتك:
+    - شاب مصري من أسوان (نوبي/صعيدي)، دمك خفيف، لسانك حلو، وصاحب واجب.
+    - بتتكلم بلهجة "أسواني" محببة (يا زول، يا غالي، على عيني، أحلى ناس، الدنيا رايقة).
+    - أسلوبك حكواتي: مش مجرد ردود آلية، إنت بتحكي وتاخد وتدي في الكلام.
+    - هدفك: تخلي المستخدم يحس إنه في بيته، وتساعده يلاقي اللي يبسطه في الموقع.
 
-    قواعد الشخصية (إلزامي):
-    - بتتكلم مصري طبيعي وواضح.
-    - أسلوبك ودي، سينماتيك، وفيه خفة دم بسيطة.
-    - ما بتتكلمش إنجليزي إلا لو المستخدم بدأ إنجليزي.
-    - ما بتذكرش إنك AI، ولا نظام، ولا نموذج.
-    - ما بتطلعش برّه عالم Sobek Play.
-    - ما بتخترعش أفلام أو مسلسلات.
-    - لو مش متأكد من إجابة، وجّه المستخدم بدل ما تخمّن.
+    معلوماتك عن الموقع (أنت الخبير هنا):
+    1. **المكتبة (Movies & Series)**: عندنا تشكيلة واسعة (مصري، عالمي، كلاسيكيات، وأعمال أصلية لـ Sobek).
+    2. **برنامج الرحلة (Program)**: رحلة للأقصر وأسوان (4 أيام) فيها زيارات، لعب، وسهرات. (شجعهم يشوفوا التاب).
+    3. **شعار الرحلة (She3ar El Re7la)**: فيه أغاني وهتافات الرحلة عشان يدخلوا في المود.
+    4. **الغرف (Rooms)**: لسه مفاجأة (قولهم يترقبوا!).
+    5. **المتجر (Shop)**: فيه تيشيرتات وكابات وحاجات تذكارية.
+    6. **الصور (Gallery)**: صور من رحلاتنا ولمتنا.
 
-    قواعد الرد (مهمة جدًا):
-    - كل رد لازم يكون مختلف عن اللي قبله في الصياغة.
-    - ممنوع تكرار نفس الجملة أو نفس الافتتاحية.
-    - لو السؤال اتغير → الرد لازم يتغير.
-    - لو السؤال اتكرر → غيّر الأسلوب أو الزاوية.
-    - ما تردش بإجابات محفوظة أو ثابتة.
+    مكتبة الأفلام المتاحة (استخدم الوصف ده عشان ترشح بذكاء):
+    ${libraryContext}
 
-    دورك:
-    - ترحّب بالناس
-    - تساعدهم يختاروا يشوفوا إيه
-    - تشرح Sobek Play ببساطة
-    - تهزر هزار خفيف مصري
-    - تحسّس المستخدم إن الموقع عايش
+    قواعد الذكاء والتعامل:
+    - **الترشيح الذكي**: لو حد قال "عايز فيلم حلو"، متقولش اسم وخلاص. اسأله: "مودك إيه النهاردة؟ عايز تضحك ولا تشد أعصابك ولا تعيش قصة حب؟".
+    - **الربط بالأحداث**: لو سأل عن الرحلة، اربطها بالأفلام (مثلاً: "قبل ما نطلع الرحلة، اتفرج على Sobek The Aswan Affair عشان تعيش الجو").
+    - **الغموض والتشويق**: لو سأل عن "سوبيك" الشخصية، خليك غامض شوية (مثلاً: "سوبيك.. ده الكبير بتاعنا، حكايته حكاية هتعرفها في الفيديوهات").
+    - **المساعدة التقنية**: لو مش عارف يشغل حاجة، قوله "دوس على بوستر الفيلم وبعدين Play، الموضوع بسيط يا خال".
 
-    المحتوى المتاح على المنصة حصراً هو:
-    [${availableTitles}]
+    ممنوعات وقواعد تنسيق صارمة (Strict Formatting Rules):
+    - **ممنوع نهائياً** استخدام أي نوع من أنواع التنسيق (Markdown).
+    - **لا تستخدم** الخط العريض (**bold**) ولا المائل (*italic*).
+    - **لا تستخدم** القوائم النقطية (Bullet points) أو الشرط (-) أو النجوم (*).
+    - **لا تستخدم** العناوين أو الرموز الخاصة (#, >).
+    - اكتب الكلام كله كنص عادي (Plain text) وجمل ورا بعضها زي الشات الطبيعي بين الصحاب.
+    - ممنوع تخرج عن اللهجة المصرية/الأسوانية.
+    - ممنوع تألف أفلام مش موجودة في القائمة اللي فوق.
+    - ممنوع تكون رسمي زيادة (إنت صاحبهم).
 
-    قاعدة ذهبية:
-    لو المستخدم كتب حاجة جديدة → رد جديد.
-    ممنوع التكرار.
+    أمثلة لردودك:
+    - "يا هلا بيك! نورتنا والله. قولي، ناوي على سهرة سينما ولا جاي تستفسر عن الرحلة؟"
+    - "عايز أكشن؟ يبقى عليك وعلى 'Crocodile Gangster'، ضرب نار للركب!"
+    - "الرحلة يا سيدي 4 أيام من الخيال في النوبة، خش على صفحة Program وشوف الجدول باليوم والساعة."
   `;
 
   const scrollToBottom = () => {
@@ -73,7 +81,7 @@ const SobekChatbot: React.FC = () => {
       setTimeout(() => {
         setMessages([{
           id: 'welcome',
-          text: "أهلاً بيك 👋، دخلت عالم سوبك في وقت حلو. تحب حاجة تقيلة؟ ولا مزاجك رايق على دراما؟",
+          text: "مرحبتين يا غالي! 👋 أنا ابن أخو سوبك، دليلك في الرحلة والمشاهدة. تؤمرني بإيه النهاردة؟ قهوة ولا فيلم؟ ☕🎬",
           sender: 'bot'
         }]);
         setIsTyping(false);
@@ -83,20 +91,19 @@ const SobekChatbot: React.FC = () => {
 
   const generateAIResponse = async (userMessage: string, history: Message[]) => {
     try {
+      // Create new instance every call to ensure fresh config if env changes (though unlikely here)
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
-      // Convert chat history to format expected by API
-      // Only take last 6 messages to keep context relevant and cheap
-      const recentHistory = history.slice(-6).map(msg => ({
+      const recentHistory = history.slice(-8).map(msg => ({
         role: msg.sender === 'user' ? 'user' : 'model',
         parts: [{ text: msg.text }],
       }));
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-3-flash-preview', // Switched to Flash for better stability and reliability
         config: {
           systemInstruction: SYSTEM_INSTRUCTION,
-          temperature: 1.1, // Increased temperature for variety
+          temperature: 0.9, 
           topK: 40,
         },
         contents: [
@@ -105,20 +112,17 @@ const SobekChatbot: React.FC = () => {
         ]
       });
 
-      // Safe access using optional chaining to prevent crash if response is undefined
       const text = response?.text;
       
       if (!text) {
-        // Log for debugging but return friendly message
-        console.warn("AI returned empty text");
-        return "معلش، الشبكة فيها عفريت صغير 👻 جرب تقول تاني؟";
+        return "يا ساتر.. الكلام هرب مني! معلش يا زول، قول تاني؟";
       }
       
       return text;
 
     } catch (error) {
       console.error("AI Error:", error);
-      return "معلش، الموج عالي شوية والشبكة قطعت.. جرب تاني كمان شوية! 🐊🌊";
+      return "الشبكة في النيل بتعلق شوية 🌊.. جرب تاني كمان لحظة!";
     }
   };
 
@@ -133,12 +137,10 @@ const SobekChatbot: React.FC = () => {
       sender: 'user'
     };
 
-    // Optimistic Update
     setMessages(prev => [...prev, userMsg]);
     setInputText('');
     setIsTyping(true);
 
-    // Call AI
     const botReplyText = await generateAIResponse(userText, messages);
 
     const botMsg: Message = {
@@ -159,18 +161,18 @@ const SobekChatbot: React.FC = () => {
             initial={{ opacity: 0, y: 20, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="mb-4 w-[320px] md:w-[360px] h-[500px] bg-[#070A0F] border border-[#0B5D4B]/30 rounded-2xl shadow-2xl overflow-hidden flex flex-col pointer-events-auto ring-1 ring-white/5"
+            className="mb-4 w-[320px] md:w-[360px] h-[550px] bg-[#070A0F] border border-[#0B5D4B]/30 rounded-2xl shadow-2xl overflow-hidden flex flex-col pointer-events-auto ring-1 ring-white/5"
           >
             {/* Header */}
             <div className="bg-[#0B141A] p-4 flex items-center justify-between shadow-lg relative z-10 border-b border-[#0B5D4B]/20">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-[#0B5D4B]/20 rounded-full flex items-center justify-center text-xl shadow-inner border border-[#0B5D4B]/40 relative">
                   🐊
-                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-[#0B141A] rounded-full"></span>
+                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-[#0B141A] rounded-full animate-pulse"></span>
                 </div>
                 <div>
                   <h3 className="font-bold text-white text-lg leading-tight font-sans">{BOT_NAME}</h3>
-                  <p className="text-[10px] text-[#BFA05A] uppercase tracking-wider font-medium">Cinema Guide</p>
+                  <p className="text-[10px] text-[#BFA05A] uppercase tracking-wider font-medium">Smart Guide</p>
                 </div>
               </div>
               <button 
@@ -234,7 +236,7 @@ const SobekChatbot: React.FC = () => {
                 type="text"
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                placeholder="اسألني عن فيلم، مسلسل، أو اقتراح..."
+                placeholder="أنا معاك، اسأل براحتك..."
                 className="flex-1 bg-[#070A0F] border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/30 focus:outline-none focus:border-[#0B5D4B] focus:ring-1 focus:ring-[#0B5D4B] transition-all text-right"
                 dir="auto"
               />
