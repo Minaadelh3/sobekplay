@@ -29,6 +29,7 @@ interface Comment {
     like: number;
     love: number;
     funny: number;
+    crocodile: number;
   };
 }
 
@@ -86,10 +87,11 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
         reactions: {
           like: 0,
           love: 0,
-          funny: 0
+          funny: 0,
+          crocodile: 0
         }
       });
-      setCommentText('');
+      setCommentText(''); // Clear input after successful post
     } catch (err: any) {
       console.error(err);
       setError('Failed to post comment. Check connection.');
@@ -98,7 +100,7 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
     }
   };
 
-  const handleReaction = async (commentId: string, type: 'like' | 'love' | 'funny') => {
+  const handleReaction = async (commentId: string, type: 'like' | 'love' | 'funny' | 'crocodile') => {
     const storageKey = `reacted_${commentId}`;
     if (localStorage.getItem(storageKey)) {
       // User already reacted to this comment
@@ -224,6 +226,13 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
                 >
                   <span>😂</span>
                   <span>{comment.reactions?.funny || 0}</span>
+                </button>
+                <button 
+                  onClick={() => handleReaction(comment.id, 'crocodile')}
+                  className="flex items-center gap-1.5 text-xs font-medium text-muted hover:text-green-400 transition-colors bg-white/5 px-2 py-1 rounded-md hover:bg-white/10"
+                >
+                  <span>🐊</span>
+                  <span>{comment.reactions?.crocodile || 0}</span>
                 </button>
               </div>
             </motion.div>
