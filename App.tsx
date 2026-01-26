@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { HashRouter as Router, Routes, Route, useLocation, Link } from 'react-router-dom';
+import React, { useMemo, useState, useEffect } from 'react';
+import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import MobileBottomNav from './components/MobileBottomNav';
 import Hero from './components/Hero';
@@ -28,7 +28,6 @@ import SeriesPage from './pages/SeriesPage';
 import KidsPage from './pages/KidsPage';
 import MenuPage from './pages/MenuPage';
 import { motion } from 'framer-motion';
-import BrandLogo from './components/BrandLogo';
 import SobekChatbot from './components/SobekChatbot';
 import ScrollToTop from './components/ScrollToTop';
 
@@ -71,7 +70,6 @@ const Home: React.FC<{ posters: any[] }> = ({ posters }) => {
 const Footer: React.FC = () => (
   <footer className="py-8 bg-nearblack border-t border-white/5 w-full relative z-10 mb-16 md:mb-0">
     <div className="flex justify-center items-center gap-8">
-      {/* Facebook */}
       <a 
         href="https://www.facebook.com/profile.php?id=61553908212285" 
         target="_blank" 
@@ -84,7 +82,6 @@ const Footer: React.FC = () => (
         </svg>
       </a>
 
-      {/* Instagram */}
       <a 
         href="https://www.instagram.com/spark_graduates?igsh=cXZscTRrNXVlODFx" 
         target="_blank" 
@@ -105,6 +102,15 @@ const MainLayout: React.FC = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+      window.scrollTo(0, 0);
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+  }, [isMobileMenuOpen]);
 
   if (isAnalyzing) {
     return (
@@ -135,7 +141,12 @@ const MainLayout: React.FC = () => {
           setIsMobileMenuOpen={setIsMobileMenuOpen} 
         />
       )}
-      {!isWatchPage && <MobileBottomNav />}
+      {!isWatchPage && (
+        <MobileBottomNav 
+          onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          isMenuOpen={isMobileMenuOpen}
+        />
+      )}
       
       <SearchModal 
         isOpen={isSearchOpen} 
@@ -170,7 +181,7 @@ const MainLayout: React.FC = () => {
         </Routes>
       </main>
       
-      <SobekChatbot isHidden={isMobileMenuOpen} />
+      <SobekChatbot isHidden={isMobileMenuOpen || isWatchPage} />
       {!isWatchPage && <Footer />}
     </div>
   );

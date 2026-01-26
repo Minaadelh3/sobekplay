@@ -25,7 +25,6 @@ const Navbar: React.FC<NavbarProps> = ({
   const { scrollDirection, isAtTop } = useScrollDirection();
   const location = useLocation();
   
-  // Show navbar if at top OR scrolling up. Hide if scrolling down and NOT at top.
   const isVisible = isAtTop || scrollDirection === 'up';
 
   const handleNavClick = () => {
@@ -37,16 +36,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
   const isLinkActive = (path: string) => location.pathname === path;
 
-  // Prevent body scroll when mobile menu is open
-  useEffect(() => {
-    if (isMobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-  }, [isMobileMenuOpen]);
-
-  // Desktop Navigation Data Structure
+  // Desktop Tabs
   const primaryTabs = [
     { name: 'Movies', path: '/movies' },
     { name: 'Series', path: '/series' },
@@ -68,21 +58,16 @@ const Navbar: React.FC<NavbarProps> = ({
     { name: 'About', path: '/about' },
   ];
 
-  // Mobile Navigation Flat List
+  // Mobile Menu Links with Emojis
   const mobileLinks = [
-    { name: 'Movies', path: '/movies' },
-    { name: 'Series', path: '/series' },
-    { name: 'Kids', path: '/kids' },
-    { name: 'El She3ar', path: '/she3ar-al-re7la' },
-    { name: 'Program', path: '/program' },
-    { name: 'Rooms', path: '/rooms' },
-    { name: 'El Agpeya', path: '/prayers' },
-    { name: 'Subscription', path: '/subscription' },
-    { name: 'Coming Soon', path: '/coming-soon' },
-    { name: 'News', path: '/news' },
-    { name: 'Community', path: '/community' },
-    { name: 'Shop', path: '/shop' },
-    { name: 'About', path: '/about' },
+    { name: 'Home', path: '/', emoji: '🏠' },
+    { name: 'El Agpeya', path: '/prayers', emoji: '❤️' },
+    { name: 'Subscription', path: '/subscription', emoji: '💳' },
+    { name: 'Coming Soon', path: '/coming-soon', emoji: '⏳' },
+    { name: 'News', path: '/news', emoji: '📰' },
+    { name: 'Community', path: '/community', emoji: '👥' },
+    { name: 'Shop', path: '/shop', emoji: '🛍️' },
+    { name: 'About', path: '/about', emoji: 'ℹ️' },
   ];
 
   return (
@@ -91,15 +76,15 @@ const Navbar: React.FC<NavbarProps> = ({
         initial={{ y: 0 }}
         animate={{ y: isVisible ? 0 : -100 }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
-        className={`fixed top-0 w-full z-50 transition-all duration-300 ${isAtTop && !isMobileMenuOpen ? 'bg-gradient-to-b from-nearblack/90 to-transparent' : 'bg-nearblack/95 backdrop-blur-xl border-b border-white/5 shadow-lg'}`}
+        className={`fixed top-0 w-full z-[60] transition-all duration-300 ${isAtTop && !isMobileMenuOpen ? 'bg-gradient-to-b from-nearblack/90 to-transparent' : 'bg-nearblack/95 backdrop-blur-xl border-b border-white/5 shadow-lg'}`}
       >
         <div className="max-w-[1920px] mx-auto px-4 md:px-12">
           <div className="h-16 md:h-20 flex items-center justify-between">
             <div className="flex items-center gap-4 lg:gap-12">
-              {/* Hamburger Menu Button (Mobile) */}
+              {/* Hamburger Button (Mobile) */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="lg:hidden text-white p-2 focus:outline-none z-[60] relative"
+                className="lg:hidden text-white p-2 focus:outline-none transition-transform active:scale-90"
                 aria-label="Toggle menu"
               >
                 <div className="w-6 flex flex-col items-start gap-1.5">
@@ -113,10 +98,8 @@ const Navbar: React.FC<NavbarProps> = ({
                 <BrandLogo className="h-8 md:h-10 w-auto text-white hover:opacity-80 transition-opacity" />
               </Link>
               
-              {/* Desktop Navigation Group */}
+              {/* Desktop Nav */}
               <div className="hidden lg:flex items-center space-x-6">
-                
-                {/* Primary Tabs */}
                 {primaryTabs.map((tab) => (
                   <Link 
                     key={tab.path}
@@ -130,7 +113,7 @@ const Navbar: React.FC<NavbarProps> = ({
                   </Link>
                 ))}
 
-                {/* Explore Dropdown */}
+                {/* Explore Dropdown Desktop */}
                 <div 
                   className="relative h-full flex items-center group"
                   onMouseEnter={() => setActiveDropdown('explore')}
@@ -144,24 +127,20 @@ const Navbar: React.FC<NavbarProps> = ({
                     Explore
                     <svg className={`w-3 h-3 transition-transform duration-200 ${activeDropdown === 'explore' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                   </button>
-                  
                   <AnimatePresence>
                     {activeDropdown === 'explore' && (
                       <motion.div 
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
-                        transition={{ duration: 0.2 }}
-                        className="absolute top-full left-0 mt-2 w-48 bg-charcoal border border-white/10 rounded-xl shadow-2xl py-2 overflow-hidden ring-1 ring-black/5"
+                        className="absolute top-full left-0 mt-2 w-48 bg-charcoal border border-white/10 rounded-xl shadow-2xl py-2 overflow-hidden"
                       >
                         {exploreDropdown.map(item => (
                           <Link
                             key={item.path}
                             to={item.path}
                             onClick={handleNavClick}
-                            className={`block px-4 py-3 text-sm transition-colors ${
-                              isLinkActive(item.path) ? 'text-accent-green font-bold bg-white/5' : 'text-muted hover:text-white hover:bg-white/5'
-                            }`}
+                            className={`block px-4 py-3 text-sm ${isLinkActive(item.path) ? 'text-accent-green font-bold bg-white/5' : 'text-muted hover:text-white hover:bg-white/5'}`}
                           >
                             {item.name}
                           </Link>
@@ -171,7 +150,7 @@ const Navbar: React.FC<NavbarProps> = ({
                   </AnimatePresence>
                 </div>
 
-                {/* More Dropdown */}
+                {/* More Dropdown Desktop */}
                 <div 
                   className="relative h-full flex items-center group"
                   onMouseEnter={() => setActiveDropdown('more')}
@@ -185,24 +164,20 @@ const Navbar: React.FC<NavbarProps> = ({
                     More
                     <svg className={`w-3 h-3 transition-transform duration-200 ${activeDropdown === 'more' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                   </button>
-                  
                   <AnimatePresence>
                     {activeDropdown === 'more' && (
                       <motion.div 
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
-                        transition={{ duration: 0.2 }}
-                        className="absolute top-full left-0 mt-2 w-48 bg-charcoal border border-white/10 rounded-xl shadow-2xl py-2 overflow-hidden ring-1 ring-black/5"
+                        className="absolute top-full left-0 mt-2 w-48 bg-charcoal border border-white/10 rounded-xl shadow-2xl py-2 overflow-hidden"
                       >
                         {moreDropdown.map(item => (
                           <Link
                             key={item.path}
                             to={item.path}
                             onClick={handleNavClick}
-                            className={`block px-4 py-3 text-sm transition-colors ${
-                              isLinkActive(item.path) ? 'text-accent-green font-bold bg-white/5' : 'text-muted hover:text-white hover:bg-white/5'
-                            }`}
+                            className={`block px-4 py-3 text-sm ${isLinkActive(item.path) ? 'text-accent-green font-bold bg-white/5' : 'text-muted hover:text-white hover:bg-white/5'}`}
                           >
                             {item.name}
                           </Link>
@@ -214,7 +189,6 @@ const Navbar: React.FC<NavbarProps> = ({
               </div>
             </div>
 
-            {/* Right Side Actions */}
             <div className="flex items-center space-x-4 md:space-x-6">
               <button 
                 onClick={onSearchOpen}
@@ -226,7 +200,6 @@ const Navbar: React.FC<NavbarProps> = ({
                 </svg>
               </button>
 
-              {/* Subscription Button - Desktop Only */}
               <Link 
                 to="/subscription" 
                 onClick={handleNavClick}
@@ -244,20 +217,18 @@ const Navbar: React.FC<NavbarProps> = ({
                     J
                   </div>
                 </button>
-
                 <AnimatePresence>
                   {isProfileOpen && (
                     <motion.div 
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-3 w-56 bg-charcoal border border-white/10 rounded-xl shadow-2xl py-2 overflow-hidden ring-1 ring-black/5 origin-top-right z-50"
+                      className="absolute right-0 mt-3 w-56 bg-charcoal border border-white/10 rounded-xl shadow-2xl py-2 overflow-hidden z-50"
                     >
                       <div className="px-4 py-3 border-b border-white/5 bg-white/5">
                         <p className="text-sm font-bold text-white">Joy</p>
                         <p className="text-xs text-muted">Premium Member</p>
                       </div>
-                      
                       <button className="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 transition-colors border-t border-white/5 font-medium flex items-center gap-3">
                            Sign Out
                       </button>
@@ -270,65 +241,70 @@ const Navbar: React.FC<NavbarProps> = ({
         </div>
       </motion.nav>
 
-      {/* Mobile Menu Overlay */}
+      {/* Full-Screen Mobile Menu Overlay */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <>
-             <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="fixed inset-0 bg-nearblack z-40 lg:hidden overflow-hidden flex flex-col pt-20"
-             >
-               <motion.div
-                 initial={{ opacity: 0, y: 20 }}
-                 animate={{ opacity: 1, y: 0 }}
-                 exit={{ opacity: 0, y: 20 }}
-                 transition={{ delay: 0.1, duration: 0.4 }}
-                 className="flex-1 overflow-y-auto px-6 pb-24"
-               >
-                 <div className="flex flex-col space-y-2">
-                   {mobileLinks.map((link, index) => (
-                     <React.Fragment key={link.path}>
-                        {/* Add dividers between logical groups roughly based on provided list */}
-                        {index === 3 && <div className="h-px bg-white/5 my-2" />}
-                        {index === 6 && <div className="h-px bg-white/5 my-2" />}
-                        {index === 8 && <div className="h-px bg-white/5 my-2" />}
-                        
-                        <Link
-                          to={link.path}
-                          onClick={handleNavClick}
-                          className={`flex items-center justify-between px-4 py-4 rounded-xl text-lg transition-all ${
-                            isLinkActive(link.path)
-                              ? 'bg-white/10 text-accent-green font-bold'
-                              : 'text-white/80 hover:bg-white/5 hover:text-white'
-                          }`}
-                        >
-                          <span>{link.name}</span>
-                          {isLinkActive(link.path) && (
-                            <motion.div
-                              layoutId="active-pill"
-                              className="w-2 h-2 rounded-full bg-accent-green"
-                            />
-                          )}
-                        </Link>
-                     </React.Fragment>
-                   ))}
-                   
-                   <div className="pt-6 mt-4">
-                      <Link
-                         to="/subscription"
-                         onClick={handleNavClick}
-                         className="block w-full text-center bg-accent-gold text-black font-bold py-4 rounded-xl text-lg shadow-lg"
-                      >
-                         Subscribe Now
-                      </Link>
-                   </div>
-                 </div>
-               </motion.div>
-             </motion.div>
-          </>
+          <motion.div
+            initial={{ opacity: 0, x: '100%' }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed inset-0 z-[100] bg-nearblack overflow-hidden flex flex-col"
+          >
+            {/* Header Area */}
+            <div className="h-20 px-6 flex items-center justify-between border-b border-white/5 bg-nearblack/80 backdrop-blur-md">
+              <button 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-2 text-white/70 hover:text-white transition-colors active:scale-90"
+              >
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <BrandLogo className="h-8 w-auto" />
+              <div className="w-10" /> {/* Spacer */}
+            </div>
+
+            {/* Scrollable Links */}
+            <div className="flex-1 overflow-y-auto px-6 py-8 pb-32">
+              <div className="flex flex-col space-y-4">
+                {mobileLinks.map((link, idx) => (
+                  <motion.div
+                    key={link.path}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                  >
+                    <Link
+                      to={link.path}
+                      onClick={handleNavClick}
+                      className={`flex items-center space-x-5 px-4 py-4 rounded-2xl transition-all duration-300 ${
+                        isLinkActive(link.path) 
+                          ? 'bg-white/10 text-accent-green' 
+                          : 'text-white/80 hover:bg-white/5 active:bg-white/10'
+                      }`}
+                    >
+                      <span className="text-2xl">{link.emoji}</span>
+                      <span className={`text-xl font-bold tracking-tight ${isLinkActive(link.path) ? 'text-accent-green' : 'text-white'}`}>
+                        {link.name}
+                      </span>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            {/* Fixed CTA Area */}
+            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-nearblack via-nearblack to-transparent">
+              <Link
+                to="/subscription"
+                onClick={handleNavClick}
+                className="flex items-center justify-center w-full bg-accent-gold text-black py-5 rounded-2xl text-xl font-black shadow-[0_8px_32px_rgba(191,160,90,0.3)] transform transition-transform active:scale-95"
+              >
+                Subscribe Now
+              </Link>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </>
