@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { db } from '../config/firebase';
 import { 
@@ -12,7 +13,7 @@ import {
   doc,
   increment,
   Timestamp
-} from 'firebase/firestore';
+} from 'https://esm.sh/firebase@^10.8.0/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface FeedbackSectionProps {
@@ -42,7 +43,10 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
 
   // Subscribe to comments for this movie
   useEffect(() => {
-    if (!db) return;
+    if (!db) {
+        console.warn("Firestore not configured. Feedback will be disabled.");
+        return;
+    }
 
     try {
       const q = query(
@@ -58,12 +62,12 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
         })) as Comment[];
         setComments(loadedComments);
       }, (err) => {
-        console.error("Firebase error:", err);
+        console.error("Firebase subscription error:", err);
       });
 
       return () => unsubscribe();
     } catch (e) {
-      console.error("Error setting up listener", e);
+      console.error("Error setting up Firestore listener:", e);
     }
   }, [movieId]);
 
@@ -71,6 +75,11 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
     e.preventDefault();
     setError('');
     
+    if (!db) {
+        setError('Feedback system is currently offline (Firebase not configured).');
+        return;
+    }
+
     if (!userName.trim() || !commentText.trim()) {
       setError('Please fill in both name and comment.');
       return;
@@ -93,19 +102,18 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
       });
       setCommentText(''); // Clear input after successful post
     } catch (err: any) {
-      console.error(err);
-      setError('Failed to post comment. Check connection.');
+      console.error("Error adding comment:", err);
+      setError('Failed to post comment. Check your connection.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleReaction = async (commentId: string, type: 'like' | 'love' | 'funny' | 'crocodile') => {
+    if (!db) return;
+
     const storageKey = `reacted_${commentId}`;
-    if (localStorage.getItem(storageKey)) {
-      // User already reacted to this comment
-      return;
-    }
+    if (localStorage.getItem(storageKey)) return;
 
     try {
       const commentRef = doc(db, 'comments', commentId);
@@ -120,13 +128,17 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
 
   const formatDate = (timestamp: Timestamp | null) => {
     if (!timestamp) return 'Just now';
-    const date = timestamp.toDate();
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
+    try {
+        const date = timestamp.toDate();
+        return new Intl.DateTimeFormat('en-US', {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        }).format(date);
+    } catch (e) {
+        return 'Recently';
+    }
   };
 
   return (
@@ -144,7 +156,7 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
               placeholder="Your Name"
               value={userName}
               onChange={(e) => setUserName(e.target.value)}
-              className="w-full bg-nearblack border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-accent-green transition-colors"
+              className="w-full bg-nearblack border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-accent-green transition-all"
               maxLength={20}
             />
           </div>
@@ -154,7 +166,7 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
               placeholder="Share your thoughts on this title..."
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
-              className="w-full bg-nearblack border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-accent-green transition-colors"
+              className="w-full bg-nearblack border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-accent-green transition-all"
               maxLength={200}
             />
           </div>
@@ -168,7 +180,7 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
             className={`px-8 py-2 rounded-lg font-bold transition-all flex items-center gap-2 ${
               isSubmitting 
                 ? 'bg-white/10 text-white/50 cursor-not-allowed' 
-                : 'bg-accent-green text-white hover:bg-opacity-90'
+                : 'bg-accent-green text-white hover:bg-opacity-90 active:scale-95'
             }`}
           >
             {isSubmitting ? 'Posting...' : 'Post Comment'}
@@ -241,7 +253,7 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
         
         {comments.length === 0 && (
           <div className="text-center py-12 text-muted/40">
-            <p>No comments yet. Be the first to share your thoughts!</p>
+            <p>{db ? 'No comments yet. Be the first to share your thoughts!' : 'Feedback system currently unavailable.'}</p>
           </div>
         )}
       </div>

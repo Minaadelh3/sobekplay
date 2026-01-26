@@ -20,7 +20,15 @@ const WatchPlayer: React.FC<WatchPlayerProps> = ({ posters }) => {
     if (videoRef.current) {
         videoRef.current.play().catch(e => console.log("Autoplay prevented:", e));
     }
-  }, []);
+
+    // Add to continue watching list
+    if (id) {
+      const saved = JSON.parse(localStorage.getItem('sobek_continue_watching') || '[]');
+      const filtered = saved.filter((sid: string) => sid !== id);
+      const newList = [id, ...filtered].slice(0, 10);
+      localStorage.setItem('sobek_continue_watching', JSON.stringify(newList));
+    }
+  }, [id]);
 
   return (
     <div className="relative w-full h-screen bg-black overflow-hidden flex flex-col justify-center">

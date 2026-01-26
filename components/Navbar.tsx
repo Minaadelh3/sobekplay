@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import BrandLogo from './BrandLogo';
 import { useScrollDirection } from '../hooks/useScrollDirection';
+import { supabase } from '../supabaseClient';
 
 interface NavbarProps {
   onSearchOpen?: () => void;
@@ -17,6 +18,7 @@ const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [internalIsMobileMenuOpen, setInternalIsMobileMenuOpen] = useState(false);
   
   const isMobileMenuOpen = externalIsMobileMenuOpen !== undefined ? externalIsMobileMenuOpen : internalIsMobileMenuOpen;
@@ -24,14 +26,29 @@ const Navbar: React.FC<NavbarProps> = ({
   
   const { scrollDirection, isAtTop } = useScrollDirection();
   const location = useLocation();
+  const navigate = useNavigate();
   
   const isVisible = isAtTop || scrollDirection === 'up';
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleNavClick = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setActiveDropdown(null);
     setIsProfileOpen(false);
     setIsMobileMenuOpen(false);
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setIsProfileOpen(false);
+    navigate('/');
   };
 
   const isLinkActive = (path: string) => location.pathname === path;
@@ -41,6 +58,7 @@ const Navbar: React.FC<NavbarProps> = ({
     { name: 'Movies', path: '/movies' },
     { name: 'Series', path: '/series' },
     { name: 'Kids', path: '/kids' },
+    { name: 'My List', path: '/my-list' },
     { name: 'El Agpeya', path: '/prayers' },
     { name: 'Community', path: '/community' },
   ];
@@ -58,15 +76,14 @@ const Navbar: React.FC<NavbarProps> = ({
     { name: 'About', path: '/about' },
   ];
 
-  // Mobile Menu Links with Emojis
   const mobileLinks = [
     { name: 'Home', path: '/', emoji: '🏠' },
+    { name: 'My List', path: '/my-list', emoji: '🔖' },
     { name: 'El Agpeya', path: '/prayers', emoji: '❤️' },
     { name: 'Subscription', path: '/subscription', emoji: '💳' },
     { name: 'Coming Soon', path: '/coming-soon', emoji: '⏳' },
     { name: 'News', path: '/news', emoji: '📰' },
     { name: 'Community', path: '/community', emoji: '👥' },
-    { name: 'Shop', path: '/shop', emoji: '🛍️' },
     { name: 'About', path: '/about', emoji: 'ℹ️' },
   ];
 
@@ -81,7 +98,6 @@ const Navbar: React.FC<NavbarProps> = ({
         <div className="max-w-[1920px] mx-auto px-4 md:px-12">
           <div className="h-16 md:h-20 flex items-center justify-between">
             <div className="flex items-center gap-4 lg:gap-12">
-              {/* Hamburger Button (Mobile) */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="lg:hidden text-white p-2 focus:outline-none transition-transform active:scale-90"
@@ -98,7 +114,6 @@ const Navbar: React.FC<NavbarProps> = ({
                 <BrandLogo className="h-8 md:h-10 w-auto text-white hover:opacity-80 transition-opacity" />
               </Link>
               
-              {/* Desktop Nav */}
               <div className="hidden lg:flex items-center space-x-6">
                 {primaryTabs.map((tab) => (
                   <Link 
@@ -113,7 +128,6 @@ const Navbar: React.FC<NavbarProps> = ({
                   </Link>
                 ))}
 
-                {/* Explore Dropdown Desktop */}
                 <div 
                   className="relative h-full flex items-center group"
                   onMouseEnter={() => setActiveDropdown('explore')}
@@ -150,7 +164,6 @@ const Navbar: React.FC<NavbarProps> = ({
                   </AnimatePresence>
                 </div>
 
-                {/* More Dropdown Desktop */}
                 <div 
                   className="relative h-full flex items-center group"
                   onMouseEnter={() => setActiveDropdown('more')}
@@ -209,16 +222,26 @@ const Navbar: React.FC<NavbarProps> = ({
               </Link>
 
               <div className="relative">
-                <button 
-                  onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="flex items-center space-x-2 focus:outline-none group"
-                >
-                  <div className="w-8 h-8 rounded-md bg-accent-green flex items-center justify-center text-xs font-bold text-white group-hover:ring-2 ring-accent-green transition-all shadow-lg">
-                    J
-                  </div>
-                </button>
+                {user ? (
+                  <button 
+                    onClick={() => setIsProfileOpen(!isProfileOpen)}
+                    className="flex items-center space-x-2 focus:outline-none group"
+                  >
+                    <div className="w-8 h-8 rounded-md bg-accent-green flex items-center justify-center text-xs font-bold text-white group-hover:ring-2 ring-accent-green transition-all shadow-lg">
+                      {user.email?.[0].toUpperCase() || 'U'}
+                    </div>
+                  </button>
+                ) : (
+                  <Link 
+                    to="/login"
+                    className="text-sm font-bold text-white hover:text-accent-green transition-colors"
+                  >
+                    Sign In
+                  </Link>
+                )}
+                
                 <AnimatePresence>
-                  {isProfileOpen && (
+                  {isProfileOpen && user && (
                     <motion.div 
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -226,10 +249,14 @@ const Navbar: React.FC<NavbarProps> = ({
                       className="absolute right-0 mt-3 w-56 bg-charcoal border border-white/10 rounded-xl shadow-2xl py-2 overflow-hidden z-50"
                     >
                       <div className="px-4 py-3 border-b border-white/5 bg-white/5">
-                        <p className="text-sm font-bold text-white">Joy</p>
+                        <p className="text-sm font-bold text-white truncate">{user.email}</p>
                         <p className="text-xs text-muted">Premium Member</p>
                       </div>
-                      <button className="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 transition-colors border-t border-white/5 font-medium flex items-center gap-3">
+                      <Link to="/my-list" onClick={handleNavClick} className="block px-4 py-3 text-sm text-white hover:bg-white/5 transition-colors">My List</Link>
+                      <button 
+                        onClick={handleSignOut}
+                        className="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 transition-colors border-t border-white/5 font-medium flex items-center gap-3"
+                      >
                            Sign Out
                       </button>
                     </motion.div>
@@ -251,7 +278,6 @@ const Navbar: React.FC<NavbarProps> = ({
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed inset-0 z-[100] bg-nearblack overflow-hidden flex flex-col"
           >
-            {/* Header Area */}
             <div className="h-20 px-6 flex items-center justify-between border-b border-white/5 bg-nearblack/80 backdrop-blur-md">
               <button 
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -262,10 +288,9 @@ const Navbar: React.FC<NavbarProps> = ({
                 </svg>
               </button>
               <BrandLogo className="h-8 w-auto" />
-              <div className="w-10" /> {/* Spacer */}
+              <div className="w-10" />
             </div>
 
-            {/* Scrollable Links */}
             <div className="flex-1 overflow-y-auto px-6 py-8 pb-32">
               <div className="flex flex-col space-y-4">
                 {mobileLinks.map((link, idx) => (
@@ -291,10 +316,20 @@ const Navbar: React.FC<NavbarProps> = ({
                     </Link>
                   </motion.div>
                 ))}
+                
+                {!user && (
+                   <Link
+                      to="/login"
+                      onClick={handleNavClick}
+                      className="flex items-center space-x-5 px-4 py-4 rounded-2xl text-white/80 hover:bg-white/5"
+                    >
+                      <span className="text-2xl">🔑</span>
+                      <span className="text-xl font-bold tracking-tight">Login / Register</span>
+                    </Link>
+                )}
               </div>
             </div>
 
-            {/* Fixed CTA Area */}
             <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-nearblack via-nearblack to-transparent">
               <Link
                 to="/subscription"

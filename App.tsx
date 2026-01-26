@@ -29,14 +29,21 @@ import SeriesPage from './pages/SeriesPage';
 import KidsPage from './pages/KidsPage';
 import MenuPage from './pages/MenuPage';
 import MyListPage from './pages/MyListPage';
+import LoginPage from './pages/LoginPage';
 import { motion } from 'framer-motion';
 import SobekChatbot from './components/SobekChatbot';
 import ScrollToTop from './components/ScrollToTop';
 
 const Home: React.FC<{ posters: any[] }> = ({ posters }) => {
+  const [continueWatchingIds, setContinueWatchingIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    const saved = JSON.parse(localStorage.getItem('sobek_continue_watching') || '[]');
+    setContinueWatchingIds(saved);
+  }, []);
+
   const rows = useMemo(() => {
-    // Mocks for a production feel
-    const continueWatching = posters.slice(3, 7);
+    const continueWatching = posters.filter(p => continueWatchingIds.includes(p.id));
     const sobekExclusives = posters.filter(p => p.isOriginal);
     
     const topEgyptianContent = posters.filter(p => {
@@ -50,7 +57,7 @@ const Home: React.FC<{ posters: any[] }> = ({ posters }) => {
     }).sort((a, b) => (b.metrics?.impactScore || 0) - (a.metrics?.impactScore || 0)).slice(0, 10);
 
     return [
-      { title: "Continue Watching", items: continueWatching },
+      ...(continueWatching.length > 0 ? [{ title: "Continue Watching", items: continueWatching }] : []),
       { title: "Sobek Exclusives", items: sobekExclusives },
       { title: "Top in Egypt", items: topEgyptianContent },
       { title: "Action & Chaos", items: posters.filter(p => p.metrics && p.metrics.edgeDensity > 0.6 && p.metrics.contrast > 0.5) },
@@ -58,7 +65,7 @@ const Home: React.FC<{ posters: any[] }> = ({ posters }) => {
       { title: "Egyptian Classics Reimagined", items: posters.filter(p => p.isClassic && !p.isOriginal && !p.title.toLowerCase().includes('harry')) },
       { title: "Coming Soon", items: posters.filter(p => p.isComingSoon) },
     ];
-  }, [posters]);
+  }, [posters, continueWatchingIds]);
 
   return (
     <div className="pb-24">
@@ -141,17 +148,18 @@ const MainLayout: React.FC = () => {
 
   const isWatchPage = location.pathname.startsWith('/watch/');
   const isAgpeyaPage = location.pathname === '/prayers';
+  const isLoginPage = location.pathname === '/login';
 
   return (
     <div className="min-h-screen selection:bg-accent-green selection:text-white">
-      {!isWatchPage && (
+      {!isWatchPage && !isLoginPage && (
         <Navbar 
           onSearchOpen={() => setIsSearchOpen(true)} 
           isMobileMenuOpen={isMobileMenuOpen} 
           setIsMobileMenuOpen={setIsMobileMenuOpen} 
         />
       )}
-      {!isWatchPage && (
+      {!isWatchPage && !isLoginPage && (
         <MobileBottomNav 
           onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           isMenuOpen={isMobileMenuOpen}
@@ -164,9 +172,10 @@ const MainLayout: React.FC = () => {
         posters={analyzedPosters} 
       />
       
-      <main className={!isWatchPage ? "pt-0" : ""}>
+      <main className={!isWatchPage && !isLoginPage ? "pt-0" : ""}>
         <Routes>
           <Route path="/" element={<Home posters={analyzedPosters} />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/movies" element={<MoviesPage posters={analyzedPosters} />} />
           <Route path="/series" element={<SeriesPage posters={analyzedPosters} />} />
           <Route path="/kids" element={<KidsPage posters={analyzedPosters} />} />
@@ -192,8 +201,8 @@ const MainLayout: React.FC = () => {
         </Routes>
       </main>
       
-      <SobekChatbot isHidden={isMobileMenuOpen || isWatchPage || isAgpeyaPage} />
-      {!isWatchPage && <Footer />}
+      <SobekChatbot isHidden={isMobileMenuOpen || isWatchPage || isAgpeyaPage || isLoginPage} />
+      {!isWatchPage && !isLoginPage && <Footer />}
     </div>
   );
 };

@@ -1,9 +1,7 @@
 
-import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { initializeApp, getApps } from "https://esm.sh/firebase@^10.8.0/app";
+import { getFirestore } from "https://esm.sh/firebase@^10.8.0/firestore";
 
-// TODO: Replace the following config with your Firebase project configuration
-// You can find this in the Firebase Console -> Project Settings -> General -> Your apps
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
@@ -13,6 +11,20 @@ const firebaseConfig = {
   appId: "YOUR_APP_ID"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+const isPlaceholder = (val?: string) => !val || val.includes('YOUR_') || val.includes('PROJECT_ID');
+
+const isConfigured = !isPlaceholder(firebaseConfig.apiKey) && !isPlaceholder(firebaseConfig.projectId);
+
+let app;
+let db: any = null;
+
+if (isConfigured) {
+  try {
+    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+    db = getFirestore(app);
+  } catch (e) {
+    console.error("Firebase initialization failed:", e);
+  }
+}
+
+export { db };
