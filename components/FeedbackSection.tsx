@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { db } from '../config/firebase';
 import { 
@@ -23,9 +22,9 @@ interface FeedbackSectionProps {
 interface Comment {
   id: string;
   movieId: string;
-  name: string;
-  text: string;
-  createdAt: Timestamp | null;
+  userName: string;
+  commentText: string;
+  timestamp: Timestamp | null;
   reactions: {
     like: number;
     love: number;
@@ -35,8 +34,8 @@ interface Comment {
 
 const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
   const [comments, setComments] = useState<Comment[]>([]);
-  const [name, setName] = useState('');
-  const [text, setText] = useState('');
+  const [userName, setUserName] = useState('');
+  const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -48,7 +47,7 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
       const q = query(
         collection(db, 'comments'),
         where('movieId', '==', movieId),
-        orderBy('createdAt', 'desc')
+        orderBy('timestamp', 'asc')
       );
 
       const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -59,10 +58,6 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
         setComments(loadedComments);
       }, (err) => {
         console.error("Firebase error:", err);
-        // Fail silently or show UI error if config is missing
-        if (err.code === 'permission-denied' || err.code === 'failed-precondition') {
-             // Likely missing config or indexes
-        }
       });
 
       return () => unsubscribe();
@@ -75,7 +70,7 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
     e.preventDefault();
     setError('');
     
-    if (!name.trim() || !text.trim()) {
+    if (!userName.trim() || !commentText.trim()) {
       setError('Please fill in both name and comment.');
       return;
     }
@@ -85,24 +80,19 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
     try {
       await addDoc(collection(db, 'comments'), {
         movieId,
-        name: name.trim(),
-        text: text.trim(),
-        createdAt: serverTimestamp(),
+        userName: userName.trim(),
+        commentText: commentText.trim(),
+        timestamp: serverTimestamp(),
         reactions: {
           like: 0,
           love: 0,
           funny: 0
         }
       });
-      setText('');
-      // Keep name for convenience
+      setCommentText('');
     } catch (err: any) {
       console.error(err);
-      if (err.code === 'unavailable' || err.message.includes('api key')) {
-         setError('Database not configured. Please check config/firebase.ts');
-      } else {
-         setError('Failed to post comment. Try again.');
-      }
+      setError('Failed to post comment. Check connection.');
     } finally {
       setIsSubmitting(false);
     }
@@ -112,7 +102,6 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
     const storageKey = `reacted_${commentId}`;
     if (localStorage.getItem(storageKey)) {
       // User already reacted to this comment
-      // Optional: Add UI feedback like a shake animation
       return;
     }
 
@@ -151,8 +140,8 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
             <input
               type="text"
               placeholder="Your Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
               className="w-full bg-nearblack border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-accent-green transition-colors"
               maxLength={20}
             />
@@ -161,8 +150,8 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
             <input
               type="text"
               placeholder="Share your thoughts on this title..."
-              value={text}
-              onChange={(e) => setText(e.target.value)}
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
               className="w-full bg-nearblack border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-accent-green transition-colors"
               maxLength={200}
             />
@@ -200,17 +189,17 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
               <div className="flex justify-between items-start mb-2">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent-green to-accent-gold flex items-center justify-center text-xs font-bold text-white">
-                    {comment.name.charAt(0).toUpperCase()}
+                    {comment.userName.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <span className="font-bold text-white block leading-none">{comment.name}</span>
-                    <span className="text-xs text-muted">{formatDate(comment.createdAt)}</span>
+                    <span className="font-bold text-white block leading-none">{comment.userName}</span>
+                    <span className="text-xs text-muted">{formatDate(comment.timestamp)}</span>
                   </div>
                 </div>
               </div>
 
               <p className="text-white/90 leading-relaxed mb-4 pl-11">
-                {comment.text}
+                {comment.commentText}
               </p>
 
               {/* Reactions */}
