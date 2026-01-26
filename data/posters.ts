@@ -11,6 +11,7 @@ import { descriptionMap } from './descriptions';
 // ============================================================================
 
 const filenames = [
+  "sobek_universe_cover.png", // New Cover Photo (3968x1152)
   "bakkar.png", 
   "crocodile_gangster.png", 
   "grand_hotel.png", 
@@ -58,6 +59,7 @@ const humanize = (filename: string): string => {
   const base = filename.replace(/\.[^/.]+$/, ""); // Remove extension
   
   const manualMap: Record<string, string> = {
+    "sobek_universe_cover": "Sobek Universe",
     "bakkar": "مسلسل بكار",
     "ismail_yassin_army": "اسماعيل ياسين فى الجيش",
     "el_khaleya": "الخلية",
@@ -132,7 +134,7 @@ export const posters: PosterItem[] = filenames.map((filename) => {
     title: title,
     description: descriptionMap[title] || "Experience the journey along the Nile.",
     type: determineType(filename),
-    isOriginal: filename.toLowerCase().includes('sobek') || filename.toLowerCase().includes('teaser') || filename.toLowerCase().includes('return') || filename.toLowerCase().includes('guardians'),
+    isOriginal: filename.toLowerCase().includes('sobek') || filename.toLowerCase().includes('teaser') || filename.toLowerCase().includes('return') || filename.toLowerCase().includes('guardians') || filename.includes('universe'),
     isComingSoon: filename.toLowerCase().includes('soon') || filename.toLowerCase().includes('coming'),
     isClassic: /[\u0600-\u06FF]/.test(title) || filename.includes('classic') || filename.includes('masr') || filename.includes('army') || filename.includes('nil') || filename.includes('cairo')
   };

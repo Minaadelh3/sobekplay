@@ -13,10 +13,21 @@ const Hero: React.FC<HeroProps> = ({ posters }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const navigate = useNavigate();
 
-  const heroPosters = posters
-    .filter(p => (p.metrics?.impactScore || 0) > 0.4 && (p.metrics?.brightness || 0) > 0.2)
+  // Logic: 
+  // 1. Find the specific "Cover" image (sobek_universe_cover)
+  // 2. Select other high-impact posters
+  // 3. Combine them, putting the cover first
+  
+  const coverPoster = posters.find(p => p.id === 'sobek_universe_cover');
+  
+  const otherHighImpactPosters = posters
+    .filter(p => p.id !== 'sobek_universe_cover' && (p.metrics?.impactScore || 0) > 0.4 && (p.metrics?.brightness || 0) > 0.2)
     .sort((a, b) => (b.metrics?.impactScore || 0) - (a.metrics?.impactScore || 0))
     .slice(0, 3);
+
+  const heroPosters = coverPoster 
+    ? [coverPoster, ...otherHighImpactPosters.slice(0, 2)] 
+    : otherHighImpactPosters;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -43,7 +54,7 @@ const Hero: React.FC<HeroProps> = ({ posters }) => {
           <ImageWithFallback 
             src={active.src} 
             alt={active.title} 
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-top" // object-top ensures the top part of the image (often faces/logos) isn't cut off if dimensions mismatch
           />
           <div className="absolute inset-0 bg-gradient-to-r from-nearblack via-nearblack/40 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-t from-nearblack via-transparent to-transparent" />

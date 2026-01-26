@@ -1,7 +1,7 @@
-
 import React, { useMemo, useState } from 'react';
 import { HashRouter as Router, Routes, Route, useLocation, Link } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import MobileBottomNav from './components/MobileBottomNav';
 import Hero from './components/Hero';
 import Carousel from './components/Carousel';
 import SearchModal from './components/SearchModal';
@@ -23,6 +23,10 @@ import HelpPage from './pages/HelpPage';
 import PhotosPage from './pages/PhotosPage';
 import ImageGenPage from './pages/ImageGenPage';
 import VeoPage from './pages/VeoPage';
+import MoviesPage from './pages/MoviesPage';
+import SeriesPage from './pages/SeriesPage';
+import KidsPage from './pages/KidsPage';
+import MenuPage from './pages/MenuPage';
 import { motion } from 'framer-motion';
 import BrandLogo from './components/BrandLogo';
 import SobekChatbot from './components/SobekChatbot';
@@ -30,27 +34,18 @@ import ScrollToTop from './components/ScrollToTop';
 
 const Home: React.FC<{ posters: any[] }> = ({ posters }) => {
   const rows = useMemo(() => {
-    // Filter strictly for Egyptian content
     const topEgyptianContent = posters.filter(p => {
         const t = p.title.toLowerCase();
         const f = p.filename.toLowerCase();
-
-        // 1. Explicitly Exclude International IPs
         if (t.includes('harry potter') || t.includes('lord of rings') || t.includes('la casa')) return false;
-
-        // 2. Exclude Sobek Originals (Platform branding/Fantasy)
         if (p.isOriginal || t.includes('sobek')) return false;
-
-        // 3. Inclusion Criteria: Arabic Titles OR Known Egyptian Productions
         const hasArabic = /[\u0600-\u06FF]/.test(p.title);
         const knownEgyptianFiles = ['grand_hotel', 'crocodile_gangster', 'project_x', 'nubanji', 'bakkar'];
-        
         return hasArabic || knownEgyptianFiles.some(k => f.includes(k));
     }).sort((a, b) => (b.metrics?.impactScore || 0) - (a.metrics?.impactScore || 0)).slice(0, 10);
 
     return [
       { title: "Top in Egypt", items: topEgyptianContent },
-      // Removed "Sobek Originals" row as requested previously
       { title: "Action & Chaos", items: posters.filter(p => p.metrics && p.metrics.edgeDensity > 0.6 && p.metrics.contrast > 0.5) },
       { title: "Crime & Power", items: posters.filter(p => p.metrics && p.metrics.brightness < 0.4 && p.metrics.contrast > 0.6) },
       { title: "Epic Worlds & Magic", items: posters.filter(p => p.metrics && p.metrics.saturation > 0.7) },
@@ -74,7 +69,7 @@ const Home: React.FC<{ posters: any[] }> = ({ posters }) => {
 };
 
 const Footer: React.FC = () => (
-  <footer className="py-8 bg-nearblack border-t border-white/5 w-full relative z-10">
+  <footer className="py-8 bg-nearblack border-t border-white/5 w-full relative z-10 mb-16 md:mb-0">
     <div className="flex justify-center items-center gap-8">
       {/* Facebook */}
       <a 
@@ -133,17 +128,20 @@ const MainLayout: React.FC = () => {
   return (
     <div className="min-h-screen selection:bg-accent-green selection:text-white">
       {!isWatchPage && <Navbar onSearchOpen={() => setIsSearchOpen(true)} />}
+      {!isWatchPage && <MobileBottomNav />}
+      
       <SearchModal 
         isOpen={isSearchOpen} 
         onClose={() => setIsSearchOpen(false)} 
         posters={analyzedPosters} 
       />
+      
       <main className={!isWatchPage ? "pt-0" : ""}>
         <Routes>
           <Route path="/" element={<Home posters={analyzedPosters} />} />
-          <Route path="/movies" element={<Home posters={analyzedPosters.filter(p => !p.title.includes('مسلسل'))} />} />
-          <Route path="/series" element={<Home posters={analyzedPosters.filter(p => p.title.includes('مسلسل'))} />} />
-          <Route path="/kids" element={<Home posters={analyzedPosters.filter(p => p.metrics && p.metrics.brightness > 0.6)} />} />
+          <Route path="/movies" element={<MoviesPage posters={analyzedPosters} />} />
+          <Route path="/series" element={<SeriesPage posters={analyzedPosters} />} />
+          <Route path="/kids" element={<KidsPage posters={analyzedPosters} />} />
           <Route path="/coming-soon" element={<Home posters={analyzedPosters.filter(p => p.isComingSoon)} />} />
           <Route path="/title/:id" element={<TitleDetails posters={analyzedPosters} />} />
           <Route path="/watch/:id" element={<WatchPlayer posters={analyzedPosters} />} />
@@ -161,8 +159,10 @@ const MainLayout: React.FC = () => {
           <Route path="/gallery" element={<PhotosPage />} />
           <Route path="/art" element={<ImageGenPage />} />
           <Route path="/veo" element={<VeoPage />} />
+          <Route path="/menu" element={<MenuPage />} />
         </Routes>
       </main>
+      
       <SobekChatbot />
       {!isWatchPage && <Footer />}
     </div>
