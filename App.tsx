@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import MobileBottomNav from './components/MobileBottomNav';
@@ -125,6 +125,63 @@ const VerseOfTheDay: React.FC = () => {
   );
 };
 
+const RemindersRow: React.FC = () => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const reminders = [
+    { text: "متنساش القبعة 🧢", bg: "from-blue-900/40 to-blue-800/40" },
+    { text: "كريم الشمس هيفرق قوي 🌞", bg: "from-orange-500/20 to-yellow-500/20" },
+    { text: "جزمة مريحة = يوم أحسن 👟", bg: "from-green-500/20 to-emerald-500/20" },
+    { text: "الهوا بالليل على النيل تحفة 🌊", bg: "from-blue-600/20 to-cyan-500/20" },
+    { text: "الجو حر شوية بس المزاج عالي 😎", bg: "from-yellow-600/20 to-orange-500/20" },
+    { text: "نضحك أكتر ونسيب أي توتر ورا ✨", bg: "from-purple-500/20 to-pink-500/20" },
+    { text: "الرحلة أحلى وإحنا مع بعض 🤍", bg: "from-rose-500/20 to-red-500/20" },
+    { text: "خدها بهدوووء… إحنا في فسحة", bg: "from-indigo-500/20 to-violet-500/20" },
+    { text: "صور كتير… بس عيش اللحظة كمان 📸", bg: "from-teal-500/20 to-cyan-500/20" },
+    { text: "اسأل، شارك، متتكسفش 😉", bg: "from-fuchsia-500/20 to-purple-500/20" },
+  ];
+
+  // Randomize on mount (simple shuffle)
+  const shuffledReminders = useMemo(() => {
+    return [...reminders].sort(() => Math.random() - 0.5);
+  }, []);
+
+  return (
+    <div className="mb-8 relative group px-4 md:px-12 mt-8 z-30">
+      <div className="flex items-center gap-2 mb-4">
+        <h2 className="text-xl md:text-2xl font-bold text-white">تنبيهات 🧳✨</h2>
+      </div>
+
+      <div className="relative">
+        <div
+          ref={scrollRef}
+          className="flex space-x-4 overflow-x-auto scrollbar-hide snap-x pb-4"
+          dir="rtl"
+        >
+          {shuffledReminders.map((item, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: idx * 0.1 }}
+              className={`snap-start flex-shrink-0 w-64 md:w-72 h-32 rounded-2xl bg-gradient-to-br ${item.bg} border border-white/10 backdrop-blur-sm p-5 flex flex-col justify-center items-center text-center cursor-default hover:scale-105 transition-transform duration-300 relative overflow-hidden group/card`}
+            >
+              <div className="absolute inset-0 bg-white/5 opacity-0 group-hover/card:opacity-100 transition-opacity" />
+              <p className="text-lg md:text-xl font-medium text-white/90 leading-relaxed font-arabic">
+                {item.text}
+              </p>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Subtle fade masks for scroll indication */}
+        <div className="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-nearblack to-transparent pointer-events-none md:hidden" />
+        <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-nearblack to-transparent pointer-events-none md:hidden" />
+      </div>
+    </div>
+  );
+};
+
 const Home: React.FC<{ posters: any[] }> = ({ posters }) => {
   const rows = useMemo(() => {
     // Mocks for a production feel
@@ -159,7 +216,10 @@ const Home: React.FC<{ posters: any[] }> = ({ posters }) => {
       {/* Verse of the Day Injection */}
       <VerseOfTheDay />
 
-      <div className="relative z-20 -mt-12 md:-mt-24 space-y-12">
+      {/* Friendly Reminders Section */}
+      <RemindersRow />
+
+      <div className="relative z-20 -mt-8 md:-mt-12 space-y-12">
         {rows.map((row) => (
           <Carousel key={row.title} title={row.title} posters={row.items} />
         ))}
