@@ -267,7 +267,7 @@ const Navbar: React.FC<NavbarProps> = ({
               </div>
 
               {/* Scrollable Links */}
-              <div className="flex-1 overflow-y-auto px-6 py-4 pb-24">
+              <div className="flex-1 overflow-y-auto px-6 py-4 pb-32">
                 <div className="grid grid-cols-1 gap-2">
                   {mobileLinks.map((link, idx) => (
                     <Link
@@ -275,8 +275,8 @@ const Navbar: React.FC<NavbarProps> = ({
                       to={link.path}
                       onClick={handleNavClick}
                       className={`flex items-center space-x-4 px-4 py-4 rounded-xl transition-all ${isLinkActive(link.path)
-                          ? 'bg-accent-green/10 text-accent-green border border-accent-green/20'
-                          : 'text-white/80 hover:bg-white/5 active:bg-white/10 border border-transparent'
+                        ? 'bg-accent-green/10 text-accent-green border border-accent-green/20'
+                        : 'text-white/80 hover:bg-white/5 active:bg-white/10 border border-transparent'
                         }`}
                     >
                       <span className="text-xl">{link.emoji}</span>
