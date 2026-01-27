@@ -3,6 +3,8 @@ import React, { useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PosterItem } from '../types';
 
+import { useSession } from '../components/SessionProvider';
+
 interface WatchPlayerProps {
   posters: PosterItem[];
 }
@@ -10,6 +12,7 @@ interface WatchPlayerProps {
 const WatchPlayer: React.FC<WatchPlayerProps> = ({ posters }) => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addToRecentlyWatched } = useSession();
   const poster = posters.find(p => p.id === id);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -23,10 +26,7 @@ const WatchPlayer: React.FC<WatchPlayerProps> = ({ posters }) => {
 
     // Add to continue watching list
     if (id) {
-      const saved = JSON.parse(localStorage.getItem('sobek_continue_watching') || '[]');
-      const filtered = saved.filter((sid: string) => sid !== id);
-      const newList = [id, ...filtered].slice(0, 10);
-      localStorage.setItem('sobek_continue_watching', JSON.stringify(newList));
+      addToRecentlyWatched(id);
     }
   }, [id]);
 

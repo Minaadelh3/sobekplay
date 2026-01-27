@@ -14,12 +14,18 @@ interface TitleDetailsProps {
 const TitleDetails: React.FC<TitleDetailsProps> = ({ posters }) => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { myList, addToMyList, removeFromMyList, reactions, addReaction, polls, votePoll } = useSession();
+  const { myList, addToMyList, removeFromMyList, reactions, addReaction, polls, votePoll, addToRecentlyWatched } = useSession();
 
   const poster = posters.find(p => p.id === id);
   const inList = poster ? myList.includes(poster.id) : false;
   const userReaction = poster ? reactions[poster.id] : null;
   const userPoll = poster ? polls[poster.id] : null;
+
+  useEffect(() => {
+    if (poster) {
+      addToRecentlyWatched(poster.id);
+    }
+  }, [poster?.id]);
 
   const handleReaction = (emoji: string) => {
     if (poster) addReaction(poster.id, emoji);
