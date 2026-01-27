@@ -62,6 +62,8 @@ const Program: React.FC = () => {
     }
   ];
 
+  const [expandedEpisode, setExpandedEpisode] = React.useState<string | null>(null);
+
   return (
     <div className="min-h-screen bg-nearblack pt-24 pb-24">
       {/* Hero Section */}
@@ -86,7 +88,7 @@ const Program: React.FC = () => {
       {/* Photo Upload CTA */}
       <div className="max-w-2xl mx-auto px-6 mb-24 text-center">
         <motion.a
-          href="https://photos.google.com" // Placeholder for real upload link
+          href="https://photos.app.goo.gl/ZwC5xnvfy2H4pPia8"
           target="_blank"
           rel="noopener noreferrer"
           whileHover={{ scale: 1.02 }}
@@ -99,78 +101,93 @@ const Program: React.FC = () => {
               <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
             </div>
             <h3 className="text-2xl font-bold text-white leading-tight">
-              صورك هي ذكرياتنا 📸✨
+              صور الرحلة 📸
             </h3>
             <p className="text-white/70 text-lg" dir="rtl">
-              دوس هنا واعمل Upload للصور من عنيك<br />
+              دوس هنا وشوف أو ارفع صورك<br />
               <span className="text-sm text-white/40">(خلى الكل يشوف السحر اللي صورته!)</span>
             </p>
           </div>
         </motion.a>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 md:px-8 space-y-24">
+      <div className="max-w-3xl mx-auto px-4 space-y-6">
         {episodes.map((ep, index) => (
           <motion.div
             key={ep.id}
-            initial={{ opacity: 0, y: 50 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8 }}
-            className={`flex flex-col ${index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'} gap-8 md:gap-16 items-start`}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+            className="group"
           >
-            {/* Visual Side */}
-            <div className="w-full md:w-1/2 relative group rounded-2xl overflow-hidden aspect-video shadow-2xl">
-              <img
-                src={ep.image}
-                alt={ep.title}
-                className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
-              />
-              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors" />
-              <div className="absolute top-4 left-4 bg-accent-gold text-black font-black px-3 py-1 rounded text-xs uppercase tracking-wide">
-                {ep.date}
-              </div>
+            initial={false}
+            animate={{ height: expandedEpisode === ep.id ? 'auto' : 0, opacity: expandedEpisode === ep.id ? 1 : 0 }}
+            transition={{ duration: 0.3 }}
+            className="overflow-hidden bg-[#0d0f14]"
+              >
+            <div className="p-6 md:p-8 border-t border-white/5 space-y-6 relative">
+              <div className="absolute top-0 right-8 w-px h-full bg-white/10 hidden md:block" />
+
+              {ep.scenes.map((scene, i) => (
+                <div key={i} className="flex flex-col md:flex-row-reverse gap-4 md:gap-8 items-start md:items-center relative z-10" dir="rtl">
+                  <div className="md:w-32 shrink-0 text-left md:text-right">
+                    <span className="text-accent-green font-mono text-sm font-bold bg-accent-green/10 px-2 py-1 rounded">
+                      {scene.time}
+                    </span>
+                  </div>
+                  <div className="flex-1 text-right">
+                    <h4 className="text-white text-lg font-bold">{scene.title}</h4>
+                    <p className="text-white/50 text-sm mt-1">{scene.desc}</p>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            {/* Content Side */}
-            <div className="w-full md:w-1/2 pt-4" dir="rtl">
-              <div className="flex items-center gap-3 mb-4">
-                <span className="text-white/40 font-mono text-sm">EPISODE 0{index + 1}</span>
-                <div className="h-px w-12 bg-white/20" />
-              </div>
-
-              <h2 className="text-3xl md:text-4xl font-black text-white mb-4 leading-tight">
-                {ep.title}
-              </h2>
-
-              <p className="text-lg text-white/70 mb-8 border-r-4 border-accent-green pr-4 leading-relaxed">
-                {ep.description}
-              </p>
-
-              <div className="space-y-6 relative">
-                {/* Connection Line */}
-                <div className="absolute top-2 right-[7px] bottom-0 w-px bg-white/10" />
-
-                {ep.scenes.map((scene, i) => (
-                  <div key={i} className="flex gap-6 relative">
-                    <div className="w-4 h-4 rounded-full bg-nearblack border-2 border-accent-gold relative z-10 mt-1 shrink-0" />
-                    <div>
-                      <h4 className="text-white font-bold text-lg">{scene.title}</h4>
-                      <p className="text-white/50 text-sm mt-1">{scene.desc}</p>
-                      <span className="text-xs text-accent-green font-mono mt-2 block">{scene.time}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+            {/* Image for Mobile (Inside expand) */}
+            <div className="md:hidden w-full h-48 relative">
+              <img src={ep.image} alt="" className="w-full h-full object-cover opacity-60" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0d0f14] to-transparent" />
             </div>
           </motion.div>
+            </button>
+    </motion.div>
+  ))
+}
+      </div >
+
+      <h2 className="text-3xl md:text-4xl font-black text-white mb-4 leading-tight">
+        {ep.title}
+      </h2>
+
+      <p className="text-lg text-white/70 mb-8 border-r-4 border-accent-green pr-4 leading-relaxed">
+        {ep.description}
+      </p>
+
+      <div className="space-y-6 relative">
+        {/* Connection Line */}
+        <div className="absolute top-2 right-[7px] bottom-0 w-px bg-white/10" />
+
+        {ep.scenes.map((scene, i) => (
+          <div key={i} className="flex gap-6 relative">
+            <div className="w-4 h-4 rounded-full bg-nearblack border-2 border-accent-gold relative z-10 mt-1 shrink-0" />
+            <div>
+              <h4 className="text-white font-bold text-lg">{scene.title}</h4>
+              <p className="text-white/50 text-sm mt-1">{scene.desc}</p>
+              <span className="text-xs text-accent-green font-mono mt-2 block">{scene.time}</span>
+            </div>
+          </div>
         ))}
       </div>
+    </div >
+          </motion.div >
+        ))}
+      </div >
 
-      <div className="mt-32 text-center pb-12">
-        <p className="text-white/30 text-sm font-mono uppercase tracking-widest">End of Season 1</p>
-      </div>
-    </div>
+  <div className="mt-32 text-center pb-12">
+    <p className="text-white/30 text-sm font-mono uppercase tracking-widest">End of Season 1</p>
+  </div>
+    </div >
   );
 };
 
