@@ -149,7 +149,7 @@ const EmojiMoviesAI: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
                     {revealed ? (
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                            <h3 className="text-3xl font-black text-white mb-2 font-arabic">{card.movieTitle}</h3>
+                            <h3 className="text-3xl font-black text-white mb-2 font-arabic">{card.answer || "Mystery Movie"}</h3>
                             <button onClick={(e) => { e.stopPropagation(); setRevealed(false); nextCard(); }} className="mt-8 px-8 py-2 bg-accent-gold text-black font-bold rounded-full">Next</button>
                         </motion.div>
                     ) : (
@@ -189,7 +189,7 @@ const ProverbsAI: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
                     {revealed && (
                         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="bg-accent-green text-black rounded-xl p-4 font-bold text-xl font-arabic mb-4">
-                            {card.answers?.[0]}
+                            {card.answer || "No answer provided"}
                         </motion.div>
                     )}
 

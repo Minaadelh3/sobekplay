@@ -3,25 +3,21 @@
 import { DATA_FALLBACK } from '../data/partyGames';
 
 // --- CONFIG ---
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || ''; // Vite env variable
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
 
-// Define Strict Types
-export type GameMode = 'PASS_BOOM' | 'TRUTH_DARE' | 'EMOJI_MOVIES' | 'PROVERBS' | 'STORY_CHAIN';
-export type CardType = 'QUESTION' | 'CHALLENGE' | 'EMOJI' | 'PROVERB' | 'STARTER' | 'PENALTY';
+// --- STRICT TYPES (User Defined) ---
+export type GameType = 'QUESTION' | 'TASK' | 'EMOJI' | 'PROVERB' | 'STARTER' | 'PENALTY';
 
 export interface GameCard {
-    mode: GameMode;
-    type: CardType;
-    category?: string;
+    game: string; // e.g., 'PASS_BOOM', 'TRUTH_DARE'
+    type: GameType;
     text: string;
-    answers?: string[];
-    emoji?: string;
-    movieTitle?: string;
-    minTimeRequired?: number;
-    maxTimeRequired?: number;
-    intensity?: number;
-    safe?: boolean;
+    emoji?: string | null;
+    answer?: string | null;
+    minTimeRequired: number;
+    maxTimeAllowed: number;
+    safe: boolean;
 }
 
 // --- SYSTEM PROMPT ---
@@ -64,6 +60,23 @@ Before generating ANY card, think:
 If the answer is NO -> regenerate.
 
 --------------------------------
+STRICT AI OUTPUT FORMAT (JSON ONLY)
+--------------------------------
+Return ONLY one card at a time in valid JSON.
+Format MUST be:
+
+{
+  "game": "string (PASS_BOOM | TRUTH_DARE | EMOJI_MOVIES | PROVERBS | STORY_CHAIN)",
+  "type": "QUESTION | TASK | EMOJI | PROVERB | STARTER | PENALTY",
+  "text": "Masry card text",
+  "emoji": "string or null (only for EMOJI_MOVIES)",
+  "answer": "string or null (exact answer for PROVERBS/EMOJI)",
+  "minTimeRequired": number,
+  "maxTimeAllowed": number,
+  "safe": true
+}
+
+--------------------------------
 LOGIC RULES
 --------------------------------
 - If timer <= 10 seconds:
@@ -71,13 +84,6 @@ LOGIC RULES
 - No acting tasks in speed rounds.
 - No long storytelling unless explicitly allowed.
 - One card = one simple action or question.
-
---------------------------------
-CONTENT STYLE
---------------------------------
-Spicy = bold + playful + teasing  
-NOT explicit, NOT sexual, NOT humiliating  
-Keep it: Light, Social, Inclusive, Safe.
 
 --------------------------------
 EMOJI MOVIES RULE (STRICT)
@@ -90,112 +96,112 @@ EMOJI MOVIES RULE (STRICT)
 --------------------------------
 PROVERBS RULE
 --------------------------------
-- Show only the first half.
-- Always know the exact completion.
+- Show only the first half in "text".
+- Always know the exact completion in "answer".
 - Keep it Egyptian and common.
 
 --------------------------------
-OUTPUT FORMAT (STRICT JSON ONLY)
+STORY CHAIN RULE
 --------------------------------
-Return ONLY one card at a time in valid JSON.
-Matches Application Interface:
-
-{
-  "mode": "PASS_BOOM | TRUTH_DARE | EMOJI_MOVIES | PROVERBS | STORY_CHAIN",
-  "type": "QUESTION | CHALLENGE | EMOJI | PROVERB | STARTER | PENALTY",
-  "category": "string",
-  "text": "Masry card text",
-  "answers": ["exact answer (optional)"],
-  "emoji": "emoji string (optional)",
-  "movieTitle": "exact movie title (optional)",
-  "minTimeRequired": number,
-  "maxTimeRequired": number,
-  "intensity": 1-5,
-  "safe": true
-}
+- "text" is the starter phrase.
+- Must be open-ended and exciting.
 `;
 
 // --- MAIN GENERATOR FUNCTION ---
 export async function generateGameCard(
-    mode: GameMode,
+    gameMode: string,
     category: string,
     timerSeconds: number,
     difficulty: string,
     history: string[]
 ): Promise<GameCard | null> {
 
+    // 1. Check API Key
     if (!API_KEY) {
-        console.warn("Missing Gemini API Key. Using fallback.");
-        return getFallbackCard(mode, category);
+        console.warn("NO API KEY: Falling back to local deck (Last Resort).");
+        return getFallbackCard(gameMode);
     }
 
     const userPrompt = `
-    MODE: ${mode}
+    GAME_MODE: ${gameMode}
     CATEGORY: ${category}
-    TIMER: ${timerSeconds}s
+    TIMER: ${timerSeconds} seconds
     DIFFICULTY: ${difficulty}
-    HISTORY_TO_AVOID: [${history.join(', ')}]
+    HISTORY_TO_AVOID_REPEATING: [${history.slice(-20).join(', ')}]
     
-    Generate 1 card now.
+    Generate 1 NEW card now.
   `;
 
-    try {
-        const response = await fetch(API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: SYSTEM_PROMPT + "\n" + userPrompt }]
-                }],
-                generationConfig: {
-                    responseMimeType: "application/json"
-                }
-            })
-        });
+    // 2. Retry Loop (Max 5)
+    for (let i = 0; i < 5; i++) {
+        try {
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{ text: SYSTEM_PROMPT + "\n" + userPrompt }]
+                    }],
+                    generationConfig: {
+                        responseMimeType: "application/json"
+                    }
+                })
+            });
 
-        if (!response.ok) {
-            throw new Error(`Gemini API Error: ${response.status}`);
+            if (!response.ok) throw new Error(`API Status: ${response.status}`);
+
+            const data = await response.json();
+            const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!jsonText) throw new Error("Empty Response");
+
+            const card: GameCard = JSON.parse(jsonText);
+
+            // --- VALIDATION ---
+            if (!card.safe) throw new Error("Unsafe content");
+            if (card.minTimeRequired > timerSeconds && timerSeconds > 0) throw new Error("Task too long");
+            if (gameMode === 'PASS_BOOM' && timerSeconds <= 10 && card.type === 'TASK' && card.minTimeRequired > 5) {
+                throw new Error("Complex task in speed round");
+            }
+
+            // Success!
+            return card;
+
+        } catch (err) {
+            console.warn(`Attempt ${i + 1} failed:`, err);
+            // Wait slightly before retry to be nice to API (optional but good practice)
+            await new Promise(r => setTimeout(r, 500));
         }
-
-        const data = await response.json();
-        const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-        if (!jsonText) throw new Error("Empty AI Response");
-
-        const card: GameCard = JSON.parse(jsonText);
-
-        // --- VALIDATION ---
-        if (!card.safe) throw new Error("Unsafe content generated");
-        if (card.minTimeRequired && card.minTimeRequired > timerSeconds) throw new Error("Task too long for timer");
-        if (mode === 'PASS_BOOM' && timerSeconds <= 10 && (card.type === 'CHALLENGE' && card.minTimeRequired && card.minTimeRequired > 5)) {
-            throw new Error("Complex challenge forbidden in speed round");
-        }
-
-        return card;
-
-    } catch (err) {
-        console.warn("AI Generation Failed or Invalid:", err);
-        return getFallbackCard(mode, category);
     }
+
+    // 3. Fallback (Last Resort)
+    console.error("All AI attempts failed. Using fallback.");
+    return getFallbackCard(gameMode);
 }
 
-// --- FALLBACK SYSTEM ---
-// Selects a random card from local data that matches the mode
-function getFallbackCard(mode: GameMode, category: string): GameCard {
-    const list = DATA_FALLBACK[mode] || [];
+// --- FALLBACK SYSTEM (LAST RESORT) ---
+function getFallbackCard(gameMode: string): GameCard {
+    // Map existing fallback data to new schema
+    const list = DATA_FALLBACK[gameMode] || [];
     if (list.length === 0) return {
-        mode,
+        game: gameMode,
         type: 'QUESTION',
-        text: 'Fallback error: No cards found.',
+        text: 'System Error: No cards available.',
+        minTimeRequired: 0,
+        maxTimeAllowed: 60,
         safe: true
     };
 
-    // Simple random selection from local fallback
-    // In a real scenario, we could filter by category if local data supports it
-    const random = list[Math.floor(Math.random() * list.length)];
+    const random: any = list[Math.floor(Math.random() * list.length)];
+
+    // Adapt old schema to new strict schema
     return {
-        ...random,
-        mode, // Ensure mode matches
+        game: gameMode,
+        type: random.type, // Assumes type names match roughly or are compatible
+        text: random.text,
+        emoji: random.emoji || null,
+        answer: random.answers ? random.answers[0] : (random.movieTitle || null),
+        minTimeRequired: 5,
+        maxTimeAllowed: 60,
         safe: true
     };
 }
