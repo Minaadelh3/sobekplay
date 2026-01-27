@@ -75,7 +75,7 @@ export async function sendGameMessage(
 
     const initialPrompt = `
     System Instructions: ${SYSTEM_PROMPT}
-     
+
     Current Game Context:
     - Mode: ${gameMode}
     - Category: ${category}
@@ -92,6 +92,8 @@ export async function sendGameMessage(
     }
 
     try {
+        console.log("🐊 AI Request Sent: Mode=", gameMode, "Diff=", difficulty);
+
         const response = await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -106,6 +108,8 @@ export async function sendGameMessage(
         const data = await response.json();
         const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
         if (!rawText) throw new Error("Empty Response");
+
+        console.log("🐊 AI Response Received:", rawText.substring(0, 50) + "...");
 
         const cleanJson = rawText.replace(/```json\n?|```/g, '').trim();
         return JSON.parse(cleanJson);
