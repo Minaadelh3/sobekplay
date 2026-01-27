@@ -2,11 +2,11 @@
 // services/gameAI.ts
 
 // --- CONFIG ---
-// 🚨 Hardcoded Key as requested for connectivity test
-const API_KEY = "AIzaSyD6LWEoWnDMlSq7-JkO3LSQ8hZmUuMLbj4";
+// --- CONFIG ---
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
 
-// Reverting to gemini-pro on v1beta for maximum stability
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
+// Using v1 (Stable) and gemini-1.5-flash
+const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
 // --- TYPES ---
 export type GameMode = 'عدّيها 💣' | 'قول ولا تفوّت؟ 😏' | 'فيلم بالإيموجي 🎬' | 'كمّلها بقى…' | 'حدوتة على الطاير ✨' | string;

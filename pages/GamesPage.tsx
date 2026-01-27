@@ -66,6 +66,7 @@ const ActiveGame = ({ mode, settings, onExit }: { mode: string, settings: any, o
 
         try {
             const newCard = await generateGameCard(mode, settings.category, settings.timer, 2, history); // Difficulty 2 default
+            console.log("Game AI Response:", newCard);
             if (newCard) {
                 setCard(newCard);
                 setHistory(h => [...h, newCard.text].slice(-20));
