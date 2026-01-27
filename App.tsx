@@ -33,6 +33,46 @@ import { motion } from 'framer-motion';
 import SobekChatbot from './components/SobekChatbot';
 import ScrollToTop from './components/ScrollToTop';
 
+
+const VerseOfTheDay: React.FC = () => {
+  const [verse, setVerse] = useState<{ text: string; ref: string } | null>(null);
+
+  useEffect(() => {
+    const verses = [
+      { text: "الرَّبُّ فِي الْعُلاَ أَقْدَرُ مِنْ أَصْوَاتِ مِيَاهٍ كَثِيرَةٍ، مِنْ أَمْوَاجِ الْبَحْرِ الْعَظِيمَةِ.", ref: "مزامير ٩٣: ٤" }, // Mighty waters
+      { text: "يَرْوِيكَ الرَّبُّ دَائِمًا، وَيُشْبِعُ نَفْسَكَ فِي الْيَبُوسِ... فَتَكُونُ كَجَنَّةٍ رَيَّا وَكَنَبْعِ مِيَاهٍ لاَ تَنْقَطِعُ مِيَاهُهُ.", ref: "إشعياء ٥٨: ١١" }, // Spring of water
+      { text: "مَجَارِي الْمِيَاهِ تَفْرَحُ مَدِينَةَ اللهِ، مَقْدِسَ مَسَاكِنِ الْعَلِيِّ.", ref: "مزامير ٤٦: ٤" }, // Streams make glad
+      { text: "لأَنَّهُ يَشُقُّ صُخُورًا فِي الْبَرِّيَّةِ وَيَسْقِيهِمْ كَأَنَّهُ مِنْ لُجَجٍ عَظِيمَةٍ.", ref: "مزامير ٧٨: ١٥" }, // Split rocks/water
+      { text: "كُلُّ الأَنْهَارِ تَجْرِي إِلَى الْبَحْرِ، وَالْبَحْرُ لَيْسَ بِمَلآنَ. إِلَى الْمَكَانِ الَّذِي جَرَتْ مِنْهُ الأَنْهَارُ إِلَى هُنَاكَ تَذْهَبُ رَاجِعَةً.", ref: "الجامعة ١: ٧" }, // Rivers to sea
+      { text: "مُبَارَكٌ الرَّجُلُ الَّذِي يَتَّكِلُ عَلَى الرَّبِّ... فَيَكُونُ كَشَجَرَةٍ مَغْرُوسَةٍ عَلَى الْمِيَاهِ، وَعَلَى النَّهْرِ تَمُدُّ أُصُولَهَا.", ref: "إرميا ١٧: ٧-٨" }, // Planted by water
+      { text: "أَنَا أُعْطِيَّ الْعَطْشَانَ مِنْ يَنْبُوعِ مَاءِ الْحَيَاةِ مَجَّانًا.", ref: "رؤيا ٢١: ٦" }, // Water of life
+    ];
+    // Randomly select one on mount
+    const randomVerse = verses[Math.floor(Math.random() * verses.length)];
+    setVerse(randomVerse);
+  }, []);
+
+  if (!verse) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 1, delay: 0.5 }}
+      className="relative w-full max-w-4xl mx-auto my-16 px-6 text-center z-30"
+    >
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-32 bg-accent-gold/5 blur-[80px] rounded-full" />
+      <div className="relative border-y border-white/10 py-8 md:py-10">
+        <span className="text-accent-gold text-xs font-bold tracking-[0.2em] uppercase mb-4 block">Verse of the Day 🌊</span>
+        <p className="text-xl md:text-3xl text-white font-medium leading-relaxed font-serif" dir="rtl">
+          "{verse.text}"
+        </p>
+        <p className="text-white/40 text-sm mt-4 font-mono">{verse.ref}</p>
+      </div>
+    </motion.div>
+  );
+};
+
 const Home: React.FC<{ posters: any[] }> = ({ posters }) => {
   const rows = useMemo(() => {
     // Mocks for a production feel
@@ -63,7 +103,11 @@ const Home: React.FC<{ posters: any[] }> = ({ posters }) => {
   return (
     <div className="pb-24">
       <Hero posters={posters} />
-      <div className="relative z-20 -mt-24 md:-mt-48 space-y-12">
+
+      {/* Verse of the Day Injection */}
+      <VerseOfTheDay />
+
+      <div className="relative z-20 -mt-12 md:-mt-24 space-y-12">
         {rows.map((row) => (
           <Carousel key={row.title} title={row.title} posters={row.items} />
         ))}

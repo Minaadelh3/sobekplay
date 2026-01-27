@@ -83,6 +83,32 @@ const Program: React.FC = () => {
         </div>
       </div>
 
+      {/* Photo Upload CTA */}
+      <div className="max-w-2xl mx-auto px-6 mb-24 text-center">
+        <motion.a
+          href="https://photos.google.com" // Placeholder for real upload link
+          target="_blank"
+          rel="noopener noreferrer"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="block group relative p-[2px] rounded-2xl overflow-hidden"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-accent-gold via-accent-green to-accent-gold animate-gradient" />
+          <div className="relative bg-charcoal rounded-2xl p-6 md:p-8 flex flex-col items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            </div>
+            <h3 className="text-2xl font-bold text-white leading-tight">
+              صورك هي ذكرياتنا 📸✨
+            </h3>
+            <p className="text-white/70 text-lg" dir="rtl">
+              دوس هنا واعمل Upload للصور من عنيك<br />
+              <span className="text-sm text-white/40">(خلى الكل يشوف السحر اللي صورته!)</span>
+            </p>
+          </div>
+        </motion.a>
+      </div>
+
       <div className="max-w-6xl mx-auto px-4 md:px-8 space-y-24">
         {episodes.map((ep, index) => (
           <motion.div
