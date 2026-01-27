@@ -15,7 +15,7 @@ const UX = {
     difficulty: "الصعوبة (مستوى الشقاوة 😎)"
 };
 
-// Map Internal keys to Display Names (if needed) or use Display Names directly
+// Map Internal keys to Display Names
 const MODES = {
     PASS_BOOM: "عدّيها 💣",
     TRUTH_DARE: "قول ولا تفوّت؟ 😏",
@@ -70,7 +70,21 @@ const CATEGORIES: Record<string, string[]> = {
     "كمّلها بقى…": ['أمثال قديمة', 'حكم', 'إيفيهات أفلام']
 };
 
-// --- CHAT COMPONENTS ---
+// --- EMOJI SEED DATA (FALLBACK) ---
+const EMOJI_SEED_DATA = [
+    "الفيل الأزرق: 🐘🟦",
+    "الناظر: 👨🏫👓🔴",
+    "بوحة: 🐂🔪🥩",
+    "كده رضا: 👨👦👦🆔3️⃣",
+    "أمير البحار: 🛥️⚓👑",
+    "عسل أسود: 🍯⬛🦅",
+    "صعيدي في الجامعة الأمريكية: 👨🌾🎓🇺🇸",
+    "مدرسة المشاغبين: 🏫👨🏫💥",
+    "العيال كبرت: 👨👩👧👦🏠👴",
+    "بكار: 👦🏾🐐🛶"
+];
+
+// --- COMPONENTS ---
 
 const MessageBubble = ({ msg }: { msg: ChatMessage }) => {
     const isModel = msg.role === 'model';
@@ -81,8 +95,8 @@ const MessageBubble = ({ msg }: { msg: ChatMessage }) => {
             className={`flex w-full mb-4 ${isModel ? 'justify-start' : 'justify-end'}`}
         >
             <div className={`max-w-[85%] rounded-2xl px-5 py-3 text-lg leading-relaxed font-arabic shadow-md ${isModel
-                    ? 'bg-[#1a1a1a] border border-white/10 text-white rounded-tl-none'
-                    : 'bg-gradient-to-l from-accent-gold to-yellow-600 text-black font-bold rounded-tr-none'
+                ? 'bg-[#1a1a1a] border border-white/10 text-white rounded-tl-none'
+                : 'bg-gradient-to-l from-accent-gold to-yellow-600 text-black font-bold rounded-tr-none'
                 }`}>
                 {msg.text}
             </div>
@@ -95,6 +109,7 @@ const ActiveGame = ({ mode, settings, onExit }: { mode: string, settings: any, o
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(false);
 
     // Timer State
     const [timer, setTimer] = useState(0);
@@ -110,7 +125,7 @@ const ActiveGame = ({ mode, settings, onExit }: { mode: string, settings: any, o
 
     // Initial Start
     useEffect(() => {
-        handleSendMessage(true); // Initial trigger
+        handleSendMessage(true);
     }, []);
 
     // Timer Logic
@@ -142,27 +157,38 @@ const ActiveGame = ({ mode, settings, onExit }: { mode: string, settings: any, o
         }
 
         setLoading(true);
-        setBoom(false); // Reset boom on new interaction
+        setBoom(false);
+        setError(false);
 
         try {
-            // Include the new user message in history sent to API
             const historyToSend = userMsg ? [...messages, userMsg] : [...messages];
-
-            // Using settings.difficulty from Lobby
             const response = await sendGameMessage(mode, settings.category, settings.difficulty, historyToSend);
 
             if (response) {
-                const aiMsg: ChatMessage = { role: 'model', text: response.text };
+                let finalResponse = response;
+
+                // FALLBACK INTERCEPTOR
+                if (response.safe && mode === "فيلم بالإيموجي 🎬") {
+                    const randomSeed = EMOJI_SEED_DATA[Math.floor(Math.random() * EMOJI_SEED_DATA.length)];
+                    finalResponse = {
+                        ...response,
+                        text: `(Offline Mode 📶) خمن دي: ${randomSeed}`
+                    };
+                }
+
+                const aiMsg: ChatMessage = { role: 'model', text: finalResponse.text };
                 setMessages(prev => [...prev, aiMsg]);
 
-                // Handle Actions
-                if (response.action === 'START_TIMER') {
-                    setTimer(response.timerSeconds || 30);
+                if (finalResponse.action === 'START_TIMER') {
+                    setTimer(finalResponse.timerSeconds || 30);
                     setTimerActive(true);
                 }
+            } else {
+                throw new Error("No response");
             }
         } catch (e) {
             console.error(e);
+            setError(true);
         } finally {
             setLoading(false);
         }
@@ -209,6 +235,21 @@ const ActiveGame = ({ mode, settings, onExit }: { mode: string, settings: any, o
                     </motion.div>
                 )}
 
+                {/* Error Card */}
+                {error && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-center w-full my-4">
+                        <div className="bg-red-900/50 border border-red-500/30 rounded-xl p-4 text-center max-w-sm">
+                            <p className="text-white mb-3 font-bold">الشبكة واقعة يا معلم! 🔌</p>
+                            <button
+                                onClick={() => handleSendMessage()}
+                                className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-red-500 transition-colors"
+                            >
+                                {UX.retry}
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+
                 {boom && (
                     <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center py-6 text-center">
                         <div className="text-6xl mb-2">💥</div>
@@ -234,9 +275,9 @@ const ActiveGame = ({ mode, settings, onExit }: { mode: string, settings: any, o
                     />
                     <button
                         onClick={() => handleSendMessage()}
-                        disabled={loading || !input.trim()}
+                        disabled={loading || (!input.trim() && !error)}
                         className={`px-6 rounded-full font-bold font-arabic transition-all shadow-lg flex items-center justify-center
-                            ${loading || !input.trim()
+                            ${loading || (!input.trim() && !error)
                                 ? 'bg-white/5 text-white/20 cursor-not-allowed'
                                 : 'bg-accent-gold text-black hover:bg-yellow-400 hover:scale-105 active:scale-95'
                             }`}
@@ -250,12 +291,11 @@ const ActiveGame = ({ mode, settings, onExit }: { mode: string, settings: any, o
     );
 };
 
-// --- GAME HUB (User Design Merge) ---
+// --- GAME HUB ---
 
 const GamesPage = () => {
     const [view, setView] = useState<'HUB' | 'LOBBY' | 'GAME'>('HUB');
     const [selection, setSelection] = useState<string | null>(null);
-    // State now includes difficulty 1-5 (Default 2)
     const [lobbyState, setLobbyState] = useState({ category: 'عام', difficulty: 2 });
 
     const handleSelect = (mode: string) => {
@@ -272,7 +312,6 @@ const GamesPage = () => {
         <div className="min-h-screen bg-nearblack font-sans text-white pb-24" dir="rtl">
             {view === 'HUB' && (
                 <div className="flex flex-col min-h-screen pt-24 pb-16">
-                    {/* Hero */}
                     <header className="text-center px-4 mb-10">
                         <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-3 font-arabic bg-clip-text text-transparent bg-gradient-to-r from-accent-gold to-yellow-600">
                             سوبيك جيمز 🐊
@@ -282,7 +321,6 @@ const GamesPage = () => {
                         </p>
                     </header>
 
-                    {/* Games Grid */}
                     <main className="flex-1 px-4 md:px-12 lg:px-20 max-w-6xl mx-auto w-full">
                         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
                             {gameModes.map((game) => (
@@ -357,7 +395,7 @@ const GamesPage = () => {
                         </div>
 
                         <div className="flex gap-4 mt-8">
-                            <button onClick={() => setView('HUB')} className="flex-1 py-4 border border-white/10 rounded-2xl font-bold font-arabic hover:bg-white/5 text-white/60">رجوع</button>
+                            <button onClick={() => setView('HUB')} className="flex-1 py-4 border border-white/10 rounded-2xl font-bold font-arabic hover:bg-white/10">رجوع</button>
                             <button onClick={() => setView('GAME')} className="flex-[2] py-4 bg-accent-gold text-black rounded-2xl font-black font-arabic shadow-xl hover:scale-[1.02] transition-transform text-xl">
                                 يلا بينا 🚀
                             </button>
