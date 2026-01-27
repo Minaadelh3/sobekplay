@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { generateGameCard, GameCard } from '../services/gameAI';
+import { sendGameMessage, ChatMessage, AIResponse } from '../services/gameAI';
 
 // --- CONFIG ---
 const UX = {
-    loading: "ثانية كده بنفكر 🤔",
+    loading: "سوبيك بيفكر... 🤔",
     newCard: "كارت جديد 🎴",
     retry: "نجرب تاني 🔄",
     timeUp: "فرقعت 💥",
     passPhone: "ادي الموبايل للي جنبك 📱",
+    placeholder: "اكتب ردك هنا...",
+    send: "إرسال 🚀"
 };
 
 // Map Internal keys to Display Names (if needed) or use Display Names directly
@@ -31,47 +33,96 @@ const CATEGORIES: Record<string, string[]> = {
 
 const TIMERS = [10, 20, 30, 45, 60];
 
-// --- COMPONENTS ---
+// --- CHAT COMPONENTS ---
 
-const LoadingCard = () => (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center p-12 text-center h-[300px]">
-        <div className="text-4xl mb-4 animate-bounce">🤔</div>
-        <div className="text-white/60 font-bold font-arabic text-xl">{UX.loading}</div>
-    </motion.div>
-);
+const MessageBubble = ({ msg }: { msg: ChatMessage }) => {
+    const isModel = msg.role === 'model';
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`flex w-full mb-4 ${isModel ? 'justify-start' : 'justify-end'}`}
+        >
+            <div className={`max-w-[85%] rounded-2xl px-5 py-3 text-lg leading-relaxed font-arabic ${isModel
+                    ? 'bg-charcoal border border-white/10 text-white rounded-tl-none'
+                    : 'bg-accent-green text-white rounded-tr-none'
+                }`}>
+                {msg.text}
+            </div>
+        </motion.div>
+    );
+};
 
-const ErrorCard = ({ onRetry }: { onRetry: () => void }) => (
-    <div className="text-center p-8 bg-red-900/20 rounded-3xl border border-red-500/30">
-        <div className="text-4xl mb-4">😅</div>
-        <div className="text-white font-bold font-arabic mb-4">الذكاء الاصطناعي مهنج شوية</div>
-        <button onClick={onRetry} className="px-6 py-3 bg-white text-black font-bold rounded-full shadow-lg">{UX.retry}</button>
-    </div>
-);
-
-// --- ACTIVE GAME VIEW ---
+// --- ACTIVE GAME VIEW (CHAT) ---
 const ActiveGame = ({ mode, settings, onExit }: { mode: string, settings: any, onExit: () => void }) => {
-    const [card, setCard] = useState<GameCard | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [timer, setTimer] = useState(settings.timer);
-    const [active, setActive] = useState(false);
-    const [revealed, setRevealed] = useState(false);
-    const [history, setHistory] = useState<string[]>([]);
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
+    const [input, setInput] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    // Timer State
+    const [timer, setTimer] = useState(0);
+    const [timerActive, setTimerActive] = useState(false);
     const [boom, setBoom] = useState(false);
 
-    const loadNewCard = async () => {
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // Auto-scroll
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+    useEffect(scrollToBottom, [messages, loading]);
+
+    // Initial Start
+    useEffect(() => {
+        handleSendMessage(true); // Initial trigger
+    }, []);
+
+    // Timer Logic
+    useEffect(() => {
+        if (!timerActive || timer <= 0) return;
+        const interval = setInterval(() => {
+            setTimer(t => {
+                if (t <= 1) {
+                    setTimerActive(false);
+                    setBoom(true);
+                    return 0;
+                }
+                return t - 1;
+            });
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [timerActive, timer]);
+
+    const handleSendMessage = async (isInitial = false) => {
+        if (!input.trim() && !isInitial) return;
+
+        const userMsg: ChatMessage | null = isInitial
+            ? null
+            : { role: 'user', text: input };
+
+        if (userMsg) {
+            setMessages(prev => [...prev, userMsg]);
+            setInput('');
+        }
+
         setLoading(true);
-        setBoom(false);
-        setRevealed(false);
-        setActive(false);
+        setBoom(false); // Reset boom on new interaction
 
         try {
-            const newCard = await generateGameCard(mode, settings.category, settings.timer, 2, history); // Difficulty 2 default
-            console.log("Game AI Response:", newCard);
-            if (newCard) {
-                setCard(newCard);
-                setHistory(h => [...h, newCard.text].slice(-20));
-                setTimer(settings.timer);
-                setActive(true);
+            // Include the new user message in history sent to API
+            const historyToSend = userMsg ? [...messages, userMsg] : [...messages];
+
+            const response = await sendGameMessage(mode, settings.category, historyToSend);
+
+            if (response) {
+                const aiMsg: ChatMessage = { role: 'model', text: response.text };
+                setMessages(prev => [...prev, aiMsg]);
+
+                // Handle Actions
+                if (response.action === 'START_TIMER') {
+                    setTimer(response.timerSeconds || settings.timer || 30);
+                    setTimerActive(true);
+                }
             }
         } catch (e) {
             console.error(e);
@@ -80,93 +131,80 @@ const ActiveGame = ({ mode, settings, onExit }: { mode: string, settings: any, o
         }
     };
 
-    useEffect(() => { loadNewCard(); }, []);
-
-    // Timer Logic
-    useEffect(() => {
-        if (!active || timer <= 0) return;
-        const interval = setInterval(() => {
-            setTimer(t => {
-                if (t <= 1) {
-                    setActive(false);
-                    setBoom(true);
-                    return 0;
-                }
-                return t - 1;
-            });
-        }, 1000);
-        return () => clearInterval(interval);
-    }, [active, timer]);
-
     return (
-        <div className={`fixed inset-0 z-50 flex flex-col items-center bg-[#0a0a0a] transition-colors duration-500 ${boom ? 'bg-red-900' : ''}`}>
+        <div className={`fixed inset-0 z-50 flex flex-col bg-[#0a0a0a] transition-colors duration-500 ${boom ? 'bg-red-900/50' : ''}`}>
 
             {/* Header */}
-            <div className="w-full p-6 flex justify-between items-center z-10">
-                <button onClick={onExit} className="text-white/60 font-bold font-arabic">❌ خروج</button>
-                <div className="px-4 py-1 bg-white/10 rounded-full text-sm font-arabic text-white/80">{mode}</div>
+            <div className="w-full h-16 bg-nearblack/90 backdrop-blur-md border-b border-white/10 flex justify-between items-center px-4 z-20 shadow-lg">
+                <button onClick={onExit} className="text-white/60 font-bold font-arabic hover:text-white transition-colors">← خروج</button>
+                <div className="flex flex-col items-center">
+                    <span className="font-bold text-white font-arabic">{mode}</span>
+                    <span className="text-xs text-accent-gold">{settings.category}</span>
+                </div>
+                <div className="w-16 flex justify-end">
+                    {timer > 0 && (
+                        <div className={`font-black text-xl font-mono ${timer <= 10 ? 'text-red-500 animate-pulse' : 'text-white'}`}>
+                            {timer}s
+                        </div>
+                    )}
+                </div>
             </div>
 
-            {/* Content */}
-            <div className="flex-1 w-full max-w-md flex flex-col items-center justify-center p-6">
+            {/* Chat Area */}
+            <div className="flex-1 overflow-y-auto p-4 pb-24 space-y-2">
+                {messages.map((msg, idx) => (
+                    <MessageBubble key={idx} msg={msg} />
+                ))}
 
-                {boom ? (
-                    <motion.div initial={{ scale: 0.5 }} animate={{ scale: 1.2 }} className="text-center">
-                        <div className="text-9xl mb-4">💥</div>
-                        <h1 className="text-6xl font-black text-white font-arabic mb-4">{UX.timeUp}</h1>
-                        <button onClick={loadNewCard} className="px-8 py-3 bg-white text-black font-bold font-arabic rounded-full mt-8 shadow-xl">
-                            {UX.passPhone}
-                        </button>
-                    </motion.div>
-                ) : loading ? (
-                    <LoadingCard />
-                ) : card ? (
-                    <motion.div
-                        initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-                        className="w-full bg-gradient-to-b from-gray-800 to-black p-8 rounded-[40px] border border-white/10 shadow-2xl min-h-[400px] flex flex-col items-center text-center relative"
-                    >
-                        {/* Timer */}
-                        {settings.timer > 0 && (
-                            <div className={`absolute -top-8 bg-white text-black w-24 h-24 rounded-full flex items-center justify-center text-4xl font-black shadow-lg z-20 ${timer <= 5 ? 'bg-red-500 text-white animate-pulse' : ''}`}>
-                                {timer}
+                {loading && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start w-full">
+                        <div className="bg-charcoal/50 rounded-2xl px-4 py-3 border border-white/5">
+                            <div className="flex gap-1">
+                                <span className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
+                                <span className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                                <span className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
                             </div>
-                        )}
-
-                        <div className="flex-1 flex flex-col justify-center items-center w-full pt-8">
-                            {card.emoji && <div className="text-8xl mb-6">{card.emoji}</div>}
-
-                            <h3 className="text-3xl md:text-5xl font-bold text-white font-arabic leading-relaxed mb-8" dir="rtl">
-                                {card.text}
-                            </h3>
-
-                            {/* Answer Reveal */}
-                            {(card.answer || card.type === 'PROVERB' || mode.includes('فيلم')) && (
-                                <div className="w-full mt-auto">
-                                    {!revealed ? (
-                                        <button onClick={() => setRevealed(true)} className="text-white/40 text-sm font-arabic underline p-2">عرض الإجابة</button>
-                                    ) : (
-                                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="bg-green-900/40 p-4 rounded-xl text-green-400 font-bold font-arabic text-xl border border-green-500/20">
-                                            {card.answer}
-                                        </motion.div>
-                                    )}
-                                </div>
-                            )}
                         </div>
                     </motion.div>
-                ) : (
-                    <ErrorCard onRetry={loadNewCard} />
                 )}
 
+                {boom && (
+                    <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center py-8">
+                        <div className="text-6xl mb-2">💥</div>
+                        <div className="text-2xl font-black text-white font-arabic">{UX.timeUp}</div>
+                    </motion.div>
+                )}
+
+                <div ref={messagesEndRef} />
             </div>
 
-            {/* Footer Controls */}
-            {!loading && !boom && (
-                <div className="w-full max-w-md p-6 pb-12">
-                    <button onClick={loadNewCard} className="w-full py-5 bg-accent-gold text-black font-black font-arabic text-2xl rounded-2xl shadow-xl hover:scale-[1.02] active:scale-95 transition-transform">
-                        {UX.newCard}
+            {/* Input Area */}
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-nearblack border-t border-white/10 z-20">
+                <div className="max-w-3xl mx-auto flex gap-3">
+                    <input
+                        type="text"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                        placeholder={UX.placeholder}
+                        disabled={loading}
+                        className="flex-1 bg-white/10 border border-white/10 rounded-full px-5 py-4 text-white placeholder-white/30 focus:outline-none focus:border-accent-green font-arabic transition-colors text-right"
+                        dir="rtl"
+                    />
+                    <button
+                        onClick={() => handleSendMessage()}
+                        disabled={loading || !input.trim()}
+                        className={`px-6 rounded-full font-bold font-arabic transition-all shadow-lg
+                            ${loading || !input.trim()
+                                ? 'bg-white/5 text-white/20 cursor-not-allowed'
+                                : 'bg-accent-green text-white hover:bg-accent-green/80 hover:scale-105 active:scale-95'
+                            }`}
+                    >
+                        {UX.send}
                     </button>
                 </div>
-            )}
+            </div>
+
         </div>
     );
 };
