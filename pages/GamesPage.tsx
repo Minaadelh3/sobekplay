@@ -170,7 +170,47 @@ const ActiveGame = ({ mode, settings, onExit }: { mode: string, settings: any, o
     );
 };
 
-// --- GAME HUB ---
+// --- GAME HUB (User Design Merge) ---
+
+// UI Configuration with Internal Mode Mapping
+const gameModes = [
+    {
+        id: "pass-boom",
+        mode: "عدّيها 💣", // Must match the string expected by GameLobby/ActiveGame
+        title: "عدّيها 💣",
+        description: "الموبايل بيلف… واللي يفرقع عليه يتحاسب!",
+        accent: "from-red-500/70 to-orange-500/60",
+    },
+    {
+        id: "truth-dare",
+        mode: "قول ولا تفوّت؟ 😏",
+        title: "قول ولا تعمل 😏",
+        description: "سؤال محرج ولا تحدّي مجنون…؟ انت وحظك.",
+        accent: "from-pink-500/70 to-purple-500/60",
+    },
+    {
+        id: "emoji-movie",
+        mode: "فيلم بالإيموجي 🎬",
+        title: "فيلم بالإيموجي 🎬",
+        description: "إيموجيز بس… وتخمّن اسم الفيلم قبل صحابك.",
+        accent: "from-blue-500/70 to-cyan-500/60",
+    },
+    {
+        id: "proverbs",
+        mode: "كمّلها بقى…",
+        title: "كمّل المثل 🧠",
+        description: "أمثال مصرية ناقصة… كمّلها قبل ما حد يسبقك.",
+        accent: "from-emerald-500/70 to-lime-500/60",
+    },
+    {
+        id: "story-chain",
+        mode: "حدوتة على الطاير ✨",
+        title: "حدوتة على الطاير ✨",
+        description: "كل واحد يزوّد جملة… ونشوف القصّة هتوصل لفين.",
+        accent: "from-amber-500/70 to-rose-500/60",
+    },
+];
+
 const GamesPage = () => {
     const [view, setView] = useState<'HUB' | 'LOBBY' | 'GAME'>('HUB');
     const [selection, setSelection] = useState<string | null>(null);
@@ -178,24 +218,66 @@ const GamesPage = () => {
 
     const handleSelect = (mode: string) => {
         setSelection(mode);
-        setLobbyState({ category: CATEGORIES[mode]?.[0] || 'عام', timer: mode === MODES.PASS_BOOM ? 30 : 0 });
+        // Default Settings
+        setLobbyState({
+            category: CATEGORIES[mode]?.[0] || 'عام',
+            timer: mode.includes("عدّيها") ? 30 : 0
+        });
         setView('LOBBY');
     };
 
     return (
         <div className="min-h-screen bg-nearblack font-sans text-white pb-24" dir="rtl">
             {view === 'HUB' && (
-                <div className="max-w-6xl mx-auto pt-24 px-4">
-                    <h1 className="text-4xl font-black text-white font-arabic mb-2 text-center">سوبيك جيمز 🐊</h1>
-                    <p className="text-white/60 text-center font-arabic mb-12">قعدة ونيسة.. بالذكاء الاصطناعي</p>
+                <div className="flex flex-col min-h-screen pt-24 pb-16">
+                    {/* Hero */}
+                    <header className="text-center px-4 mb-10">
+                        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-3 font-arabic">
+                            سوبيك جيمز 🐊🎮
+                        </h1>
+                        <p className="text-sm md:text-base text-white/60 font-arabic">
+                            اختار لعبة ونولّع القعدة… الكروت هتجيلك جاهزة على طول.
+                        </p>
+                    </header>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <HubCard title={MODES.PASS_BOOM} icon="💣" desc="بسرعة قبل ما تفرقع!" onClick={() => handleSelect(MODES.PASS_BOOM)} color="from-red-900 via-red-950 to-black" />
-                        <HubCard title={MODES.TRUTH_DARE} icon="😏" desc="أسئلة وتحديات" onClick={() => handleSelect(MODES.TRUTH_DARE)} color="from-blue-900 via-blue-950 to-black" />
-                        <HubCard title={MODES.EMOJI_MOVIES} icon="🎬" desc="خمن الفيلم" onClick={() => handleSelect(MODES.EMOJI_MOVIES)} color="from-purple-900 via-purple-950 to-black" />
-                        <HubCard title={MODES.PROVERBS} icon="🗣️" desc="كمّل المثل" onClick={() => handleSelect(MODES.PROVERBS)} color="from-green-900 via-green-950 to-black" />
-                        <HubCard title={MODES.STORY_CHAIN} icon="✨" desc="ألف قصة" onClick={() => handleSelect(MODES.STORY_CHAIN)} color="from-indigo-900 via-indigo-950 to-black" />
-                    </div>
+                    {/* Games Grid */}
+                    <main className="flex-1 px-4 md:px-12 lg:px-20 max-w-6xl mx-auto w-full">
+                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                            {gameModes.map((game) => (
+                                <button
+                                    key={game.id}
+                                    onClick={() => handleSelect(game.mode)}
+                                    className={`
+                                group relative overflow-hidden rounded-3xl p-[1px]
+                                bg-gradient-to-br ${game.accent}
+                                hover:scale-[1.02] active:scale-[0.98] transition-transform duration-200
+                                text-right w-full
+                            `}
+                                >
+                                    <div className="h-full w-full bg-[#121212] rounded-3xl p-6 flex flex-col justify-between min-h-[180px]">
+                                        <div>
+                                            <h2 className="text-xl font-bold mb-2 text-white group-hover:text-accent-gold font-arabic">
+                                                {game.title}
+                                            </h2>
+                                            <p className="text-sm text-white/50 leading-relaxed font-arabic">
+                                                {game.description}
+                                            </p>
+                                        </div>
+                                        <div className="mt-6 flex items-center justify-between text-sm">
+                                            <span className="text-accent-gold font-semibold font-arabic">
+                                                العب دلوقتي
+                                            </span>
+                                            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-accent-gold/15 text-accent-gold">
+                                                <span className="rotate-180 group-hover:-translate-x-1 transition-transform">
+                                                    ↩
+                                                </span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </main>
                 </div>
             )}
 
@@ -208,17 +290,17 @@ const GamesPage = () => {
                             <label className="block text-white/50 font-bold font-arabic mb-4">هنتكلم في إيه؟</label>
                             <div className="flex flex-wrap gap-2 justify-center">
                                 {CATEGORIES[selection]?.map(c => (
-                                    <button key={c} onClick={() => setLobbyState({ ...lobbyState, category: c })} className={`px-4 py-2 rounded-full border ${lobbyState.category === c ? 'bg-white text-black border-white' : 'border-white/20'}`}>{c}</button>
+                                    <button key={c} onClick={() => setLobbyState({ ...lobbyState, category: c })} className={`px-4 py-2 rounded-full border transition-colors ${lobbyState.category === c ? 'bg-white text-black border-white' : 'border-white/20 hover:bg-white/10'}`}>{c}</button>
                                 ))}
                             </div>
                         </div>
 
-                        {selection === MODES.PASS_BOOM && (
+                        {selection.includes("عدّيها") && (
                             <div>
                                 <label className="block text-white/50 font-bold font-arabic mb-4">الوقت (ثواني)</label>
                                 <div className="flex gap-2 justify-center">
                                     {TIMERS.map(t => (
-                                        <button key={t} onClick={() => setLobbyState({ ...lobbyState, timer: t })} className={`w-12 h-12 rounded-full border flex items-center justify-center font-bold ${lobbyState.timer === t ? 'bg-red-500 border-red-500' : 'border-white/20'}`}>{t}</button>
+                                        <button key={t} onClick={() => setLobbyState({ ...lobbyState, timer: t })} className={`w-12 h-12 rounded-full border flex items-center justify-center font-bold transition-all ${lobbyState.timer === t ? 'bg-white text-black border-white scale-110' : 'border-white/20'}`}>{t}</button>
                                     ))}
                                 </div>
                             </div>
@@ -226,8 +308,8 @@ const GamesPage = () => {
                     </div>
 
                     <div className="flex gap-4 w-full max-w-sm">
-                        <button onClick={() => setView('HUB')} className="flex-1 py-3 border border-white/20 rounded-xl font-bold font-arabic">رجوع</button>
-                        <button onClick={() => setView('GAME')} className="flex-[2] py-3 bg-white text-black rounded-xl font-black font-arabic shadow-lg">يلا بينا 🚀</button>
+                        <button onClick={() => setView('HUB')} className="flex-1 py-3 border border-white/20 rounded-xl font-bold font-arabic hover:bg-white/10">رجوع</button>
+                        <button onClick={() => setView('GAME')} className="flex-[2] py-3 bg-white text-black rounded-xl font-black font-arabic shadow-lg hover:scale-105 transition-transform">يلا بينا 🚀</button>
                     </div>
                 </div>
             )}
@@ -238,14 +320,5 @@ const GamesPage = () => {
         </div>
     );
 };
-
-const HubCard = ({ title, icon, desc, onClick, color }: any) => (
-    <motion.div whileTap={{ scale: 0.98 }} onClick={onClick} className={`bg-gradient-to-br ${color} p-8 rounded-3xl border border-white/10 cursor-pointer shadow-lg min-h-[160px] flex flex-col justify-center relative overflow-hidden`}>
-        <div className="absolute right-6 top-6 text-5xl opacity-20">{icon}</div>
-        <div className="text-4xl mb-4 relative z-10">{icon}</div>
-        <h3 className="text-2xl font-black text-white font-arabic mb-1 relative z-10">{title}</h3>
-        <p className="text-white/60 font-arabic relative z-10">{desc}</p>
-    </motion.div>
-);
 
 export default GamesPage;
