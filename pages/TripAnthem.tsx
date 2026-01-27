@@ -8,113 +8,116 @@ const TripAnthem: React.FC = () => {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.2
-      }
+      transition: { staggerChildren: 0.15 }
     }
   };
 
   const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 }
+    hidden: { opacity: 0, scale: 0.9, filter: 'blur(10px)' },
+    show: { opacity: 1, scale: 1, filter: 'blur(0px)' }
   };
 
   return (
-    <div className="min-h-screen bg-nearblack pt-32 px-4 md:px-12 flex flex-col items-center text-center relative overflow-hidden pb-24">
-      {/* Background Ambience */}
+    <div className="min-h-screen bg-nearblack pt-32 px-4 md:px-12 flex flex-col items-center text-center relative overflow-hidden pb-48">
+      {/* Cinematic Spotlight Background */}
       <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent-green/10 blur-[150px] rounded-full opacity-50" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent-gold/5 blur-[120px] rounded-full opacity-50" />
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20" />
+        <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-accent-gold/20 blur-[150px] rounded-full mix-blend-screen" />
+        <div className="absolute inset-0 bg-[url('/assets/noise.png')] opacity-10" />
       </div>
 
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.8 }}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1 }}
         className="relative z-10 w-full flex flex-col items-center"
       >
-        <div className="mb-12">
-            <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-accent-gold to-white mb-4 drop-shadow-2xl tracking-tight">
-                شعار الرحلة
-            </h1>
-            <div className="h-1 w-32 bg-accent-green mx-auto rounded-full" />
+        {/* Title Sequence */}
+        <div className="mb-20">
+          <motion.span
+            initial={{ letterSpacing: '1em', opacity: 0 }}
+            animate={{ letterSpacing: '0.2em', opacity: 1 }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+            className="text-xs md:text-sm text-accent-green font-bold uppercase block mb-4"
+          >
+            Original Soundtrack
+          </motion.span>
+          <h1 className="text-6xl md:text-9xl font-black text-white mb-2 tracking-tighter drop-shadow-2xl">
+            EL SHE3AR
+          </h1>
+          <p className="text-white/40 text-lg font-serif italic">
+            The voice of the journey.
+          </p>
         </div>
 
         {siteConfig.OPTIONAL_AUDIO_PATH && (
-            <motion.div 
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-12 w-full max-w-md bg-charcoal/80 backdrop-blur-lg rounded-full p-4 border border-white/10 shadow-xl flex items-center gap-4"
-            >
-                <div className="w-12 h-12 rounded-full bg-accent-green flex items-center justify-center shrink-0">
-                    <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                </div>
-                <div className="flex-1">
-                    <div className="h-1 bg-white/10 rounded-full overflow-hidden">
-                        <div className="h-full w-1/3 bg-accent-gold relative" />
-                    </div>
-                </div>
-                <span className="text-xs font-mono text-muted">Play Anthem</span>
-            </motion.div>
-        )}
-        
-        <motion.div 
-            variants={container}
-            initial="hidden"
-            animate="show"
-            className="max-w-4xl w-full grid gap-8"
-        >
-          <motion.div variants={item} className="bg-charcoal/40 p-8 md:p-10 rounded-3xl backdrop-blur-md border border-white/5 shadow-2xl hover:bg-charcoal/60 transition-colors group">
-             <div className="text-xl md:text-3xl text-white leading-[2.2] font-medium font-sans" dir="rtl">
-                <p>صحينا وإبتدت رحلتنا</p>
-                <p>وأسوان هي محطتنا</p>
-                <p>فيها هنعرف حكايتنا</p>
-                <p className="text-accent-gold">ومعاكوا هتكمل فرحتنا</p>
-             </div>
-          </motion.div>
-
-          <motion.div variants={item} className="bg-charcoal/40 p-8 md:p-10 rounded-3xl backdrop-blur-md border border-white/5 shadow-2xl hover:bg-charcoal/60 transition-colors">
-             <div className="text-xl md:text-3xl text-white leading-[2.2] font-medium font-sans" dir="rtl">
-                <p>هنتعرف علي الأسرار</p>
-                <p>وعين سوبيك بتطق شرار</p>
-                <p>وإزاي النيل نازل هزار</p>
-                <p className="text-accent-gold">والدنيا بتحلي بعد مرار</p>
-             </div>
-          </motion.div>
-
-          <motion.div variants={item} className="bg-charcoal/40 p-8 md:p-10 rounded-3xl backdrop-blur-md border border-white/5 shadow-2xl hover:bg-charcoal/60 transition-colors">
-             <div className="text-xl md:text-3xl text-white leading-[2.2] font-medium font-sans" dir="rtl">
-                <p>حدوتة مثيرة ومحبوبة</p>
-                <p>ماشية من أسوان للنوبة</p>
-                <p>فيها لعنة وكنوز منهوبة</p>
-                <p className="text-accent-gold">وقوالب صارت مقلوبة</p>
-             </div>
-          </motion.div>
-
-          <motion.div variants={item} className="bg-charcoal/40 p-8 md:p-10 rounded-3xl backdrop-blur-md border border-white/5 shadow-2xl hover:bg-charcoal/60 transition-colors">
-             <div className="text-xl md:text-3xl text-white leading-[2.2] font-medium font-sans" dir="rtl">
-                <p>ياما قلت وياما حكيت</p>
-                <p>وبصوت عالي أنا غنيت</p>
-                <p>ياحبيبتى يامصر أنا جيت</p>
-                <p className="text-accent-gold font-bold">إيكادولي يا كيميت ياكيميت</p>
-             </div>
-          </motion.div>
-
-          <motion.div 
-            variants={item}
-            className="mt-8 py-12 relative"
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="mb-24 cursor-pointer group"
           >
-             <div className="absolute inset-0 bg-accent-green/5 blur-3xl rounded-full" />
-             <div className="relative z-10 space-y-4" dir="rtl">
-                <p className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/50 drop-shadow-lg">
-                  إيكادولي يا كيميت ياكيميت
-                </p>
-                <p className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-accent-gold to-accent-gold/50 drop-shadow-lg">
-                  إيكادولي يا كيميت ياكيميت
-                </p>
-             </div>
+            <div className="w-20 h-20 rounded-full bg-accent-gold flex items-center justify-center shadow-[0_0_40px_rgba(255,215,0,0.4)] transition-all group-hover:shadow-[0_0_60px_rgba(255,215,0,0.6)]">
+              <svg className="w-8 h-8 text-black ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+            </div>
+            <span className="text-white/60 text-xs mt-4 block font-bold tracking-widest uppercase">Play Audio</span>
           </motion.div>
+        )}
+
+        {/* Kinetic Typography Lyrics */}
+        <motion.div
+          variants={container}
+          initial="hidden"
+          animate="show"
+          className="max-w-4xl w-full flex flex-col items-center gap-16 md:gap-24"
+          dir="rtl"
+        >
+          {/* Verse 1 */}
+          <motion.div variants={item} className="text-center group">
+            <p className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/70 leading-tight group-hover:to-white transition-all duration-500">
+              "صحينا وإبتدت رحلتنا"
+            </p>
+            <p className="text-xl md:text-2xl text-white/50 mt-2 font-light">
+              ... ومن أسوان بدأت الحكاية
+            </p>
+          </motion.div>
+
+          {/* Verse 2 */}
+          <motion.div variants={item} className="text-center group">
+            <p className="text-4xl md:text-6xl font-black text-white leading-tight drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+              "وعين سوبيك بتطق شرار"
+            </p>
+            <p className="text-lg md:text-xl text-accent-gold mt-4 font-bold tracking-wide">
+              (والدنيا بتحلو بعد مرار)
+            </p>
+          </motion.div>
+
+          {/* Verse 3 */}
+          <motion.div variants={item} className="text-center group relative">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-accent-green/10 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+            <p className="text-3xl md:text-5xl font-black text-white leading-tight relative z-10">
+              "حدوتة مثيرة ومحبوبة"
+            </p>
+            <p className="text-2xl md:text-4xl text-white/80 mt-2 font-serif relative z-10">
+              ماشية من أسوان للنوبة
+            </p>
+          </motion.div>
+
+          {/* Chorus - The Climax */}
+          <motion.div
+            variants={item}
+            className="mt-12 py-16 px-8 border-y border-white/10 w-full relative overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-accent-gold/5 blur-xl" />
+            <div className="relative z-10 flex flex-col items-center gap-6">
+              <p className="text-5xl md:text-8xl font-black text-white drop-shadow-2xl animate-pulse">
+                إيكادولي
+              </p>
+              <div className="flex flex-col md:flex-row gap-4 md:gap-12 items-center">
+                <span className="text-2xl md:text-4xl text-white/60 font-medium">يا كيميت</span>
+                <span className="w-2 h-2 rounded-full bg-accent-gold hidden md:block" />
+                <span className="text-2xl md:text-4xl text-white/60 font-medium">يا كيميت</span>
+              </div>
+            </div>
+          </motion.div>
+
         </motion.div>
       </motion.div>
     </div>
