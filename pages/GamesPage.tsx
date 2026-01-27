@@ -1,9 +1,5 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-// --- Types ---
-type GameType = 'draw' | 'quest' | 'memory';
 
 // --- Shared Components ---
 const BackButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
@@ -15,329 +11,378 @@ const BackButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
     </button>
 );
 
-// --- Draw Sobek (Advanced) ---
-const DrawSobekGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
-    const [level, setLevel] = useState(1);
-    const [completedLines, setCompletedLines] = useState<number[]>([]);
-    const [isDrawing, setIsDrawing] = useState(false);
-    const [currentStart, setCurrentStart] = useState<number | null>(null);
+// --- Game 1: MEMORY ENGINE (Robust State Machine) ---
+type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
+interface Card {
+    id: number;
+    value: string; // Emoji
+    isFlipped: boolean;
+    isMatched: boolean;
+}
 
-    // Levels configuration
-    const levels = [
-        { id: 1, name: "The Smile", points: [[50, 60], [40, 65], [30, 65], [20, 60]], hint: "Connect the smile" },
-        { id: 2, name: "The Crown", points: [[35, 30], [50, 20], [65, 30], [50, 40]], hint: "Draw the crown" },
-        { id: 3, name: "The Eye", points: [[45, 45], [55, 45], [50, 50], [45, 45]], hint: "The all-seeing eye" },
-    ];
+const MEMORY_EMOJIS = ['🐊', '🌴', '⛵', '☀️', '🌊', '🏛️', '🐪', '🏺', '👑', '👀'];
 
-    /* 
-      Simplify for this demo: Just connecting dots in order.
-      In a real full implementation, we'd use Canvas API for freehand drawing or complex svg paths.
-      Here we simulate "connecting" by clicking points in sequence.
-    */
-    const currentLevelData = levels[level - 1];
-    const [connectedPoints, setConnectedPoints] = useState<number[]>([]);
+const MemoryGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+    const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
+    const [cards, setCards] = useState<Card[]>([]);
+    const [flippedIds, setFlippedIds] = useState<number[]>([]);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [moves, setMoves] = useState(0);
+    const [matches, setMatches] = useState(0);
+    const [isWin, setIsWin] = useState(false);
 
-    const handlePointClick = (index: number) => {
-        if (connectedPoints.length === 0) {
-            if (index === 0) setConnectedPoints([0]);
-        } else {
-            const lastPoint = connectedPoints[connectedPoints.length - 1];
-            if (index === lastPoint + 1) {
-                setConnectedPoints([...connectedPoints, index]);
-                if (index === currentLevelData.points.length - 1) {
-                    // Level Complete
-                    setTimeout(() => {
-                        if (level < levels.length) {
-                            setLevel(level + 1);
-                            setConnectedPoints([]);
-                        } else {
-                            alert("You are a Master Artist!"); // Replace with nice UI
-                            setLevel(1);
-                            setConnectedPoints([]);
-                        }
-                    }, 1000);
-                }
+    // Engine: Initialize Game
+    const startGame = (diff: Difficulty) => {
+        setDifficulty(diff);
+        let pairCount = 6; // Easy default
+        if (diff === 'MEDIUM') pairCount = 8;
+        if (diff === 'HARD') pairCount = 12;
+
+        const selectedEmojis = MEMORY_EMOJIS.slice(0, pairCount);
+        // Create pairs
+        const deck = [...selectedEmojis, ...selectedEmojis].map((emoji, index) => ({
+            id: index,
+            value: emoji,
+            isFlipped: false,
+            isMatched: false,
+        }));
+
+        // Fisher-Yates Shuffle
+        for (let i = deck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [deck[i], deck[j]] = [deck[j], deck[i]];
+        }
+
+        setCards(deck);
+        setFlippedIds([]);
+        setIsProcessing(false);
+        setMoves(0);
+        setMatches(0);
+        setIsWin(false);
+    };
+
+    // Engine: Card Interaction
+    const handleCardClick = (id: number) => {
+        // Block interaction if:
+        // 1. Processing a mismatch (wait state)
+        // 2. Card is already flipped
+        // 3. Card is already matched
+        const card = cards.find(c => c.id === id);
+        if (isProcessing || !card || card.isFlipped || card.isMatched) return;
+
+        // Flip logic
+        const newCards = cards.map(c => c.id === id ? { ...c, isFlipped: true } : c);
+        setCards(newCards);
+
+        const newFlippedIds = [...flippedIds, id];
+        setFlippedIds(newFlippedIds);
+
+        // Check for Pair
+        if (newFlippedIds.length === 2) {
+            setIsProcessing(true); // LOCK BOARD
+            setMoves(m => m + 1);
+
+            const c1 = newCards.find(c => c.id === newFlippedIds[0]);
+            const c2 = newCards.find(c => c.id === newFlippedIds[1]);
+
+            if (c1 && c2 && c1.value === c2.value) {
+                // MATCH
+                setTimeout(() => {
+                    setCards(prev => prev.map(c =>
+                        (c.id === c1.id || c.id === c2.id) ? { ...c, isMatched: true } : c
+                    ));
+                    setMatches(m => m + 1);
+                    setFlippedIds([]);
+                    setIsProcessing(false); // UNLOCK
+                }, 500); // Short delay to see the match
+            } else {
+                // NO MATCH
+                setTimeout(() => {
+                    setCards(prev => prev.map(c =>
+                        (c.id === c1?.id || c.id === c2?.id) ? { ...c, isFlipped: false } : c
+                    ));
+                    setFlippedIds([]);
+                    setIsProcessing(false); // UNLOCK
+                }, 1000); // 1s delay to memorize
             }
         }
     };
 
-    return (
-        <div className="relative w-full h-full flex flex-col items-center justify-center bg-[#1a1a1a] p-4 text-center">
-            <BackButton onClick={onBack} />
-            <h2 className="text-3xl font-black text-accent-gold mb-2">DRAW SOBEK</h2>
-            <p className="text-white/60 mb-8">Level {level}: {currentLevelData.hint}</p>
-
-            <div className="relative w-full max-w-sm aspect-square bg-[#2a2a2a] rounded-3xl border border-white/10 shadow-2xl p-8">
-                {/* Render Lines */}
-                <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                    {connectedPoints.map((pIndex, i) => {
-                        if (i === 0) return null;
-                        const start = currentLevelData.points[connectedPoints[i - 1]];
-                        const end = currentLevelData.points[pIndex];
-                        return (
-                            <line
-                                key={i}
-                                x1={`${start[0]}%`} y1={`${start[1]}%`}
-                                x2={`${end[0]}%`} y2={`${end[1]}%`}
-                                stroke="#E5A00D" strokeWidth="4" strokeLinecap="round"
-                            />
-                        );
-                    })}
-                </svg>
-
-                {/* Render Points */}
-                {currentLevelData.points.map((p, i) => {
-                    const isConnected = connectedPoints.includes(i);
-                    const isNext = connectedPoints.length === i;
-
-                    return (
-                        <motion.button
-                            key={i}
-                            className={`absolute w-8 h-8 -ml-4 -mt-4 rounded-full border-2 flex items-center justify-center font-bold text-xs transition-colors z-10
-                 ${isConnected ? 'bg-accent-gold border-accent-gold text-black' :
-                                    isNext ? 'bg-white border-white text-black animate-pulse' : 'bg-transparent border-white/30 text-white/30'}
-               `}
-                            style={{ left: `${p[0]}%`, top: `${p[1]}%` }}
-                            onClick={() => handlePointClick(i)}
-                            whileTap={{ scale: 0.9 }}
-                        >
-                            {i + 1}
-                        </motion.button>
-                    );
-                })}
-            </div>
-            <p className="mt-8 text-white/40 text-sm">Tap the glowing numbers in order!</p>
-        </div>
-    );
-};
-
-
-// --- Sobek Quest (New) ---
-const SobekQuestGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
-    const [step, setStep] = useState(0);
-
-    const storyline = [
-        {
-            text: "You arrive at the edge of the Nile. The water is calm, but something ripples beneath the surface...",
-            choices: [
-                { label: "Dive in", next: 1 },
-                { label: "Wait and watch", next: 2 }
-            ]
-        },
-        {
-            text: "You dive! It's refreshing. Suddenly, a friendly crocodile nudges you. It's Sobek!",
-            visual: "🐊",
-            choices: [
-                { label: "High five him", next: 3 },
-                { label: "Swim away fast", next: 2 }
-            ]
-        },
-        {
-            text: "You decide to stay dry. A felucca drifts by. The captain waves at you.",
-            visual: "⛵",
-            choices: [
-                { label: "Hop on board", next: 3 },
-                { label: "Walk along the bank", next: 3 }
-            ]
-        },
-        {
-            text: "Whatever path you took, you found the hidden temple! A golden light shines from within.",
-            visual: "✨",
-            choices: [
-                { label: "Enter the light", next: 4 }
-            ]
-        },
-        {
-            text: "Congratulations! You found the ancient playlist of the Pharaohs. The party never ends!",
-            visual: "🎉",
-            choices: [
-                { label: "Play Again", next: 0 }
-            ]
+    // Engine: Win Condition
+    useEffect(() => {
+        if (cards.length > 0 && matches === cards.length / 2) {
+            setIsWin(true);
         }
-    ];
+    }, [matches, cards]);
 
-    const currentScene = storyline[step];
-
-    return (
-        <div className="relative w-full h-full flex flex-col items-center justify-center bg-[#0d1416] p-6 text-center">
-            <BackButton onClick={onBack} />
-
-            <motion.div
-                key={step}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="max-w-md w-full"
-            >
-                {currentScene.visual && (
-                    <div className="text-8xl mb-8 animate-bounce">{currentScene.visual}</div>
-                )}
-
-                <p className="text-2xl md:text-3xl text-white font-medium mb-12 leading-relaxed">
-                    {currentScene.text}
-                </p>
-
-                <div className="space-y-4">
-                    {currentScene.choices.map((choice, i) => (
-                        <button
-                            key={i}
-                            onClick={() => setStep(choice.next)}
-                            className="w-full py-4 bg-white/10 hover:bg-accent-gold hover:text-black border border-white/20 rounded-xl text-lg font-bold transition-all"
-                        >
-                            {choice.label}
+    if (!difficulty) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-[#151515] p-6 text-center">
+                <BackButton onClick={onBack} />
+                <h2 className="text-4xl font-black text-white mb-8">MEMORY CHALLENGE</h2>
+                <div className="space-y-4 w-full max-w-xs">
+                    {(['EASY', 'MEDIUM', 'HARD'] as Difficulty[]).map(d => (
+                        <button key={d} onClick={() => startGame(d)}
+                            className="w-full py-4 rounded-xl font-bold bg-white/5 border border-white/10 hover:bg-accent-green hover:text-black transition-all">
+                            {d}
                         </button>
                     ))}
                 </div>
-            </motion.div>
-        </div>
-    );
-};
-
-// --- Quick Challenges (Memory) ---
-const MemoryGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
-    const initialCards = [
-        { id: 1, emoji: '🐊' }, { id: 2, emoji: '🐊' },
-        { id: 3, emoji: '🌴' }, { id: 4, emoji: '🌴' },
-        { id: 5, emoji: '⛵' }, { id: 6, emoji: '⛵' },
-        { id: 7, emoji: '☀️' }, { id: 8, emoji: '☀️' },
-    ].sort(() => Math.random() - 0.5);
-
-    const [cards, setCards] = useState(initialCards.map(c => ({ ...c, flipped: false, matched: false })));
-    const [flippedIndices, setFlippedIndices] = useState<number[]>([]);
-
-    const handleCardClick = (index: number) => {
-        if (flippedIndices.length === 2 || cards[index].flipped || cards[index].matched) return;
-
-        const newCards = [...cards];
-        newCards[index].flipped = true;
-        setCards(newCards);
-
-        const newFlipped = [...flippedIndices, index];
-        setFlippedIndices(newFlipped);
-
-        if (newFlipped.length === 2) {
-            const c1 = newCards[newFlipped[0]];
-            const c2 = newCards[newFlipped[1]];
-
-            if (c1.emoji === c2.emoji) {
-                c1.matched = true;
-                c2.matched = true;
-                setFlippedIndices([]);
-            } else {
-                setTimeout(() => {
-                    const resetCards = [...cards];
-                    resetCards[newFlipped[0]].flipped = false;
-                    resetCards[newFlipped[1]].flipped = false;
-                    setCards(resetCards);
-                    setFlippedIndices([]);
-                }, 1000);
-            }
-        }
-    };
-
-    const isWin = cards.every(c => c.matched);
+            </div>
+        );
+    }
 
     return (
-        <div className="relative w-full h-full flex flex-col items-center justify-center bg-[#151515] p-6 text-center">
-            <BackButton onClick={onBack} />
-            <h2 className="text-3xl font-black text-accent-green mb-8">MIND OF THE NILE</h2>
+        <div className="flex flex-col items-center justify-center min-h-[90vh] bg-[#151515] p-4">
+            <div className="w-full max-w-4xl flex justify-between items-center mb-6">
+                <button onClick={() => setDifficulty(null)} className="text-white/60 hover:text-white">← Exit</button>
+                <div className="flex gap-4 text-sm font-mono text-white/60">
+                    <span>MOVES: {moves}</span>
+                    <span>PAIRS: {matches}</span>
+                </div>
+            </div>
 
-            <div className="grid grid-cols-4 gap-4 max-w-sm w-full">
-                {cards.map((card, i) => (
+            <div className={`grid gap-3 w-full max-w-4xl mx-auto
+                ${difficulty === 'EASY' ? 'grid-cols-3 md:grid-cols-4' :
+                    difficulty === 'MEDIUM' ? 'grid-cols-4' : 'grid-cols-4 md:grid-cols-6'}`}>
+                {cards.map(card => (
                     <motion.button
-                        key={i}
-                        className={`aspect-square rounded-xl text-4xl flex items-center justify-center border-2 transition-colors ${card.flipped || card.matched ? 'bg-white border-white text-black' : 'bg-white/10 border-white/10 text-transparent'}`}
-                        onClick={() => handleCardClick(i)}
-                        whileTap={{ scale: 0.9 }}
-                        animate={{ rotateY: card.flipped || card.matched ? 180 : 0 }}
+                        key={card.id}
+                        onClick={() => handleCardClick(card.id)}
+                        className={`aspect-square rounded-xl text-3xl md:text-5xl flex items-center justify-center border-2 transition-all duration-300 transform
+                            ${card.isMatched ? 'bg-accent-green/20 border-accent-green/50 opacity-50' :
+                                card.isFlipped ? 'bg-white border-white text-black rotate-y-180' : 'bg-white/5 border-white/10 text-transparent hover:bg-white/10'}
+                        `}
+                        whileTap={{ scale: 0.95 }}
+                        animate={{ rotateY: (card.isFlipped || card.isMatched) ? 180 : 0 }}
                     >
                         <div style={{ transform: 'rotateY(180deg)' }}>
-                            {(card.flipped || card.matched) ? card.emoji : '?'}
+                            {(card.isFlipped || card.isMatched) ? card.value : ''}
                         </div>
                     </motion.button>
                 ))}
             </div>
 
-            {isWin && (
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="mt-8 p-4 bg-accent-gold text-black rounded-xl font-bold"
-                >
-                    Memory Master! 🧠
-                    <button className="block mt-2 text-sm underline opacity-70" onClick={() => window.location.reload()}>Play Again</button>
-                </motion.div>
-            )}
+            <AnimatePresence>
+                {isWin && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 backdrop-blur-md"
+                    >
+                        <h2 className="text-5xl font-black text-accent-gold mb-4">MATCHED!</h2>
+                        <p className="text-white/60 mb-8">Completed in {moves} moves.</p>
+                        <button onClick={() => startGame(difficulty)} className="px-8 py-3 bg-white text-black font-bold rounded-full hover:scale-105 transition-transform">
+                            Play Again
+                        </button>
+                        <button onClick={() => setDifficulty(null)} className="mt-4 text-white/40 hover:text-white">
+                            Change Difficulty
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
-}
+};
 
-// --- Main Games Hub ---
-const GamesPage: React.FC = () => {
-    const [activeGame, setActiveGame] = useState<GameType | null>(null);
 
-    if (activeGame === 'draw') return <DrawSobekGame onBack={() => setActiveGame(null)} />;
-    if (activeGame === 'quest') return <SobekQuestGame onBack={() => setActiveGame(null)} />;
-    if (activeGame === 'memory') return <MemoryGame onBack={() => setActiveGame(null)} />;
+// --- Game 2: DRAW SOBEK (Strict Precision Engine) ---
+const DRAW_LEVELS = [
+    {
+        id: 1,
+        name: "Basic Shape",
+        dots: [
+            { id: 1, x: 20, y: 50 }, { id: 2, x: 40, y: 30 }, { id: 3, x: 60, y: 50 },
+            { id: 4, x: 80, y: 40 }, { id: 5, x: 50, y: 80 }
+        ]
+    },
+    {
+        id: 2,
+        name: "The Crown",
+        dots: [
+            { id: 1, x: 30, y: 60 }, { id: 2, x: 30, y: 40 }, { id: 3, x: 50, y: 25 },
+            { id: 4, x: 70, y: 40 }, { id: 5, x: 70, y: 60 }, { id: 6, x: 50, y: 50 }
+        ]
+    },
+    {
+        id: 3,
+        name: "Full Crocodile",
+        dots: [
+            { id: 1, x: 10, y: 50 }, { id: 2, x: 25, y: 40 }, { id: 3, x: 40, y: 45 },
+            { id: 4, x: 55, y: 35 }, { id: 5, x: 70, y: 40 }, { id: 6, x: 85, y: 50 }, // Snout
+            { id: 7, x: 75, y: 60 }, { id: 8, x: 60, y: 55 }, { id: 9, x: 45, y: 65 },
+            { id: 10, x: 30, y: 60 }, { id: 11, x: 20, y: 55 }
+        ]
+    }
+];
+
+const DrawSobekGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+    const [levelIdx, setLevelIdx] = useState(0);
+    const [connected, setConnected] = useState<number[]>([1]); // Start with dot 1 active
+    const [wrongAttempt, setWrongAttempt] = useState<number | null>(null);
+    const [isComplete, setIsComplete] = useState(false);
+
+    const level = DRAW_LEVELS[levelIdx];
+
+    const handleDotTap = (dotId: number) => {
+        if (isComplete) return;
+
+        const lastConnected = connected[connected.length - 1];
+
+        // STRICT LOGIC: Must be exactly the next number
+        if (dotId === lastConnected + 1) {
+            const newConnected = [...connected, dotId];
+            setConnected(newConnected);
+
+            // Check win
+            if (newConnected.length === level.dots.length) {
+                setIsComplete(true);
+            }
+        } else if (dotId !== lastConnected && !connected.includes(dotId)) {
+            // Error logic
+            setWrongAttempt(dotId);
+            setTimeout(() => setWrongAttempt(null), 500);
+
+            // Optional: Haptic feedback here
+        }
+    };
+
+    const nextLevel = () => {
+        if (levelIdx < DRAW_LEVELS.length - 1) {
+            setLevelIdx(l => l + 1);
+            setConnected([1]);
+            setIsComplete(false);
+        } else {
+            // Loop back or end screen
+            setLevelIdx(0);
+            setConnected([1]);
+            setIsComplete(false);
+        }
+    };
+
+    // Helper to get lines
+    const getLines = () => {
+        let path = "";
+        for (let i = 0; i < connected.length - 1; i++) {
+            const d1 = level.dots.find(d => d.id === connected[i]);
+            const d2 = level.dots.find(d => d.id === connected[i + 1]);
+            if (d1 && d2) {
+                path += `M ${d1.x} ${d1.y} L ${d2.x} ${d2.y} `;
+            }
+        }
+        return path;
+    };
 
     return (
-        <div className="min-h-screen bg-nearblack pt-24 pb-32 px-6 overflow-hidden relative">
-            {/* Background */}
-            <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-accent-gold/5 rounded-full blur-[120px]" />
-                <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent-blue/5 rounded-full blur-[120px]" />
+        <div className="flex flex-col items-center justify-center min-h-[90vh] bg-[#1a1a1a] p-4 text-white">
+            <div className="w-full max-w-md flex justify-between items-center mb-6">
+                <button onClick={onBack} className="text-white/60 hover:text-white">← Exit</button>
+                <div className="font-bold text-accent-gold">{level.name.toUpperCase()}</div>
+                <div className="text-xs text-white/40">Level {level.id}/{DRAW_LEVELS.length}</div>
             </div>
 
-            <div className="max-w-4xl mx-auto text-center relative z-10">
-                <h1 className="text-5xl md:text-7xl font-black text-white mb-4 tracking-tighter">
-                    ARCADE <span className="text-accent-gold">SOBEK</span>
-                </h1>
-                <p className="text-xl text-white/60 mb-16">
-                    Play, Explore, and Challenge the Gods.
-                </p>
+            <div className="relative w-full max-w-md aspect-square bg-[#222] rounded-2xl border border-white/5 shadow-inner overflow-hidden select-none touch-none">
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Game Card 1 */}
-                    <motion.button
-                        onClick={() => setActiveGame('draw')}
-                        whileHover={{ y: -10 }}
-                        className="group relative h-64 rounded-3xl overflow-hidden text-left"
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-br from-purple-900 to-black opacity-80" />
-                        <img src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?q=80&w=2071&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-50" />
-                        <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                            <h3 className="text-3xl font-black text-white mb-2">DRAW SOBEK</h3>
-                            <p className="text-white/60 text-sm">Connect the stars.<br />Create the legend.</p>
-                        </div>
-                    </motion.button>
+                {/* Lines Layer */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none z-0" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <path d={getLines()} stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                </svg>
 
-                    {/* Game Card 2 */}
-                    <motion.button
-                        onClick={() => setActiveGame('quest')}
-                        whileHover={{ y: -10 }}
-                        className="group relative h-64 rounded-3xl overflow-hidden text-left"
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-900 to-black opacity-80" />
-                        <img src="https://images.unsplash.com/photo-1544377045-81640523e3cb?q=80&w=2072&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-50" />
-                        <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                            <h3 className="text-3xl font-black text-white mb-2">SOBEK QUEST</h3>
-                            <p className="text-white/60 text-sm">A choice-based<br />Nile adventure.</p>
-                        </div>
-                    </motion.button>
+                {/* Dots Layer */}
+                {level.dots.map(dot => {
+                    const isConnected = connected.includes(dot.id);
+                    const isNext = !isComplete && dot.id === connected[connected.length - 1] + 1;
+                    const isWrong = wrongAttempt === dot.id;
 
-                    {/* Game Card 3 */}
-                    <motion.button
+                    return (
+                        <motion.button
+                            key={dot.id}
+                            onPointerDown={() => handleDotTap(dot.id)} // Specific pointer event for faster response
+                            className={`absolute w-10 h-10 -ml-5 -mt-5 rounded-full flex items-center justify-center font-bold text-sm transition-all z-10
+                                ${isConnected ? 'bg-accent-green text-back' : 'bg-nearblack border-2 border-white/20 text-white/50'}
+                                ${isNext ? 'ring-4 ring-accent-gold/40 animate-pulse scale-110 border-accent-gold text-white' : ''}
+                                ${isWrong ? 'bg-red-500 animate-shake' : ''}
+                            `}
+                            style={{ left: `${dot.x}%`, top: `${dot.y}%` }}
+                            whileTap={{ scale: 0.9 }}
+                        >
+                            {isConnected ? '✓' : dot.id}
+                        </motion.button>
+                    );
+                })}
+
+                {/* Level Complete Overlay */}
+                <AnimatePresence>
+                    {isComplete && (
+                        <motion.div
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                            className="absolute inset-0 z-20 bg-black/80 flex flex-col items-center justify-center backdrop-blur-sm"
+                        >
+                            <motion.div
+                                initial={{ scale: 0 }} animate={{ scale: 1 }}
+                                className="text-6xl mb-4"
+                            >
+                                ✨
+                            </motion.div>
+                            <h3 className="text-2xl font-black text-white mb-6">Beautiful!</h3>
+                            <button onClick={nextLevel} className="px-8 py-3 bg-accent-gold text-black font-bold rounded-full">
+                                {levelIdx < DRAW_LEVELS.length - 1 ? "Next Level" : "Replay All"}
+                            </button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+            <p className="mt-8 text-white/30 text-xs uppercase tracking-widest">Connect the dots in order</p>
+        </div>
+    );
+};
+
+// --- Main Page ---
+
+const GamesPage: React.FC = () => {
+    const [activeGame, setActiveGame] = useState<'draw' | 'memory' | null>(null);
+
+    // Render Active Game
+    if (activeGame === 'memory') return <MemoryGame onBack={() => setActiveGame(null)} />;
+    if (activeGame === 'draw') return <DrawSobekGame onBack={() => setActiveGame(null)} />;
+
+    // Render Menu
+    return (
+        <div className="min-h-screen bg-nearblack pt-24 px-4 pb-20">
+            <div className="max-w-4xl mx-auto text-center">
+                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
+                    <h1 className="text-4xl md:text-6xl font-black text-white mb-2">ARCADE</h1>
+                    <p className="text-white/60 mb-12">Train your mind. Explore the Nile.</p>
+                </motion.div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                    {/* Card 1: MEMORY */}
+                    <div
                         onClick={() => setActiveGame('memory')}
-                        whileHover={{ y: -10 }}
-                        className="group relative h-64 rounded-3xl overflow-hidden text-left"
+                        className="group relative aspect-[4/3] rounded-3xl overflow-hidden cursor-pointer border border-white/5 hover:border-accent-green/50 transition-all"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-900 to-black opacity-80" />
-                        <img src="https://images.unsplash.com/photo-1634152962476-4b8a00e1915c?q=80&w=2000&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-50" />
-                        <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                            <h3 className="text-3xl font-black text-white mb-2">MEMORY</h3>
-                            <p className="text-white/60 text-sm">Train your brain.<br />Master the symbols.</p>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10" />
+                        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1626544827763-d516dce335ca?q=80&w=1200&auto=format&fit=crop')] bg-cover bg-center transition-transform duration-700 group-hover:scale-110 opacity-60" />
+
+                        <div className="absolute bottom-0 left-0 p-8 z-20 text-left">
+                            <h3 className="text-3xl font-black text-white mb-1 group-hover:text-accent-green transition-colors">MEMORY</h3>
+                            <p className="text-white/70 text-sm">Match the symbols of ancient Egypt.</p>
                         </div>
-                    </motion.button>
+                    </div>
+
+                    {/* Card 2: DRAW */}
+                    <div
+                        onClick={() => setActiveGame('draw')}
+                        className="group relative aspect-[4/3] rounded-3xl overflow-hidden cursor-pointer border border-white/5 hover:border-accent-gold/50 transition-all"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10" />
+                        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1547963334-3156637e6d0a?q=80&w=1200&auto=format&fit=crop')] bg-cover bg-center transition-transform duration-700 group-hover:scale-110 opacity-60" />
+
+                        <div className="absolute bottom-0 left-0 p-8 z-20 text-left">
+                            <h3 className="text-3xl font-black text-white mb-1 group-hover:text-accent-gold transition-colors">DRAW SOBEK</h3>
+                            <p className="text-white/70 text-sm">Connect the stars to reveal the guardian.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
