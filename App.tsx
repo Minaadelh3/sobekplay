@@ -38,15 +38,15 @@ const Home: React.FC<{ posters: any[] }> = ({ posters }) => {
     // Mocks for a production feel
     const continueWatching = posters.slice(3, 7);
     const sobekExclusives = posters.filter(p => p.isOriginal);
-    
+
     const topEgyptianContent = posters.filter(p => {
-        const t = p.title.toLowerCase();
-        const f = p.filename.toLowerCase();
-        if (t.includes('harry potter') || t.includes('lord of rings') || t.includes('la casa')) return false;
-        if (p.isOriginal || t.includes('sobek')) return false;
-        const hasArabic = /[\u0600-\u06FF]/.test(p.title);
-        const knownEgyptianFiles = ['grand_hotel', 'crocodile_gangster', 'project_x', 'nubanji', 'bakkar'];
-        return hasArabic || knownEgyptianFiles.some(k => f.includes(k));
+      const t = p.title.toLowerCase();
+      const f = p.filename.toLowerCase();
+      if (t.includes('harry potter') || t.includes('lord of rings') || t.includes('la casa')) return false;
+      if (p.isOriginal || t.includes('sobek')) return false;
+      const hasArabic = /[\u0600-\u06FF]/.test(p.title);
+      const knownEgyptianFiles = ['grand_hotel', 'crocodile_gangster', 'project_x', 'nubanji', 'bakkar'];
+      return hasArabic || knownEgyptianFiles.some(k => f.includes(k));
     }).sort((a, b) => (b.metrics?.impactScore || 0) - (a.metrics?.impactScore || 0)).slice(0, 10);
 
     return [
@@ -79,20 +79,20 @@ const Footer: React.FC = () => (
         © 2025 Sobek Play. Built for the modern Nile explorer.
       </div>
       <div className="flex justify-center items-center gap-8">
-        <a 
-          href="https://www.facebook.com/profile.php?id=61553908212285" 
-          target="_blank" 
+        <a
+          href="https://www.facebook.com/profile.php?id=61553908212285"
+          target="_blank"
           rel="noopener noreferrer"
           className="text-muted hover:text-white transition-colors duration-300 transform hover:scale-110"
           aria-label="Facebook"
         >
           <svg fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6">
-            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
           </svg>
         </a>
-        <a 
-          href="https://www.instagram.com/spark_graduates?igsh=cXZscTRrNXVlODFx" 
-          target="_blank" 
+        <a
+          href="https://www.instagram.com/spark_graduates?igsh=cXZscTRrNXVlODFx"
+          target="_blank"
           rel="noopener noreferrer"
           className="text-muted hover:text-white transition-colors duration-300 transform hover:scale-110"
           aria-label="Instagram"
@@ -127,11 +127,11 @@ const MainLayout: React.FC = () => {
         <div className="text-accent-green animate-pulse flex flex-col items-center">
           <div className="text-xl font-black mb-4 tracking-widest">SOBEK PLAY</div>
           <div className="w-12 h-1 bg-white/10 rounded-full overflow-hidden">
-            <motion.div 
+            <motion.div
               initial={{ x: '-100%' }}
               animate={{ x: '100%' }}
               transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
-              className="w-full h-full bg-accent-green" 
+              className="w-full h-full bg-accent-green"
             />
           </div>
         </div>
@@ -145,25 +145,26 @@ const MainLayout: React.FC = () => {
   return (
     <div className="min-h-screen selection:bg-accent-green selection:text-white">
       {!isWatchPage && (
-        <Navbar 
-          onSearchOpen={() => setIsSearchOpen(true)} 
-          isMobileMenuOpen={isMobileMenuOpen} 
-          setIsMobileMenuOpen={setIsMobileMenuOpen} 
+        <Navbar
+          onSearchOpen={() => setIsSearchOpen(true)}
+          isMobileMenuOpen={isMobileMenuOpen}
+          setIsMobileMenuOpen={setIsMobileMenuOpen}
         />
       )}
       {!isWatchPage && (
-        <MobileBottomNav 
+        <MobileBottomNav
           onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           isMenuOpen={isMobileMenuOpen}
+          onSearchOpen={() => setIsSearchOpen(true)}
         />
       )}
-      
-      <SearchModal 
-        isOpen={isSearchOpen} 
-        onClose={() => setIsSearchOpen(false)} 
-        posters={analyzedPosters} 
+
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        posters={analyzedPosters}
       />
-      
+
       <main className={!isWatchPage ? "pt-0" : ""}>
         <Routes>
           <Route path="/" element={<Home posters={analyzedPosters} />} />
@@ -191,7 +192,7 @@ const MainLayout: React.FC = () => {
           <Route path="/menu" element={<MenuPage />} />
         </Routes>
       </main>
-      
+
       <SobekChatbot isHidden={isMobileMenuOpen || isWatchPage || isAgpeyaPage} />
       {!isWatchPage && <Footer />}
     </div>

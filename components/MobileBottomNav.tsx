@@ -7,14 +7,15 @@ import { useScrollDirection } from '../hooks/useScrollDirection';
 interface MobileBottomNavProps {
   onMenuToggle: () => void;
   isMenuOpen: boolean;
+  onSearchOpen: () => void;
 }
 
-const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onMenuToggle, isMenuOpen }) => {
+const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onMenuToggle, isMenuOpen, onSearchOpen }) => {
   const { scrollDirection } = useScrollDirection();
   const location = useLocation();
 
-  // Hide on scroll down, show on scroll up (or if at top).
-  const isVisible = scrollDirection !== 'down';
+  // Netflix behavior: Bottom nav usually persistent, but distinct active states
+  const isVisible = true; // Always visible on mobile for easier navigation as requested
 
   const navItems = [
     {
@@ -27,12 +28,12 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onMenuToggle, isMenuO
       )
     },
     {
-      name: 'Browse',
-      path: '/movies',
+      name: 'Search',
+      isAction: true,
+      onClick: onSearchOpen,
       icon: (active: boolean) => (
-        <svg className="w-6 h-6" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? 0 : 2} strokeLinecap="round" strokeLinejoin="round">
-          <rect x="2" y="7" width="20" height="15" rx="2" ry="2" />
-          <path d="M17 2l-5 5-5-5" />
+        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
       )
     },
@@ -46,21 +47,21 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onMenuToggle, isMenuO
       )
     },
     {
-      name: 'Explore',
-      path: '/program',
+      name: 'Browse',
+      path: '/movies', // Simplify browse to movies/main feed
       icon: (active: boolean) => (
         <svg className="w-6 h-6" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? 0 : 2} strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10" />
-          <path d="M14.31 9.69L9.69 14.31 9.69 14.31 14.31 9.69zm-1.62 1.62L12 11.31l-.69.69" />
+          <rect x="2" y="7" width="20" height="15" rx="2" ry="2" />
+          <path d="M17 2l-5 5-5-5" />
         </svg>
       )
     },
     {
       name: 'More',
-      action: true,
-      path: '#',
+      isAction: true,
+      onClick: onMenuToggle,
       icon: (active: boolean) => (
-        <svg className={`w-6 h-6 transition-transform duration-300 ${isMenuOpen ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
           <path d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       )
@@ -68,67 +69,41 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onMenuToggle, isMenuO
   ];
 
   return (
-    <AnimatePresence>
-      {isVisible && (
-        <motion.div
-          initial={{ y: 100 }}
-          animate={{ y: 0 }}
-          exit={{ y: 100 }}
-          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} // Custom spring-like easing
-          className="fixed bottom-0 left-0 right-0 z-[120] bg-nearblack/80 backdrop-blur-2xl border-t border-white/5 md:hidden pb-safe-area shadow-[0_-10px_40px_rgba(0,0,0,0.4)]"
-        >
-          <div className="flex justify-around items-center h-[72px] px-2 relative">
-            {/* Background blur/gradient enhancement */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+    <div className="fixed bottom-0 left-0 right-0 z-[120] bg-[#121212]/95 backdrop-blur-md border-t border-white/5 md:hidden pb-safe-area shadow-2xl">
+      <div className="flex justify-between items-center h-[60px] px-4">
+        {navItems.map((item) => {
+          const isActive = item.name === 'More' ? isMenuOpen : location.pathname === item.path;
+          // Search doesn't have a path, so active state is transient or handled by modal
 
-            {navItems.map((item) => {
-              const isActive = item.action ? isMenuOpen : location.pathname === item.path;
+          const Content = (
+            <>
+              <motion.div
+                whileTap={{ scale: 0.9 }}
+                className={`flex flex-col items-center gap-1 ${isActive ? 'text-white' : 'text-gray-500'}`}
+              >
+                {item.icon(isActive && item.name !== 'Search')}
+                <span className="text-[9px] font-medium tracking-wide">{item.name}</span>
+              </motion.div>
+            </>
+          );
 
-              return (
-                <div key={item.name} className="flex-1 h-full relative z-10">
-                  <Component
-                    item={item}
-                    isActive={isActive}
-                    onMenuToggle={onMenuToggle}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+          if (item.isAction) {
+            return (
+              <button key={item.name} onClick={item.onClick} className="flex-1 h-full flex items-center justify-center focus:outline-none">
+                {Content}
+              </button>
+            )
+          }
+
+          return (
+            <Link key={item.name} to={item.path!} className="flex-1 h-full flex items-center justify-center focus:outline-none">
+              {Content}
+            </Link>
+          );
+        })}
+      </div>
+    </div>
   );
 };
-
-// Sub-component for cleaner render logic
-const Component = ({ item, isActive, onMenuToggle }: { item: any, isActive: boolean, onMenuToggle: () => void }) => {
-  const Tag = item.action ? 'button' : Link;
-  const props = item.action ? { onClick: onMenuToggle } : { to: item.path };
-
-  return (
-    <Tag
-      {...props}
-      className="w-full h-full flex flex-col items-center justify-center space-y-1.5 focus:outline-none group active:scale-90 transition-transform duration-200"
-    >
-      <div className={`relative p-1 rounded-xl transition-colors duration-300 ${isActive ? 'text-white' : 'text-white/40 group-hover:text-white/70'}`}>
-        {/* Active Indicator Glow */}
-        {isActive && (
-          <motion.div
-            layoutId="nav-bg"
-            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-            className="absolute inset-0 bg-white/10 rounded-xl blur-sm"
-          />
-        )}
-        <div className="relative z-10">
-          {item.icon(isActive)}
-        </div>
-      </div>
-      <span className={`text-[10px] font-bold tracking-wider uppercase transition-colors duration-300 ${isActive ? 'text-white' : 'text-white/40'}`}>
-        {item.name}
-      </span>
-    </Tag>
-  )
-}
 
 export default MobileBottomNav;
