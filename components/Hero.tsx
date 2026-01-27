@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { PosterItem } from '../types';
 import { useNavigate } from 'react-router-dom';
 import ImageWithFallback from './ImageWithFallback';
-import { useSession } from '../components/SessionProvider';
+import { supabase } from '../supabaseClient';
 
 interface HeroProps {
   posters: PosterItem[];
@@ -12,10 +12,17 @@ interface HeroProps {
 
 const Hero: React.FC<HeroProps> = ({ posters }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const { myList, addToMyList, removeFromMyList } = useSession();
+  const [user, setUser] = useState<any>(null);
+  const [inList, setInList] = useState(false);
   const navigate = useNavigate();
 
-  // Uncle Joy Mode: No Auth Listener needed
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
 
   const coverPoster = posters.find(p => p.id === 'sobek_universe_cover');
   const otherHighImpactPosters = posters
@@ -33,14 +40,43 @@ const Hero: React.FC<HeroProps> = ({ posters }) => {
   }, [heroPosters.length]);
 
   const active = heroPosters[currentIndex];
-  const inList = active ? myList.includes(active.id) : false;
+
+  useEffect(() => {
+    if (!active) return;
+    
+    const checkWatchlist = async () => {
+      if (!user) {
+        const local = JSON.parse(localStorage.getItem('sobek_guest_list') || '[]');
+        setInList(local.includes(active.id));
+        return;
+      }
+      const { data } = await supabase.from('watchlist').select('id').eq('user_id', user.id).eq('content_id', active.id);
+      setInList(!!data && data.length > 0);
+    };
+
+    checkWatchlist();
+  }, [user, active]);
 
   const toggleWatchlist = async () => {
-    if (inList) {
-      await removeFromMyList(active.id);
-    } else {
-      await addToMyList(active.id);
+    if (!user) {
+      const local = JSON.parse(localStorage.getItem('sobek_guest_list') || '[]');
+      let newList;
+      if (inList) {
+        newList = local.filter((id: string) => id !== active.id);
+      } else {
+        newList = [...local, active.id];
+      }
+      localStorage.setItem('sobek_guest_list', JSON.stringify(newList));
+      setInList(!inList);
+      return;
     }
+
+    if (inList) {
+      await supabase.from('watchlist').delete().eq('user_id', user.id).eq('content_id', active.id);
+    } else {
+      await supabase.from('watchlist').insert({ user_id: user.id, content_id: active.id });
+    }
+    setInList(!inList);
   };
 
   if (!active) return null;
@@ -91,7 +127,7 @@ const Hero: React.FC<HeroProps> = ({ posters }) => {
               onClick={() => navigate(`/watch/${active.id}`)}
               className="bg-white text-black px-10 py-4 rounded-xl font-black text-lg md:text-xl flex items-center gap-3 hover:scale-105 transition-all shadow-2xl shadow-white/10 active:scale-95"
             >
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
               <span>Play Now</span>
             </button>
 
@@ -100,11 +136,11 @@ const Hero: React.FC<HeroProps> = ({ posters }) => {
               className="bg-white/10 backdrop-blur-xl text-white border border-white/20 px-8 py-4 rounded-xl font-bold text-lg flex items-center gap-3 hover:bg-white/20 transition-all active:scale-95"
             >
               {inList ? (
-                <svg className="w-6 h-6 text-accent-green" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" /></svg>
+                <svg className="w-6 h-6 text-accent-green" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
               ) : (
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
               )}
-              <span>{inList ? '✓ In My List' : '+ My List'}</span>
+              <span>My List</span>
             </button>
           </div>
         </motion.div>

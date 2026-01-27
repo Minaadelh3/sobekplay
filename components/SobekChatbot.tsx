@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GoogleGenAI } from "@google/genai";
@@ -75,13 +74,8 @@ const SobekChatbot: React.FC<SobekChatbotProps> = ({ isHidden = false }) => {
   }, [isOpen]);
 
   const generateAIResponse = async (userMessage: string, history: Message[]) => {
-    const apiKey = process.env.API_KEY || '';
-    if (!apiKey || apiKey.includes('PLACEHOLDER') || apiKey.length < 10) {
-      return "يا غالي، الخدمة حالياً مريحة شوية.. كلم الإدارة يظبطوا مفتاح التواصل! 🐊";
-    }
-
     try {
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const recentHistory = history.slice(-8).map(msg => ({
         role: msg.sender === 'user' ? 'user' : 'model',
         parts: [{ text: msg.text }],
@@ -98,9 +92,8 @@ const SobekChatbot: React.FC<SobekChatbotProps> = ({ isHidden = false }) => {
           { role: 'user', parts: [{ text: userMessage }] }
         ]
       });
-      return response.text || "يا ساتر.. الكلام هرب مني!";
+      return response?.text || "يا ساتر.. الكلام هرب مني!";
     } catch (error) {
-      console.error("Gemini Error:", error);
       return "الشبكة في النيل بتعلق شوية 🌊.. جرب تاني كمان لحظة!";
     }
   };
