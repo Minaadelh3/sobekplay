@@ -1,17 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { generateGameCard, GameCard } from '../services/gameAI';
+import { DirectorService } from '../services/director';
+import { Card, GameModeId } from '../types/partyEngine';
 
 // --- CONFIG ---
 const UX = {
-    loading: "ثانية كده بنفكر 🤔",
+    loading: "ثانية كده... 🤔",
     newCard: "كارت جديد 🎴",
-    retry: "نجرب تاني 🔄",
+    retry: "خلصت الكروت! نعيد؟ 🔄",
     timeUp: "فرقعت 💥",
     passPhone: "ادي الموبايل للي جنبك 📱",
     start: "يلا بينا 🚀",
-    categories: "هنتكلم في إيه؟",
+    categories: "اختار الفئة (دي مجرد تصفية، اللعبة ذكية 😉)",
     timer: "وقت الجولة",
     intensity: "مود اللعب",
     back: "رجوع",
@@ -20,13 +21,15 @@ const UX = {
     answer: "الحل هو:"
 };
 
-const CATEGORIES = {
-    'عدّيها 💣': ['عام', 'أفلام', 'أغاني', 'تاريخ', 'جغرافيا', 'ضحك'],
-    'قول ولا تفوّت؟ 😏': ['خفيف', 'جرأة', 'عميق', 'ضحك', 'مواقف'],
-    'فيلم بالإيموجي 🎬': ['أفلام مصري', 'أفلام أجنبي', 'مسرحيات', 'كرتون'],
-    'كمّلها بقى…': ['أمثال قديمة', 'أمثال شعبية', 'حكم'],
-    'حدوتة على الطاير ✨': ['خيال', 'رعب كوميدي', 'مغامرة', 'جريمة']
+// Simplified Categories mapping to Packs for now
+const MODE_MAPPING: Record<string, GameModeId> = {
+    'عدّيها 💣': 'pass_boom',
+    'قول ولا تفوّت؟ 😏': 'truth_dare',
+    'فيلم بالإيموجي 🎬': 'movies_emoji',
+    'كمّلها بقى…': 'proverbs',
+    'حدوتة على الطاير ✨': 'story_chain'
 };
+
 const TIMERS = [10, 20, 30, 45, 60];
 
 // --- COMPONENTS ---
@@ -35,7 +38,7 @@ const GameHub = ({ onSelect }: { onSelect: (mode: string) => void }) => (
     <div className="max-w-6xl mx-auto pt-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
             <h1 className="text-5xl md:text-7xl font-black text-white mb-4 font-arabic">سوبيك جيمز 🐊</h1>
-            <p className="text-white/60 text-xl font-arabic">الليلة هنلعب إيه؟</p>
+            <p className="text-white/60 text-xl font-arabic">قعدة رايقة، لعب نضيف</p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 px-4 pb-32">
@@ -60,23 +63,15 @@ const HubCard = ({ title, desc, color, icon, onClick }: any) => (
 );
 
 const GameLobby = ({ mode, onStart, onBack }: { mode: string, onStart: (s: any) => void, onBack: () => void }) => {
-    const [cat, setCat] = useState((CATEGORIES as any)[mode]?.[0] || 'عام');
+    // For now, we simulate deck selection by just starting. 
+    // In future, this screen shows "Packs" (Decks).
     const [time, setTime] = useState(mode === 'عدّيها 💣' ? 30 : 0);
 
     return (
         <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center text-white font-arabic">
             <h2 className="text-4xl font-black mb-12">{mode}</h2>
             <div className="w-full max-w-md space-y-8 mb-12">
-                <div>
-                    <label className="block text-white/50 mb-4 text-lg font-bold">{UX.categories}</label>
-                    <div className="flex flex-wrap gap-2 justify-center">
-                        {(CATEGORIES as any)[mode]?.map((c: string) => (
-                            <button key={c} onClick={() => setCat(c)} className={`px-4 py-2 rounded-full border transition-all ${cat === c ? 'bg-white text-black border-white' : 'bg-transparent border-white/20 text-white/60'}`}>
-                                {c}
-                            </button>
-                        ))}
-                    </div>
-                </div>
+
                 {mode === 'عدّيها 💣' && (
                     <div>
                         <label className="block text-white/50 mb-4 text-lg font-bold">{UX.timer}</label>
@@ -89,10 +84,15 @@ const GameLobby = ({ mode, onStart, onBack }: { mode: string, onStart: (s: any) 
                         </div>
                     </div>
                 )}
+
+                <p className="text-white/40 max-w-xs mx-auto">
+                    اللعبة دي بتستخدم نظام "المدير الذكي" عشان يظبطلك القعدة ويقلب المود تدريجي. 😉
+                </p>
             </div>
+
             <div className="flex gap-4 w-full max-w-md">
                 <button onClick={onBack} className="flex-1 py-4 rounded-xl font-bold border border-white/10 hover:bg-white/10">{UX.back}</button>
-                <button onClick={() => onStart({ category: cat, timer: time })} className="flex-[2] py-4 bg-white text-black rounded-xl font-black text-xl shadow-lg hover:scale-105 transition-transform">
+                <button onClick={() => onStart({ timer: time })} className="flex-[2] py-4 bg-white text-black rounded-xl font-black text-xl shadow-lg hover:scale-105 transition-transform">
                     {UX.start}
                 </button>
             </div>
@@ -100,37 +100,50 @@ const GameLobby = ({ mode, onStart, onBack }: { mode: string, onStart: (s: any) 
     );
 };
 
-const ActiveGame = ({ mode, settings, onExit }: { mode: string, settings: any, onExit: () => void }) => {
-    const [card, setCard] = useState<GameCard | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [history, setHistory] = useState<string[]>([]);
+const ActiveGame = ({ modeLabel, settings, onExit }: { modeLabel: string, settings: any, onExit: () => void }) => {
+    const [card, setCard] = useState<Card | null>(null);
+    // Initialize Director ONCE
+    const directorRef = useRef<DirectorService | null>(null);
+    const [stats, setStats] = useState({ currentIntensity: 1 });
+
+    // Game State
     const [timer, setTimer] = useState(settings.timer);
     const [active, setActive] = useState(false);
     const [boom, setBoom] = useState(false);
     const [revealed, setRevealed] = useState(false);
 
-    const fetchCard = async () => {
-        setLoading(true);
+    useEffect(() => {
+        if (!directorRef.current) {
+            const mappedMode = MODE_MAPPING[modeLabel] || 'pass_boom';
+            directorRef.current = new DirectorService(mappedMode, []);
+            fetchCard();
+        }
+    }, [modeLabel]);
+
+    const fetchCard = () => {
+        if (!directorRef.current) return;
+
         setBoom(false);
         setRevealed(false);
         setActive(false);
-        const newCard = await generateGameCard(mode, settings.category, settings.timer, 2, history);
 
-        if (newCard) {
-            setCard(newCard);
-            setHistory(h => [...h, newCard.text].slice(-20));
+        const next = directorRef.current.getNextCard();
+        setStats(directorRef.current.getSessionStats());
+
+        if (next) {
+            setCard(next);
             setTimer(settings.timer);
             setActive(true);
+        } else {
+            setCard(null);
         }
-        setLoading(false);
     };
 
-    useEffect(() => { fetchCard(); }, []);
-
+    // Timer Logic
     useEffect(() => {
         if (!active || timer <= 0) return;
         const interval = setInterval(() => {
-            setTimer(t => {
+            setTimer((t: number) => {
                 if (t <= 1) { setActive(false); setBoom(true); return 0; }
                 return t - 1;
             });
@@ -142,16 +155,13 @@ const ActiveGame = ({ mode, settings, onExit }: { mode: string, settings: any, o
         <div className={`min-h-screen pt-20 px-4 flex flex-col items-center relative transition-colors duration-500 ${boom ? 'bg-red-900' : 'bg-[#0a0a0a]'}`}>
             <div className="w-full max-w-md flex justify-between items-center mb-8">
                 <button onClick={onExit} className="text-white/50 hover:text-white font-arabic">❌ {UX.exit}</button>
-                <div className="text-white/50 font-arabic text-sm px-3 py-1 bg-white/5 rounded-full">{settings.category}</div>
+                <div className="flex gap-2">
+                    <div className="text-white/30 font-arabic text-xs px-2 py-1 border border-white/10 rounded-full">🔥 {stats.currentIntensity}/5</div>
+                </div>
             </div>
 
             <div className="flex-1 w-full max-w-md flex flex-col justify-center items-center">
-                {loading ? (
-                    <div className="animate-pulse flex flex-col items-center">
-                        <span className="text-6xl mb-4">🤔</span>
-                        <span className="text-white/50 font-arabic text-xl">{UX.loading}</span>
-                    </div>
-                ) : boom ? (
+                {boom ? (
                     <div className="text-center animate-bounce">
                         <span className="text-9xl block mb-4">💥</span>
                         <h2 className="text-6xl font-black text-white font-arabic">{UX.timeUp}</h2>
@@ -159,7 +169,8 @@ const ActiveGame = ({ mode, settings, onExit }: { mode: string, settings: any, o
                     </div>
                 ) : card ? (
                     <motion.div
-                        initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                        key={card.id}
+                        initial={{ scale: 0.9, opacity: 0, rotate: -2 }} animate={{ scale: 1, opacity: 1, rotate: 0 }}
                         className="w-full bg-gradient-to-b from-gray-800 to-black p-8 rounded-[40px] border border-white/10 shadow-2xl min-h-[400px] flex flex-col items-center text-center relative"
                     >
                         {settings.timer > 0 && (
@@ -169,34 +180,38 @@ const ActiveGame = ({ mode, settings, onExit }: { mode: string, settings: any, o
                         )}
                         <div className="flex-1 flex flex-col justify-center items-center w-full">
                             {card.emoji && <div className="text-7xl mb-6">{card.emoji}</div>}
-                            <h3 className="text-2xl md:text-3xl font-bold text-white font-arabic leading-relaxed mb-6" dir="rtl">{card.text}</h3>
-                            {(card.answer || card.type === 'PROVERB') && (
+                            <h3 className="text-2xl md:text-4xl font-bold text-white font-arabic leading-relaxed mb-6" dir="rtl">{card.text}</h3>
+
+                            {(card.answer) && (
                                 <div className="mt-4">
                                     {!revealed ? (
                                         <button onClick={() => setRevealed(true)} className="text-white/40 text-sm font-arabic underline">{UX.reveal}</button>
                                     ) : (
                                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-green-900/40 p-4 rounded-xl text-green-400 font-bold font-arabic">
-                                            {card.answer || "No Answer"}
+                                            {card.answer}
                                         </motion.div>
                                     )}
                                 </div>
                             )}
                         </div>
+                        <div className="absolute bottom-6 flex gap-2">
+                            {card.tags.map(t => <span key={t} className="text-[10px] uppercase tracking-widest text-white/20 bg-white/5 px-2 py-1 rounded">{t}</span>)}
+                        </div>
                     </motion.div>
                 ) : (
                     <div className="text-center">
-                        <p className="text-white/50 font-arabic mb-4">حصلت مشكلة بسيطة 😅</p>
-                        <button onClick={fetchCard} className="px-6 py-2 bg-white/10 rounded-full">{UX.retry}</button>
+                        <p className="text-white/50 font-arabic mb-4">خلصنا الكروت اللي في المود ده!</p>
+                        <button onClick={onExit} className="px-6 py-2 bg-white/10 rounded-full">اختار مود تاني</button>
                     </div>
                 )}
             </div>
 
-            {!loading && !boom && (
+            {!boom && card && (
                 <div className="w-full max-w-md pt-8 pb-12">
                     <button onClick={fetchCard} className="w-full py-4 bg-accent-gold text-black font-black font-arabic text-xl rounded-2xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all">
-                        {UX.newCard}
+                        {timer === 0 ? 'التالي ⏭️' : UX.newCard}
                     </button>
-                    {mode === 'عدّيها 💣' && timer <= 5 && <div className="text-center mt-2 text-white/30 text-sm">{UX.passPhone}</div>}
+                    {timer > 0 && timer <= 5 && <div className="text-center mt-2 text-white/30 text-sm">{UX.passPhone}</div>}
                 </div>
             )}
         </div>
@@ -224,7 +239,7 @@ const GamesPage: React.FC = () => {
             <AnimatePresence mode='wait'>
                 {view === 'HUB' && <motion.div key="hub"><GameHub onSelect={handleSelect} /></motion.div>}
                 {view === 'LOBBY' && selectedMode && <motion.div key="lobby"><GameLobby mode={selectedMode} onStart={handleStart} onBack={() => setView('HUB')} /></motion.div>}
-                {view === 'GAME' && selectedMode && gameSettings && <motion.div key="game" className="fixed inset-0 z-50 bg-[#0a0a0a]"><ActiveGame mode={selectedMode} settings={gameSettings} onExit={() => setView('HUB')} /></motion.div>}
+                {view === 'GAME' && selectedMode && gameSettings && <motion.div key="game" className="fixed inset-0 z-50 bg-[#0a0a0a]"><ActiveGame modeLabel={selectedMode} settings={gameSettings} onExit={() => setView('HUB')} /></motion.div>}
             </AnimatePresence>
         </div>
     );
