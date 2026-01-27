@@ -104,7 +104,7 @@ const ActiveGame = ({ modeLabel, settings, onExit }: { modeLabel: string, settin
     const [card, setCard] = useState<Card | null>(null);
     // Initialize Director ONCE
     const directorRef = useRef<DirectorService | null>(null);
-    const [stats, setStats] = useState({ currentIntensity: 1 });
+    const [stats, setStats] = useState({ currentIntensity: 1, curve: 'warmup', intensityTarget: 1 });
 
     // Game State
     const [timer, setTimer] = useState(settings.timer);
@@ -128,7 +128,7 @@ const ActiveGame = ({ modeLabel, settings, onExit }: { modeLabel: string, settin
         setActive(false);
 
         const next = directorRef.current.getNextCard();
-        setStats(directorRef.current.getSessionStats());
+        setStats(directorRef.current.getSessionStats() as any);
 
         if (next) {
             setCard(next);
@@ -155,8 +155,11 @@ const ActiveGame = ({ modeLabel, settings, onExit }: { modeLabel: string, settin
         <div className={`min-h-screen pt-20 px-4 flex flex-col items-center relative transition-colors duration-500 ${boom ? 'bg-red-900' : 'bg-[#0a0a0a]'}`}>
             <div className="w-full max-w-md flex justify-between items-center mb-8">
                 <button onClick={onExit} className="text-white/50 hover:text-white font-arabic">❌ {UX.exit}</button>
-                <div className="flex gap-2">
-                    <div className="text-white/30 font-arabic text-xs px-2 py-1 border border-white/10 rounded-full">🔥 {stats.currentIntensity}/5</div>
+                <div className="flex gap-2 items-center">
+                    <span className="text-white/30 text-xs font-arabic uppercase tracking-widest">{stats.curve}</span>
+                    <div className="text-white/30 font-arabic text-xs px-2 py-1 border border-white/10 rounded-full">
+                        🔥 {stats.intensityTarget}/10
+                    </div>
                 </div>
             </div>
 
