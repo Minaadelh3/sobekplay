@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
+
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     QUESTIONS,
@@ -572,6 +574,15 @@ const PassAndBoomGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
 const GamesPage: React.FC = () => {
     const [activeGame, setActiveGame] = useState<'draw' | 'memory' | 'spin' | 'truth' | 'vote' | 'boom' | 'charades' | 'proverbs' | 'fantasy' | null>(null);
+    const location = useLocation();
+
+    // Reselect to Reset Logic
+    useEffect(() => {
+        if (location.state && (location.state as any).resetTab) {
+            setActiveGame(null);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }, [location.state]);
 
     // Render Active Game
     if (activeGame === 'memory') return <MemoryGame onBack={() => setActiveGame(null)} />;

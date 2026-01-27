@@ -1,9 +1,11 @@
-
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 const MobileBottomNav: React.FC = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const tabs = [
     { label: 'Program', path: '/program', icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> },
     { label: 'El She3ar', path: '/she3ar-al-re7la', icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg> },
@@ -19,6 +21,12 @@ const MobileBottomNav: React.FC = () => {
           <NavLink
             key={tab.path}
             to={tab.path}
+            onClick={(e) => {
+              if (location.pathname.startsWith(tab.path)) {
+                e.preventDefault();
+                navigate(tab.path, { state: { resetTab: Date.now() }, replace: true });
+              }
+            }}
             className={({ isActive }) =>
               `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors duration-200 ${isActive ? 'text-accent-gold' : 'text-white/50 hover:text-white/80'
               }`
