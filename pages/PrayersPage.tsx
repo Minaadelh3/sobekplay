@@ -15,42 +15,48 @@ const PrayersPage: React.FC = () => {
       title: "صلاة باكر",
       subtitle: "The Morning Prayer",
       timeNote: "توافق الساعة السادسة صباحًا، وتُقال بعد الاستيقاظ.",
-      icon: "🌅"
+      icon: "🌅",
+      content: `PLACEHOLDER_PRIME`
     },
     {
       id: 'terce',
       title: "صلاة الساعة الثالثة",
       subtitle: "The Third Hour",
       timeNote: "تُصَلَّى في الساعة التاسعة صباحًا.",
-      icon: "🕊️"
+      icon: "🕊️",
+      content: `PLACEHOLDER_TERCE`
     },
     {
       id: 'sext',
       title: "صلاة الساعة السادسة",
       subtitle: "The Sixth Hour",
       timeNote: "تُصَلَّى الساعة الثانية عشر ظهرًا.",
-      icon: "☀️"
+      icon: "☀️",
+      content: `PLACEHOLDER_SEXT`
     },
     {
       id: 'none',
       title: "صلاة الساعة التاسعة",
       subtitle: "The Ninth Hour",
       timeNote: "توافق الساعة الثالثة بعد الظهر.",
-      icon: "✝️"
+      icon: "✝️",
+      content: `PLACEHOLDER_NONE`
     },
     {
       id: 'vespers',
       title: "صلاة الغروب",
       subtitle: "Vespers",
       timeNote: "تُصَلَّى في الساعة الخامسة مساءً قبل حلول الليل.",
-      icon: "🌇"
+      icon: "🌇",
+      content: `PLACEHOLDER_VESPERS`
     },
     {
       id: 'compline',
       title: "صلاة النوم",
       subtitle: "Compline",
       timeNote: "تُصَلَّى قبل النوم.",
-      icon: "🌙"
+      icon: "🌙",
+      content: ``
     }
   ];
 
@@ -76,8 +82,8 @@ const PrayersPage: React.FC = () => {
             <motion.button
               onClick={() => toggleSection(prayer.id)}
               className={`w-full flex items-center justify-between p-6 rounded-2xl border transition-all duration-300 group ${openSection === prayer.id
-                  ? 'bg-charcoal border-accent-gold/50 shadow-[0_0_30px_rgba(255,215,0,0.1)]'
-                  : 'bg-charcoal/40 border-white/5 hover:bg-charcoal/60'
+                ? 'bg-charcoal border-accent-gold/50 shadow-[0_0_30px_rgba(255,215,0,0.1)]'
+                : 'bg-charcoal/40 border-white/5 hover:bg-charcoal/60'
                 }`}
             >
               <div className="flex items-center gap-4 md:gap-6 w-full">
@@ -113,11 +119,18 @@ const PrayersPage: React.FC = () => {
                     <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
                     {/* CONTENT PLACEHOLDER */}
-                    <div className="w-full flex flex-col items-center justify-center py-12 text-white/20">
-                      <p className="font-mono text-sm uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full">
-                        {prayer.title} Content Placeholder
-                      </p>
-                      <p className="mt-4 text-xs">Insert prayer text here...</p>
+                    <div className="w-full py-8 text-right px-2 md:px-8">
+                      {prayer.content ? (
+                        <div className="whitespace-pre-line font-serif text-lg md:text-xl leading-loose text-white/90 font-medium" dir="rtl">
+                          {prayer.content}
+                        </div>
+                      ) : (
+                        <div className="w-full flex flex-col items-center justify-center py-12 text-white/20">
+                          <p className="font-mono text-sm uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full">
+                            Content Pending
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                   </div>
