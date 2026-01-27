@@ -255,7 +255,7 @@ const MainLayout: React.FC = () => {
         posters={analyzedPosters}
       />
 
-      <main className={`${!isWatchPage ? "pt-20" : ""} ${isTripPage ? "pb-28 md:pb-0" : ""}`}>
+      <main className={`${!isWatchPage ? "pt-20" : ""} pb-24 md:pb-0`}>
         <Routes>
           <Route path="/" element={<Home posters={analyzedPosters} />} />
           <Route path="/movies" element={<MoviesPage posters={analyzedPosters} />} />
@@ -287,7 +287,7 @@ const MainLayout: React.FC = () => {
       </main>
 
       <SobekChatbot isHidden={isMobileMenuOpen || isWatchPage || isAgpeyaPage} />
-      {isTripPage && <MobileBottomNav />}
+      <MobileBottomNav />
       {!isWatchPage && <Footer />}
     </div>
   );

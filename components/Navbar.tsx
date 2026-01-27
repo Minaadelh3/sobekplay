@@ -77,6 +77,24 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
     </motion.div>
   );
 
+  // Mobile Menu State
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    // Lock body scroll when mobile menu is open
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMobileMenuOpen]);
+
+  // Combined nav items for mobile
+  const allNavItems = [...navLinks, ...exploreItems, ...moreItems];
+
   return (
     <>
       {/* Backdrop for click-outside */}
@@ -96,20 +114,44 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
         <div className="max-w-[1920px] mx-auto px-4 md:px-12 h-full flex items-center justify-between gap-4">
 
           {/* Logo */}
-          <Link to="/" onClick={() => setActiveDropdown(null)} className="flex-shrink-0 z-[101] relative">
+          <Link to="/" onClick={() => { setActiveDropdown(null); setIsMobileMenuOpen(false); }} className="flex-shrink-0 z-[102] relative flex items-center gap-2">
             <BrandLogo className="h-6 md:h-8 w-auto text-accent-gold hover:text-white transition-colors" />
           </Link>
 
-          {/* Scrollable Tabs Container */}
-          <div className="flex-1 overflow-x-auto no-scrollbar mx-2 md:mx-8 relative z-[101]">
-            <div className="flex items-center space-x-6 md:space-x-8 min-w-max px-2">
+          {/* Mobile Burger Trigger (Visible Only on Mobile) */}
+          <div className="md:hidden z-[102] flex items-center gap-4">
+            {/* Search in Header for Mobile */}
+            <button
+              onClick={onSearchOpen}
+              className="text-white/80"
+              aria-label="Search"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            </button>
+
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="text-white p-2"
+              aria-label="Menu"
+            >
+              <div className="space-y-1.5 w-6">
+                <motion.span animate={{ rotate: isMobileMenuOpen ? 45 : 0, y: isMobileMenuOpen ? 8 : 0 }} className="block h-0.5 w-full bg-accent-gold transform origin-center transition-transform" />
+                <motion.span animate={{ opacity: isMobileMenuOpen ? 0 : 1 }} className="block h-0.5 w-full bg-accent-gold transition-opacity" />
+                <motion.span animate={{ rotate: isMobileMenuOpen ? -45 : 0, y: isMobileMenuOpen ? -8 : 0 }} className="block h-0.5 w-full bg-accent-gold transform origin-center transition-transform" />
+              </div>
+            </button>
+          </div>
+
+          {/* DESKTOP NAV (Hidden on Mobile) */}
+          <div className="hidden md:flex flex-1 overflow-x-auto no-scrollbar mx-8 relative z-[101]">
+            <div className="flex items-center space-x-8 min-w-max px-2">
               {/* Standard Links */}
               {navLinks.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}
                   onClick={() => setActiveDropdown(null)}
-                  className={`text-sm md:text-base font-medium whitespace-nowrap transition-all duration-200 select-none ${isLinkActive(link.path)
+                  className={`text-base font-medium whitespace-nowrap transition-all duration-200 select-none ${isLinkActive(link.path)
                     ? 'text-white font-bold border-b-2 border-accent-green pb-1'
                     : 'text-white/60 hover:text-white'
                     }`}
@@ -122,7 +164,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
               <div className="relative">
                 <button
                   onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === 'explore' ? null : 'explore'); }}
-                  className={`text-sm md:text-base font-medium whitespace-nowrap flex items-center gap-1 transition-all duration-200 ${activeDropdown === 'explore' || exploreItems.some(i => isLinkActive(i.path)) ? 'text-white font-bold' : 'text-white/60 hover:text-white'
+                  className={`text-base font-medium whitespace-nowrap flex items-center gap-1 transition-all duration-200 ${activeDropdown === 'explore' || exploreItems.some(i => isLinkActive(i.path)) ? 'text-white font-bold' : 'text-white/60 hover:text-white'
                     }`}
                 >
                   Explore
@@ -137,7 +179,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
               <div className="relative">
                 <button
                   onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === 'more' ? null : 'more'); }}
-                  className={`text-sm md:text-base font-medium whitespace-nowrap flex items-center gap-1 transition-all duration-200 ${activeDropdown === 'more' || moreItems.some(i => isLinkActive(i.path)) ? 'text-white font-bold' : 'text-white/60 hover:text-white'
+                  className={`text-base font-medium whitespace-nowrap flex items-center gap-1 transition-all duration-200 ${activeDropdown === 'more' || moreItems.some(i => isLinkActive(i.path)) ? 'text-white font-bold' : 'text-white/60 hover:text-white'
                     }`}
                 >
                   More
@@ -150,8 +192,8 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
             </div>
           </div>
 
-          {/* Right Side Actions */}
-          <div className="flex-shrink-0 flex items-center gap-3 md:gap-6 bg-nearblack/95 pl-2 z-[101] relative">
+          {/* Right Side Actions (Desktop Only) */}
+          <div className="hidden md:flex flex-shrink-0 items-center gap-6 bg-nearblack/95 pl-2 z-[101] relative">
             <button
               onClick={onSearchOpen}
               className="text-white/80 hover:text-white transition-transform hover:scale-110 p-2"
@@ -161,7 +203,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
               </svg>
             </button>
 
-            <div className="hidden sm:block h-6 w-[1px] bg-white/20" />
+            <div className="h-6 w-[1px] bg-white/20" />
 
             {/* Profile Dropdown */}
             <div className="relative">
@@ -202,6 +244,60 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
           </div>
         </div>
       </nav>
+
+      {/* MOBILE MENU OVERLAY */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-sm md:hidden"
+            />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed right-0 top-0 bottom-0 w-[80%] max-w-sm bg-[#121212] z-[101] shadow-2xl border-l border-white/10 md:hidden flex flex-col pt-24 pb-8 overflow-y-auto"
+            >
+              <div className="px-6 mb-8">
+                <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-4">Navigation</h3>
+                <div className="space-y-2">
+                  {allNavItems.map(item => (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 py-3 px-4 rounded-xl transition-colors
+                                            ${isLinkActive(item.path) ? 'bg-white/10 text-white font-bold' : 'text-white/60 hover:text-white hover:bg-white/5'}
+                                        `}
+                    >
+                      <span>{item.name}</span>
+                      {isLinkActive(item.path) && <span className="ml-auto text-accent-green">●</span>}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-auto px-6 pt-6 border-t border-white/10">
+                <div className="flex items-center gap-3 mb-6 p-4 bg-white/5 rounded-xl">
+                  <div className="w-10 h-10 rounded-full bg-accent-green flex items-center justify-center text-white font-bold">J</div>
+                  <div>
+                    <div className="text-white font-bold text-sm">Uncle Joy</div>
+                    <div className="text-accent-gold text-[10px]">Premium Member</div>
+                  </div>
+                </div>
+                <button className="w-full py-3 text-center text-red-500 font-bold bg-red-500/10 rounded-xl">
+                  Sign Out
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </>
   );
 };
