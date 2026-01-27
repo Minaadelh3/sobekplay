@@ -1,27 +1,38 @@
 // types/partyEngine.ts
 
-export type IntensityLevel = 1 | 2 | 3 | 4 | 5; // 1: Chill, 5: Extreme
-export type SocialRisk = 1 | 2 | 3; // 1: Safe, 2: Bold, 3: Risky
+export type IntensityLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10; // Expanded to 1-10
+export type SocialDanger = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10; // New metric
+
+export type Tone = 'playful' | 'neutral' | 'serious' | 'heavy';
+export type Mood = 'reflective' | 'tense' | 'relieving' | 'provocative';
+export type TimeSuitability = 'early' | 'mid' | 'late' | 'very_late';
+export type GroupSize = 'small' | 'medium' | 'large';
+
 export type GameModeId = 'pass_boom' | 'truth_dare' | 'movies_emoji' | 'proverbs' | 'story_chain';
 
 export interface Card {
     id: string;              // Unique UUID
-    text: string;            // The question/challenge in Masry
-    answer?: string;         // For trivia/riddles
-    emoji?: string;          // Visual aid
+    text: string;            // The content in human, uneven Masry
 
-    // Dimensions
+    // Core Metrics
     intensity: IntensityLevel;
-    socialRisk: SocialRisk;
+    socialDanger: SocialDanger;
+    replayFatigue: number;   // 0-100 (High = dies fast)
 
-    // Metadata
-    tags: string[];          // e.g., 'acting', 'singing', 'personal', 'funny'
-    minPlayers?: number;
+    // Vibe Metadata
+    tone: Tone;
+    mood: Mood;
+    tags: string[];
+
+    // Constraints
+    minPlayers?: GroupSize;
+    timing?: TimeSuitability[];
+
+    // Game Specifics
+    answer?: string;
+    emoji?: string;
+    minTime?: number;
     packId: string;
-    season?: string;         // e.g., 'ramadan', 'new_year'
-
-    // Rules
-    minTime?: number;        // For timed games, minimum seconds needed
 }
 
 export interface Deck {
@@ -29,7 +40,6 @@ export interface Deck {
     name: string;
     description: string;
     coverImage?: string;
-    isPremium?: boolean;
     baseIntensity: IntensityLevel;
     cards: Card[];
 }
@@ -37,7 +47,7 @@ export interface Deck {
 export interface GameSession {
     mode: GameModeId;
     activeDeckIds: string[];
-    intensityTarget: IntensityLevel;
-    history: string[]; // List of Card IDs played
+    intensityTarget: number; // Float for granular Director control
+    history: string[];
     startTime: number;
 }
