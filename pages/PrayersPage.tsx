@@ -774,17 +774,7 @@ const PrayersPage: React.FC = () => {
 
                     {/* CONTENT PLACEHOLDER */}
                     <div className="w-full py-8 text-right px-2 md:px-8">
-                      {prayer.content ? (
-                        <div className="whitespace-pre-line font-serif text-lg md:text-xl leading-loose text-white/90 font-medium" dir="rtl">
-                          {prayer.content}
-                        </div>
-                      ) : (
-                        <div className="w-full flex flex-col items-center justify-center py-12 text-white/20">
-                          <p className="font-mono text-sm uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full">
-                            Content Pending
-                          </p>
-                        </div>
-                      )}
+                      {renderPrayerContent(prayer.content, prayer.id)}
                     </div>
 
                   </div>
