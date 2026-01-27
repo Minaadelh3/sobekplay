@@ -5,13 +5,14 @@ import { sendGameMessage, ChatMessage, AIResponse } from '../services/gameAI';
 
 // --- CONFIG ---
 const UX = {
-    loading: "سوبيك بيفكر... 🤔",
+    loading: "سوبيك بيظبط القعدة... 🐊",
     newCard: "كارت جديد 🎴",
     retry: "نجرب تاني 🔄",
     timeUp: "فرقعت 💥",
     passPhone: "ادي الموبايل للي جنبك 📱",
     placeholder: "اكتب ردك هنا...",
-    send: "إرسال 🚀"
+    send: "إرسال",
+    difficulty: "الصعوبة (مستوى الشقاوة 😎)"
 };
 
 // Map Internal keys to Display Names (if needed) or use Display Names directly
@@ -23,15 +24,51 @@ const MODES = {
     STORY_CHAIN: "حدوتة على الطاير ✨"
 };
 
-const CATEGORIES: Record<string, string[]> = {
-    [MODES.PASS_BOOM]: ['عام', 'أفلام', 'أغاني', 'تاريخ', 'جغرافيا', 'ضحك'],
-    [MODES.TRUTH_DARE]: ['خفيف', 'جرأة', 'عميق', 'ضحك', 'مواقف'],
-    [MODES.EMOJI_MOVIES]: ['أفلام مصري', 'أفلام أجنبي', 'مسرحيات', 'كرتون'],
-    [MODES.PROVERBS]: ['أمثال قديمة', 'أمثال شعبية', 'حكم'],
-    [MODES.STORY_CHAIN]: ['خيال', 'رعب كوميدي', 'مغامرة', 'جريمة']
-};
+const gameModes = [
+    {
+        id: "pass-boom",
+        mode: "عدّيها 💣",
+        title: "عدّيها 💣",
+        description: "جاوب بسرعة قبل ما الموبايل يفرقع في وشك!",
+        accent: "from-red-600 to-orange-600",
+    },
+    {
+        id: "truth-dare",
+        mode: "قول ولا تفوّت؟ 😏",
+        title: "قول ولا تفوّت؟ 😏",
+        description: "أسئلة محرجة وتحديات للمجروحين.",
+        accent: "from-purple-600 to-pink-600",
+    },
+    {
+        id: "emoji-movie",
+        mode: "فيلم بالإيموجي 🎬",
+        title: "فيلم بالإيموجي 🎬",
+        description: "خمن الفيلم من الإيموجي... للصيّع بس.",
+        accent: "from-blue-600 to-cyan-600",
+    },
+    {
+        id: "aswan-orig",
+        mode: "أسواني أصلي 🐊",
+        title: "أسواني أصلي 🐊",
+        description: "أسئلة عن الرحلة، النوبة، والناس.",
+        accent: "from-emerald-600 to-teal-600",
+    },
+    {
+        id: "proverbs",
+        mode: "كمّلها بقى…",
+        title: "كمّلها بقى…",
+        description: "الأمثال الشعبية... على أصولها.",
+        accent: "from-amber-600 to-yellow-600",
+    },
+];
 
-const TIMERS = [10, 20, 30, 45, 60];
+const CATEGORIES: Record<string, string[]> = {
+    "عدّيها 💣": ['مشكل', 'أفلام', 'أغاني', 'معلومات عامة'],
+    "قول ولا تفوّت؟ 😏": ['خفيف', 'جرأة', 'عميق', 'ضحك'],
+    "فيلم بالإيموجي 🎬": ['أفلام مصري', 'مسرحيات', 'مسلسلات'],
+    "أسواني أصلي 🐊": ['النوبة', 'الرحلة', 'المعبد', 'أكل وشرب'],
+    "كمّلها بقى…": ['أمثال قديمة', 'حكم', 'إيفيهات أفلام']
+};
 
 // --- CHAT COMPONENTS ---
 
@@ -43,9 +80,9 @@ const MessageBubble = ({ msg }: { msg: ChatMessage }) => {
             animate={{ opacity: 1, y: 0 }}
             className={`flex w-full mb-4 ${isModel ? 'justify-start' : 'justify-end'}`}
         >
-            <div className={`max-w-[85%] rounded-2xl px-5 py-3 text-lg leading-relaxed font-arabic ${isModel
-                    ? 'bg-charcoal border border-white/10 text-white rounded-tl-none'
-                    : 'bg-accent-green text-white rounded-tr-none'
+            <div className={`max-w-[85%] rounded-2xl px-5 py-3 text-lg leading-relaxed font-arabic shadow-md ${isModel
+                    ? 'bg-[#1a1a1a] border border-white/10 text-white rounded-tl-none'
+                    : 'bg-gradient-to-l from-accent-gold to-yellow-600 text-black font-bold rounded-tr-none'
                 }`}>
                 {msg.text}
             </div>
@@ -67,10 +104,9 @@ const ActiveGame = ({ mode, settings, onExit }: { mode: string, settings: any, o
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // Auto-scroll
-    const scrollToBottom = () => {
+    useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
-    useEffect(scrollToBottom, [messages, loading]);
+    }, [messages, loading]);
 
     // Initial Start
     useEffect(() => {
@@ -112,7 +148,8 @@ const ActiveGame = ({ mode, settings, onExit }: { mode: string, settings: any, o
             // Include the new user message in history sent to API
             const historyToSend = userMsg ? [...messages, userMsg] : [...messages];
 
-            const response = await sendGameMessage(mode, settings.category, historyToSend);
+            // Using settings.difficulty from Lobby
+            const response = await sendGameMessage(mode, settings.category, settings.difficulty, historyToSend);
 
             if (response) {
                 const aiMsg: ChatMessage = { role: 'model', text: response.text };
@@ -120,7 +157,7 @@ const ActiveGame = ({ mode, settings, onExit }: { mode: string, settings: any, o
 
                 // Handle Actions
                 if (response.action === 'START_TIMER') {
-                    setTimer(response.timerSeconds || settings.timer || 30);
+                    setTimer(response.timerSeconds || 30);
                     setTimerActive(true);
                 }
             }
@@ -132,33 +169,37 @@ const ActiveGame = ({ mode, settings, onExit }: { mode: string, settings: any, o
     };
 
     return (
-        <div className={`fixed inset-0 z-50 flex flex-col bg-[#0a0a0a] transition-colors duration-500 ${boom ? 'bg-red-900/50' : ''}`}>
+        <div className={`fixed inset-0 z-50 flex flex-col bg-[#050505] transition-colors duration-500 ${boom ? 'bg-red-900/40' : ''}`}>
 
             {/* Header */}
-            <div className="w-full h-16 bg-nearblack/90 backdrop-blur-md border-b border-white/10 flex justify-between items-center px-4 z-20 shadow-lg">
+            <div className="w-full h-16 bg-black/80 backdrop-blur-md border-b border-white/10 flex justify-between items-center px-4 z-20 shadow-xl">
                 <button onClick={onExit} className="text-white/60 font-bold font-arabic hover:text-white transition-colors">← خروج</button>
                 <div className="flex flex-col items-center">
-                    <span className="font-bold text-white font-arabic">{mode}</span>
-                    <span className="text-xs text-accent-gold">{settings.category}</span>
+                    <span className="font-bold text-white font-arabic text-lg">{mode}</span>
+                    <div className="flex gap-2 text-xs text-white/50">
+                        <span>{settings.category}</span>
+                        <span>•</span>
+                        <span>Level {settings.difficulty}</span>
+                    </div>
                 </div>
                 <div className="w-16 flex justify-end">
                     {timer > 0 && (
-                        <div className={`font-black text-xl font-mono ${timer <= 10 ? 'text-red-500 animate-pulse' : 'text-white'}`}>
-                            {timer}s
+                        <div className={`font-black text-2xl font-mono ${timer <= 10 ? 'text-red-500 animate-pulse' : 'text-accent-gold'}`}>
+                            {timer}
                         </div>
                     )}
                 </div>
             </div>
 
             {/* Chat Area */}
-            <div className="flex-1 overflow-y-auto p-4 pb-24 space-y-2">
+            <div className="flex-1 overflow-y-auto p-4 pb-24 space-y-4">
                 {messages.map((msg, idx) => (
                     <MessageBubble key={idx} msg={msg} />
                 ))}
 
                 {loading && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start w-full">
-                        <div className="bg-charcoal/50 rounded-2xl px-4 py-3 border border-white/5">
+                        <div className="bg-[#1a1a1a] rounded-2xl px-4 py-3 border border-white/5">
                             <div className="flex gap-1">
                                 <span className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
                                 <span className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
@@ -169,9 +210,9 @@ const ActiveGame = ({ mode, settings, onExit }: { mode: string, settings: any, o
                 )}
 
                 {boom && (
-                    <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center py-8">
+                    <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center py-6 text-center">
                         <div className="text-6xl mb-2">💥</div>
-                        <div className="text-2xl font-black text-white font-arabic">{UX.timeUp}</div>
+                        <div className="text-3xl font-black text-white font-arabic">الوقت خلص يا معلم!</div>
                     </motion.div>
                 )}
 
@@ -179,7 +220,7 @@ const ActiveGame = ({ mode, settings, onExit }: { mode: string, settings: any, o
             </div>
 
             {/* Input Area */}
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-nearblack border-t border-white/10 z-20">
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-black/90 border-t border-white/10 z-20 backdrop-blur-lg">
                 <div className="max-w-3xl mx-auto flex gap-3">
                     <input
                         type="text"
@@ -188,19 +229,19 @@ const ActiveGame = ({ mode, settings, onExit }: { mode: string, settings: any, o
                         onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                         placeholder={UX.placeholder}
                         disabled={loading}
-                        className="flex-1 bg-white/10 border border-white/10 rounded-full px-5 py-4 text-white placeholder-white/30 focus:outline-none focus:border-accent-green font-arabic transition-colors text-right"
+                        className="flex-1 bg-white/5 border border-white/10 rounded-full px-6 py-4 text-white placeholder-white/30 focus:outline-none focus:border-accent-gold/50 font-arabic transition-all text-right shadow-inner"
                         dir="rtl"
                     />
                     <button
                         onClick={() => handleSendMessage()}
                         disabled={loading || !input.trim()}
-                        className={`px-6 rounded-full font-bold font-arabic transition-all shadow-lg
+                        className={`px-6 rounded-full font-bold font-arabic transition-all shadow-lg flex items-center justify-center
                             ${loading || !input.trim()
                                 ? 'bg-white/5 text-white/20 cursor-not-allowed'
-                                : 'bg-accent-green text-white hover:bg-accent-green/80 hover:scale-105 active:scale-95'
+                                : 'bg-accent-gold text-black hover:bg-yellow-400 hover:scale-105 active:scale-95'
                             }`}
                     >
-                        {UX.send}
+                        ➤
                     </button>
                 </div>
             </div>
@@ -211,56 +252,18 @@ const ActiveGame = ({ mode, settings, onExit }: { mode: string, settings: any, o
 
 // --- GAME HUB (User Design Merge) ---
 
-// UI Configuration with Internal Mode Mapping
-const gameModes = [
-    {
-        id: "pass-boom",
-        mode: "عدّيها 💣", // Must match the string expected by GameLobby/ActiveGame
-        title: "عدّيها 💣",
-        description: "الموبايل بيلف… واللي يفرقع عليه يتحاسب!",
-        accent: "from-red-500/70 to-orange-500/60",
-    },
-    {
-        id: "truth-dare",
-        mode: "قول ولا تفوّت؟ 😏",
-        title: "قول ولا تعمل 😏",
-        description: "سؤال محرج ولا تحدّي مجنون…؟ انت وحظك.",
-        accent: "from-pink-500/70 to-purple-500/60",
-    },
-    {
-        id: "emoji-movie",
-        mode: "فيلم بالإيموجي 🎬",
-        title: "فيلم بالإيموجي 🎬",
-        description: "إيموجيز بس… وتخمّن اسم الفيلم قبل صحابك.",
-        accent: "from-blue-500/70 to-cyan-500/60",
-    },
-    {
-        id: "proverbs",
-        mode: "كمّلها بقى…",
-        title: "كمّل المثل 🧠",
-        description: "أمثال مصرية ناقصة… كمّلها قبل ما حد يسبقك.",
-        accent: "from-emerald-500/70 to-lime-500/60",
-    },
-    {
-        id: "story-chain",
-        mode: "حدوتة على الطاير ✨",
-        title: "حدوتة على الطاير ✨",
-        description: "كل واحد يزوّد جملة… ونشوف القصّة هتوصل لفين.",
-        accent: "from-amber-500/70 to-rose-500/60",
-    },
-];
-
 const GamesPage = () => {
     const [view, setView] = useState<'HUB' | 'LOBBY' | 'GAME'>('HUB');
     const [selection, setSelection] = useState<string | null>(null);
-    const [lobbyState, setLobbyState] = useState({ category: 'عام', timer: 0 });
+    // State now includes difficulty 1-5 (Default 2)
+    const [lobbyState, setLobbyState] = useState({ category: 'عام', difficulty: 2 });
 
     const handleSelect = (mode: string) => {
         setSelection(mode);
         // Default Settings
         setLobbyState({
             category: CATEGORIES[mode]?.[0] || 'عام',
-            timer: mode.includes("عدّيها") ? 30 : 0
+            difficulty: 2
         });
         setView('LOBBY');
     };
@@ -271,17 +274,17 @@ const GamesPage = () => {
                 <div className="flex flex-col min-h-screen pt-24 pb-16">
                     {/* Hero */}
                     <header className="text-center px-4 mb-10">
-                        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-3 font-arabic">
-                            سوبيك جيمز 🐊🎮
+                        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-3 font-arabic bg-clip-text text-transparent bg-gradient-to-r from-accent-gold to-yellow-600">
+                            سوبيك جيمز 🐊
                         </h1>
-                        <p className="text-sm md:text-base text-white/60 font-arabic">
-                            اختار لعبة ونولّع القعدة… الكروت هتجيلك جاهزة على طول.
+                        <p className="text-white/60 font-arabic text-lg">
+                            محرك ألعاب مصري ١٠٠٪ مدعوم بالذكاء الاصطناعي
                         </p>
                     </header>
 
                     {/* Games Grid */}
                     <main className="flex-1 px-4 md:px-12 lg:px-20 max-w-6xl mx-auto w-full">
-                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
                             {gameModes.map((game) => (
                                 <button
                                     key={game.id}
@@ -289,28 +292,23 @@ const GamesPage = () => {
                                     className={`
                                 group relative overflow-hidden rounded-3xl p-[1px]
                                 bg-gradient-to-br ${game.accent}
-                                hover:scale-[1.02] active:scale-[0.98] transition-transform duration-200
+                                hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 shadow-2xl
                                 text-right w-full
                             `}
                                 >
-                                    <div className="h-full w-full bg-[#121212] rounded-3xl p-6 flex flex-col justify-between min-h-[180px]">
+                                    <div className="h-full w-full bg-[#121212] rounded-3xl p-6 flex flex-col justify-between min-h-[160px] relative z-10">
                                         <div>
-                                            <h2 className="text-xl font-bold mb-2 text-white group-hover:text-accent-gold font-arabic">
+                                            <h2 className="text-2xl font-black mb-2 text-white font-arabic">
                                                 {game.title}
                                             </h2>
-                                            <p className="text-sm text-white/50 leading-relaxed font-arabic">
+                                            <p className="text-sm text-white/60 leading-relaxed font-arabic font-medium">
                                                 {game.description}
                                             </p>
                                         </div>
-                                        <div className="mt-6 flex items-center justify-between text-sm">
-                                            <span className="text-accent-gold font-semibold font-arabic">
-                                                العب دلوقتي
-                                            </span>
-                                            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-accent-gold/15 text-accent-gold">
-                                                <span className="rotate-180 group-hover:-translate-x-1 transition-transform">
-                                                    ↩
-                                                </span>
-                                            </span>
+                                        <div className="mt-4 flex justify-end">
+                                            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                                                🎮
+                                            </div>
                                         </div>
                                     </div>
                                 </button>
@@ -321,35 +319,50 @@ const GamesPage = () => {
             )}
 
             {view === 'LOBBY' && selection && (
-                <div className="flex flex-col items-center justify-center min-h-[80vh] px-6">
-                    <h2 className="text-3xl font-black mb-8 font-arabic">{selection}</h2>
+                <div className="flex flex-col items-center justify-center min-h-[85vh] px-6">
+                    <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="w-full max-w-md">
+                        <h2 className="text-4xl font-black mb-8 font-arabic text-center bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60">{selection}</h2>
 
-                    <div className="w-full max-w-sm space-y-8 mb-12">
-                        <div>
-                            <label className="block text-white/50 font-bold font-arabic mb-4">هنتكلم في إيه؟</label>
-                            <div className="flex flex-wrap gap-2 justify-center">
-                                {CATEGORIES[selection]?.map(c => (
-                                    <button key={c} onClick={() => setLobbyState({ ...lobbyState, category: c })} className={`px-4 py-2 rounded-full border transition-colors ${lobbyState.category === c ? 'bg-white text-black border-white' : 'border-white/20 hover:bg-white/10'}`}>{c}</button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {selection.includes("عدّيها") && (
+                        <div className="bg-[#121212] border border-white/10 rounded-3xl p-8 space-y-8 shadow-2xl">
+                            {/* Category Selector */}
                             <div>
-                                <label className="block text-white/50 font-bold font-arabic mb-4">الوقت (ثواني)</label>
-                                <div className="flex gap-2 justify-center">
-                                    {TIMERS.map(t => (
-                                        <button key={t} onClick={() => setLobbyState({ ...lobbyState, timer: t })} className={`w-12 h-12 rounded-full border flex items-center justify-center font-bold transition-all ${lobbyState.timer === t ? 'bg-white text-black border-white scale-110' : 'border-white/20'}`}>{t}</button>
+                                <label className="block text-accent-gold font-bold font-arabic mb-4 text-lg">الموضوع</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {CATEGORIES[selection]?.map(c => (
+                                        <button key={c} onClick={() => setLobbyState({ ...lobbyState, category: c })} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${lobbyState.category === c ? 'bg-white text-black scale-105 shadow-lg' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}>{c}</button>
                                     ))}
                                 </div>
                             </div>
-                        )}
-                    </div>
 
-                    <div className="flex gap-4 w-full max-w-sm">
-                        <button onClick={() => setView('HUB')} className="flex-1 py-3 border border-white/20 rounded-xl font-bold font-arabic hover:bg-white/10">رجوع</button>
-                        <button onClick={() => setView('GAME')} className="flex-[2] py-3 bg-white text-black rounded-xl font-black font-arabic shadow-lg hover:scale-105 transition-transform">يلا بينا 🚀</button>
-                    </div>
+                            {/* Difficulty Selector (Stars) */}
+                            <div>
+                                <label className="block text-accent-gold font-bold font-arabic mb-4 text-lg">{UX.difficulty} {lobbyState.difficulty}/5</label>
+                                <div className="flex justify-between bg-white/5 rounded-2xl p-4">
+                                    {[1, 2, 3, 4, 5].map(lvl => (
+                                        <button
+                                            key={lvl}
+                                            onClick={() => setLobbyState({ ...lobbyState, difficulty: lvl })}
+                                            className={`text-3xl transition-transform hover:scale-125 ${lvl <= lobbyState.difficulty ? 'grayscale-0' : 'grayscale opacity-30'}`}
+                                        >
+                                            ⭐
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="text-center mt-3 text-sm text-white/40 font-arabic">
+                                    {lobbyState.difficulty === 1 && "سهلة (تحفيل)"}
+                                    {lobbyState.difficulty === 3 && "متوسطة (شغل فنادق)"}
+                                    {lobbyState.difficulty === 5 && "صعبة (عافية وشقاوة)"}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-4 mt-8">
+                            <button onClick={() => setView('HUB')} className="flex-1 py-4 border border-white/10 rounded-2xl font-bold font-arabic hover:bg-white/5 text-white/60">رجوع</button>
+                            <button onClick={() => setView('GAME')} className="flex-[2] py-4 bg-accent-gold text-black rounded-2xl font-black font-arabic shadow-xl hover:scale-[1.02] transition-transform text-xl">
+                                يلا بينا 🚀
+                            </button>
+                        </div>
+                    </motion.div>
                 </div>
             )}
 
