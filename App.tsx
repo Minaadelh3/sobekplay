@@ -129,6 +129,47 @@ const VerseOfTheDay: React.FC = () => {
   );
 };
 
+const TripTips: React.FC = () => {
+  const tips = [
+    { text: "متنساش القبعة، الشمس مش بتهزر! 🧢", category: "essential" },
+    { text: "جزمة مريحة = رحلة أحسن بكتير 👟", category: "essential" },
+    { text: "كريم الشمس مش رفاهية، ده ضرورة 🌞", category: "essential" },
+    { text: "الجو حر شوية… بس المناظر تستاهل 😎", category: "weather" },
+    { text: "خدها بهدوووء… إحنا في فسحة ❤️", category: "vibe" },
+    { text: "باور بانك عشان الموبايل ميفصلش 🔋", category: "tech" },
+    { text: "نستمتع سوا، ونسيب أي زعل ورا ✨", category: "vibe" },
+    { text: "الضحكة الحلوة بتكمّل الرحلة 😄", category: "vibe" },
+    { text: "الهوا على النيل حلو بالليل 🌊", category: "weather" },
+    { text: "صور ذكريات كتير متتعوضش 📸", category: "fun" },
+  ];
+
+  return (
+    <div className="py-6 mb-4">
+      <h3 className="text-white text-lg md:text-xl font-bold mb-4 px-6 md:px-12 flex items-center gap-2">
+        <span className="text-2xl">🧳✨</span>
+        تنبيهات
+      </h3>
+      <div className="flex overflow-x-auto gap-4 px-6 md:px-12 pb-8 scrollbar-hide snap-x snap-mandatory">
+        {tips.map((tip, index) => (
+          <motion.div
+            key={index}
+            whileHover={{ scale: 1.05, rotate: 1 }}
+            className="flex-none snap-start w-48 md:w-56 aspect-[4/3] bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col justify-center items-center text-center group hover:bg-white/10 transition-colors cursor-default"
+          >
+            <p className="text-white/90 font-medium leading-relaxed font-serif text-sm md:text-base dir-rtl">
+              {tip.text}
+            </p>
+            <div className={`mt-3 w-12 h-1 rounded-full opacity-30 group-hover:opacity-60 transition-opacity ${tip.category === 'essential' ? 'bg-accent-blue' :
+                tip.category === 'vibe' ? 'bg-accent-gold' :
+                  tip.category === 'weather' ? 'bg-green-400' : 'bg-purple-400'
+              }`} />
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const Home: React.FC<{ posters: any[] }> = ({ posters }) => {
   const rows = useMemo(() => {
     // Mocks for a production feel
@@ -157,15 +198,18 @@ const Home: React.FC<{ posters: any[] }> = ({ posters }) => {
   }, [posters]);
 
   return (
-    <div className="pb-24">
-      <Hero posters={posters} />
-
-      {/* Verse of the Day Injection */}
+    <div className="pb-24 md:pb-12 bg-[#090b10]">
       <VerseOfTheDay />
+      <Hero poster={posters[0]} />
 
-      <div className="relative z-20 -mt-12 md:-mt-24 space-y-12">
+      <div className="relative z-10 -mt-20 md:-mt-32 space-y-8 md:space-y-12 pb-12">
+        {/* Inject TripTips early in the flow but not overlapping Hero too awkwardly */}
+        <div className="mt-12 md:mt-0">
+          <TripTips />
+        </div>
+
         {rows.map((row) => (
-          <Carousel key={row.title} title={row.title} posters={row.items} />
+          <Carousel key={row.title} title={row.title} items={row.items} />
         ))}
       </div>
     </div>
