@@ -27,23 +27,9 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
 
-        {/* Protected Routes */}
-        <Route
-          path="/my-list"
-          element={
-            <ProtectedRoute>
-              <MyList posters={posters} />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/watch/:id"
-          element={
-            <ProtectedRoute>
-              <WatchPlayer posters={posters} />
-            </ProtectedRoute>
-          }
-        />
+        {/* Public Routes (Uncle Joy Mode) */}
+        <Route path="/my-list" element={<MyList posters={posters} />} />
+        <Route path="/watch/:id" element={<WatchPlayer posters={posters} />} />
 
         {/* Content Routes */}
         <Route path="/title/:id" element={<TitleDetails posters={posters} />} />

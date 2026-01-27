@@ -17,6 +17,8 @@ const TitleDetails: React.FC<TitleDetailsProps> = ({ posters }) => {
   const [inList, setInList] = useState(false);
   // Uncle Joy Mode: No Auth Listener
 
+  const poster = posters.find(p => p.id === id);
+
 
   useEffect(() => {
     if (!poster) return;
