@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import AppLayout from "./components/AppLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -21,11 +22,12 @@ import { posters } from "./data/posters";
 
 export default function App() {
   return (
-    <>
-      <Navbar />
-      <Routes>
+    <Routes>
+      <Route element={<AppLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
+
+        {/* Protected Routes */}
         <Route
           path="/my-list"
           element={
@@ -34,8 +36,17 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/watch/:id"
+          element={
+            <ProtectedRoute>
+              <WatchPlayer posters={posters} />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Content Routes */}
         <Route path="/title/:id" element={<TitleDetails posters={posters} />} />
-        <Route path="/watch/:id" element={<WatchPlayer posters={posters} />} />
         <Route path="/movies" element={<Home />} />
         <Route path="/series" element={<Home />} />
         <Route path="/kids" element={<Home />} />
@@ -51,7 +62,7 @@ export default function App() {
         <Route path="/subscription" element={<SubscriptionPage />} />
         <Route path="/policy" element={<PolicyPage />} />
         <Route path="/photos" element={<PhotosPage />} />
-      </Routes>
-    </>
+      </Route>
+    </Routes>
   );
 }

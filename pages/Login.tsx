@@ -46,8 +46,8 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-nearblack relative overflow-hidden px-4">
       {/* Immersive Background */}
       <div className="absolute inset-0 z-0">
-        <img 
-          src="https://images.unsplash.com/photo-1503177119275-0b344701075d?q=80&w=2000&auto=format&fit=crop" 
+        <img
+          src="https://images.unsplash.com/photo-1503177119275-0b344701075d?q=80&w=2000&auto=format&fit=crop"
           className="w-full h-full object-cover opacity-30 blur-md scale-110"
           alt="Egyptian Backdrop"
         />
@@ -55,16 +55,18 @@ export default function Login() {
       </div>
 
       {/* Close Button */}
-      <button 
-        onClick={handleClose}
-        className="absolute top-8 right-8 z-50 p-3 bg-white/5 hover:bg-white/10 rounded-full text-white/50 hover:text-white transition-all backdrop-blur-md border border-white/10 group"
+      {/* Back to Home - Top Left */}
+      <button
+        onClick={() => navigate("/")}
+        className="absolute top-8 left-8 z-50 p-3 bg-white/5 hover:bg-white/10 rounded-full text-white/50 hover:text-white transition-all backdrop-blur-md border border-white/10 group flex items-center gap-2 pr-6"
       >
-        <svg className="w-6 h-6 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
+        <span className="text-sm font-bold uppercase tracking-widest">Home</span>
       </button>
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 30, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         className="w-full max-w-md rounded-[40px] bg-charcoal/80 backdrop-blur-3xl border border-white/10 p-10 text-center space-y-8 z-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
@@ -112,21 +114,21 @@ export default function Login() {
             </button>
           </form>
         ) : (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             className="p-8 bg-accent-green/10 border border-accent-green/30 rounded-3xl"
           >
             <div className="w-20 h-20 bg-accent-green/20 rounded-full flex items-center justify-center mx-auto mb-6">
-               <svg className="w-10 h-10 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-               </svg>
+              <svg className="w-10 h-10 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
             </div>
             <p className="text-white font-black text-2xl mb-3">Check Your Portal</p>
             <p className="text-muted text-base leading-relaxed">
               We've sent a magic link to <span className="text-white font-bold">{email}</span>. One click and you're in.
             </p>
-            <button 
+            <button
               onClick={() => setSent(false)}
               className="mt-8 text-accent-gold text-sm font-black uppercase tracking-widest hover:underline"
             >
