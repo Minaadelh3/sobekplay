@@ -3,115 +3,54 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const PrayersPage: React.FC = () => {
-  const [openSection, setOpenSection] = useState<number | null>(0);
+  const [openSection, setOpenSection] = useState<string | null>('prime');
 
-  const toggleSection = (idx: number) => {
-    setOpenSection(openSection === idx ? null : idx);
+  const toggleSection = (id: string) => {
+    setOpenSection(openSection === id ? null : id);
   };
 
   const prayers = [
     {
-      id: 1,
+      id: 'prime',
       title: "صلاة باكر",
       subtitle: "The Morning Prayer",
-      icon: "🌅",
-      content: (
-        <div className="space-y-8 text-right" dir="rtl">
-          <div>
-            <h3 className="text-xl font-bold text-accent-gold mb-3">صلاة الشكر</h3>
-            <p className="text-lg leading-loose text-white/90">
-              فلنشكر صانع الخيرات الرحوم الله، أبا ربنا وإلهنا ومخلصنا يسوع المسيح، لأنه سترنا وأعاننا، وحفظنا، وقبلنا إليه وأشفق علينا وعضدنا، وأتى بنا إلى هذه الساعة. هو أيضا فلنسأله أن يحفظنا في هذا اليوم المقدس وكل أيام حياتنا بكل سلام. الضابط الكل الرب إلهنا.
-            </p>
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-accent-gold mb-3">الصلاة الربانية</h3>
-            <p className="text-lg leading-loose text-white/90">
-              أبانا الذي في السموات. ليتقدس اسمك. ليأت ملكوتك. لتكن مشيئتك. كما في السماء كذلك على الأرض. خبزنا الذي للغد أعطنا اليوم. وأغفر لنا ذنوبنا كما نغفر نحن أيضا للمذنبين إلينا. ولا تدخلنا في تجربة. لكن نجنا من الشرير. بالمسيح يسوع ربنا لأن لك الملك والقوة والمجد إلى الأبد. آمين.
-            </p>
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-accent-gold mb-3">طلبة ختامية</h3>
-            <p className="text-lg leading-loose text-white/90">
-              يا رب، في هذا الصباح، استمع لصوت دعائي. املأ قلبي بسلامك، وقدني في كل خطوة اليوم بروحك القدوس. آمين.
-            </p>
-          </div>
-        </div>
-      )
+      timeNote: "توافق الساعة السادسة صباحًا، وتُقال بعد الاستيقاظ.",
+      icon: "🌅"
     },
     {
-      id: 2,
-      title: "صلاة أثناء اليوم",
-      subtitle: "Midday Prayer for Guidance",
-      icon: "☀️",
-      content: (
-        <div className="space-y-8 text-right" dir="rtl">
-          <div>
-            <h3 className="text-xl font-bold text-accent-gold mb-3">المزمور الثالث والعشرون</h3>
-            <p className="text-lg leading-loose text-white/90">
-              الرب يرعاني فلا يعوزني شئ. في مراع خضر يسكنني، إلى ماء الراحة يوردني. يرد نفسي. يهدني إلى سبل البر من أجل اسمه. إن سلكت في وسط ظلال الموت فلا أخاف شرا، لأنك أنت معي. عصاك وعكازك هما يعزيانني.
-            </p>
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-accent-gold mb-3">طلبة</h3>
-            <p className="text-lg leading-loose text-white/90">
-              يا رب، في منتصف هذا اليوم، جدد قوتي. امنحني حكمة في قراراتي، وصبرًا في تعاملاتي، واجعلني نورًا لمن حولي. لا تتركني وحدي، بل كن أنت قائدي ومعيني في كل أمر. آمين.
-            </p>
-          </div>
-        </div>
-      )
+      id: 'terce',
+      title: "صلاة الساعة الثالثة",
+      subtitle: "The Third Hour",
+      timeNote: "تُصَلَّى في الساعة التاسعة صباحًا.",
+      icon: "🕊️"
     },
     {
-      id: 3,
+      id: 'sext',
+      title: "صلاة الساعة السادسة",
+      subtitle: "The Sixth Hour",
+      timeNote: "تُصَلَّى الساعة الثانية عشر ظهرًا.",
+      icon: "☀️"
+    },
+    {
+      id: 'none',
+      title: "صلاة الساعة التاسعة",
+      subtitle: "The Ninth Hour",
+      timeNote: "توافق الساعة الثالثة بعد الظهر.",
+      icon: "✝️"
+    },
+    {
+      id: 'vespers',
       title: "صلاة الغروب",
-      subtitle: "Evening Prayer",
-      icon: "🌇",
-      content: (
-        <div className="space-y-8 text-right" dir="rtl">
-          <div>
-            <h3 className="text-xl font-bold text-accent-gold mb-3">المزمور المائة والسادس عشر</h3>
-            <p className="text-lg leading-loose text-white/90">
-              سبحوا الربَّ يا جميع الأمم ولتباركه كافة الشعوب. لأن رحمته قد ثبتت علينا وحق الرب يدوم إلى الأبد هلليلويا.
-            </p>
-            <p className="text-lg leading-loose text-white/90 mt-4">
-              اعترفوا للرب لأنه صالح وأن إلى الأبد رحمته. ليقل بيت إسرائيل إنه صالح وإن إلى الأبد رحمته.
-            </p>
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-accent-gold mb-3">شكر المساء</h3>
-            <p className="text-lg leading-loose text-white/90">
-              نشكرك يا رب لأنك أعنتنا لنعبر هذا اليوم بسلام، وأتيت بنا إلى المساء. اغفر لنا ما أخطأنا به إليك في القول أو الفعل أو الفكر، وامنحنا ليلة هادئة بغير خطية. آمين.
-            </p>
-          </div>
-        </div>
-      )
+      subtitle: "Vespers",
+      timeNote: "تُصَلَّى في الساعة الخامسة مساءً قبل حلول الليل.",
+      icon: "🌇"
     },
     {
-      id: 4,
+      id: 'compline',
       title: "صلاة النوم",
-      subtitle: "Night Prayer for Rest",
-      icon: "🌙",
-      content: (
-        <div className="space-y-8 text-right" dir="rtl">
-          <div>
-            <h3 className="text-xl font-bold text-accent-gold mb-3">تسبحة سمعان الشيخ</h3>
-            <p className="text-lg leading-loose text-white/90">
-              الآن يا سيدي تطلق عبدك بسلام حسب قولك، لأن عيني قد أبصرتا خلاصك الذي أعددته قدام جميع الشعوب. نورا تجلى للأمم، ومجدا لشعبك إسرائيل.
-            </p>
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-accent-gold mb-3">طلبة التوبة</h3>
-            <p className="text-lg leading-loose text-white/90">
-              هوذا أنا عتيد أن أقف أمام الديان العادل، مرعوبا ومرتعبا من كثرة ذنوبي. لكن توبي يا نفسي مادمتِ في الأرض ساكنة... اللهم ارحمني وخلصني.
-            </p>
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-accent-gold mb-3">التحليل</h3>
-            <p className="text-lg leading-loose text-white/90">
-              تفضل يا رب أن تحفظنا في هذه الليلة بغير خطية. لتكن رحمتك علينا يا رب كمثل اتكالنا عليك. اسمعنا يا الله مخلصنا يا رجاء أقطار الأرض كلها.
-            </p>
-          </div>
-        </div>
-      )
+      subtitle: "Compline",
+      timeNote: "تُصَلَّى قبل النوم.",
+      icon: "🌙"
     }
   ];
 
@@ -127,38 +66,42 @@ const PrayersPage: React.FC = () => {
         <span className="text-accent-gold text-xs font-bold tracking-[0.3em] uppercase mb-4 block">Sacred Moments</span>
         <h1 className="text-4xl md:text-5xl font-black text-white mb-4 tracking-tight">El Agpyea – Daily Prayers</h1>
         <p className="text-white/50 text-lg font-serif italic max-w-xl mx-auto">
-          A spiritual journey from sunrise to sunset.
+          A spiritual journey through the hours of the day.
         </p>
       </motion.div>
 
       <div className="w-full max-w-3xl px-4 space-y-4">
-        {prayers.map((prayer, index) => (
+        {prayers.map((prayer) => (
           <div key={prayer.id} className="w-full">
             <motion.button
-              onClick={() => toggleSection(index)}
-              className={`w-full flex items-center justify-between p-6 rounded-2xl border transition-all duration-300 group ${openSection === index
+              onClick={() => toggleSection(prayer.id)}
+              className={`w-full flex items-center justify-between p-6 rounded-2xl border transition-all duration-300 group ${openSection === prayer.id
                   ? 'bg-charcoal border-accent-gold/50 shadow-[0_0_30px_rgba(255,215,0,0.1)]'
                   : 'bg-charcoal/40 border-white/5 hover:bg-charcoal/60'
                 }`}
             >
               <div className="flex items-center gap-4 md:gap-6 w-full">
-                <span className={`text-3xl filter drop-shadow-lg transition-transform duration-300 ${openSection === index ? 'scale-125' : 'group-hover:scale-110'}`}>
+                <span className={`text-3xl filter drop-shadow-lg transition-transform duration-300 ${openSection === prayer.id ? 'scale-125' : 'group-hover:scale-110'}`}>
                   {prayer.icon}
                 </span>
                 <div className="text-left flex-1">
-                  <h2 className={`text-xl font-bold transition-colors ${openSection === index ? 'text-white' : 'text-white/80'}`}>
-                    {prayer.title}
-                  </h2>
-                  <p className="text-white/40 text-sm">{prayer.subtitle}</p>
+                  <div className="flex flex-col md:flex-row md:items-center gap-2">
+                    <h2 className={`text-xl font-bold transition-colors ${openSection === prayer.id ? 'text-white' : 'text-white/80'}`}>
+                      {prayer.title}
+                    </h2>
+                    {/* Mobile visible subtitle */}
+                    <span className="md:hidden text-white/40 text-xs">{prayer.subtitle}</span>
+                  </div>
+                  <p className="text-accent-gold/80 text-sm mt-1" dir="rtl">{prayer.timeNote}</p>
                 </div>
-                <div className={`w-8 h-8 rounded-full border border-white/10 flex items-center justify-center transition-all duration-300 ${openSection === index ? 'bg-accent-gold border-accent-gold rotate-180' : 'bg-transparent'}`}>
-                  <svg className={`w-4 h-4 ${openSection === index ? 'text-black' : 'text-white/50'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                <div className={`w-8 h-8 rounded-full border border-white/10 flex items-center justify-center transition-all duration-300 ${openSection === prayer.id ? 'bg-accent-gold border-accent-gold rotate-180' : 'bg-transparent'}`}>
+                  <svg className={`w-4 h-4 ${openSection === prayer.id ? 'text-black' : 'text-white/50'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                 </div>
               </div>
             </motion.button>
 
             <AnimatePresence>
-              {openSection === index && (
+              {openSection === prayer.id && (
                 <motion.div
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
@@ -166,9 +109,17 @@ const PrayersPage: React.FC = () => {
                   transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
                   className="overflow-hidden"
                 >
-                  <div className="p-8 md:p-10 bg-white/5 border-x border-b border-white/5 rounded-b-2xl -mt-2 relative">
+                  <div className="p-8 md:p-12 bg-white/5 border-x border-b border-white/5 rounded-b-2xl -mt-2 relative">
                     <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-                    {prayer.content}
+
+                    {/* CONTENT PLACEHOLDER */}
+                    <div className="w-full flex flex-col items-center justify-center py-12 text-white/20">
+                      <p className="font-mono text-sm uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full">
+                        {prayer.title} Content Placeholder
+                      </p>
+                      <p className="mt-4 text-xs">Insert prayer text here...</p>
+                    </div>
+
                   </div>
                 </motion.div>
               )}
