@@ -185,6 +185,7 @@ const MainLayout: React.FC = () => {
 
   const isWatchPage = location.pathname.startsWith('/watch/');
   const isAgpeyaPage = location.pathname === '/prayers';
+  const isTripPage = ['/program', '/she3ar-al-re7la', '/prayers', '/rooms'].includes(location.pathname);
 
   return (
     <div className="min-h-screen selection:bg-accent-green selection:text-white">
@@ -200,7 +201,7 @@ const MainLayout: React.FC = () => {
         posters={analyzedPosters}
       />
 
-      <main className={!isWatchPage ? "pt-20" : ""}>
+      <main className={`${!isWatchPage ? "pt-20" : ""} ${isTripPage ? "pb-28 md:pb-0" : ""}`}>
         <Routes>
           <Route path="/" element={<Home posters={analyzedPosters} />} />
           <Route path="/movies" element={<MoviesPage posters={analyzedPosters} />} />
@@ -229,6 +230,7 @@ const MainLayout: React.FC = () => {
       </main>
 
       <SobekChatbot isHidden={isMobileMenuOpen || isWatchPage || isAgpeyaPage} />
+      {isTripPage && <MobileBottomNav />}
       {!isWatchPage && <Footer />}
     </div>
   );
