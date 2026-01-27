@@ -1,13 +1,19 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@^2.39.0';
 
-// Helper to check if a value is a placeholder
-const isPlaceholder = (val?: string) => !val || val.includes('placeholder') || val.includes('YOUR_') || val.length < 20;
+// Helper to check if a value is a placeholder or invalid
+const isPlaceholder = (val?: string) => 
+  !val || 
+  val.trim() === '' ||
+  val.trim() === 'undefined' ||
+  val.includes('placeholder') || 
+  val.includes('YOUR_') || 
+  val.includes('PLACEHOLDER') ||
+  val.length < 10;
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || '';
+const rawUrl = process.env.VITE_SUPABASE_URL || '';
+const rawKey = process.env.VITE_SUPABASE_ANON_KEY || '';
 
-const isConfigured = !isPlaceholder(supabaseUrl) && !isPlaceholder(supabaseAnonKey);
+const isConfigured = !isPlaceholder(rawUrl) && !isPlaceholder(rawKey);
 
 /**
  * Enhanced Supabase client that gracefully handles unconfigured environments.
@@ -15,14 +21,16 @@ const isConfigured = !isPlaceholder(supabaseUrl) && !isPlaceholder(supabaseAnonK
  * 'Failed to fetch' errors while allowing the UI to remain functional.
  */
 export const supabase = isConfigured 
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient(rawUrl, rawKey)
   : {
       auth: {
         getUser: async () => ({ data: { user: null }, error: null }),
         onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
         signInWithPassword: async () => ({ error: { message: "Supabase not configured" } }),
+        signInWithOtp: async () => ({ error: { message: "Supabase not configured" } }),
         signUp: async () => ({ error: { message: "Supabase not configured" } }),
         signOut: async () => ({ error: null }),
+        getSession: async () => ({ data: { session: null }, error: null }),
       },
       from: () => ({
         select: () => ({

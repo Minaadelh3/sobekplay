@@ -1,4 +1,3 @@
-
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { defineConfig, loadEnv } from 'vite';
@@ -22,7 +21,9 @@ export default defineConfig(({ mode }) => {
         'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY || ''),
       },
       resolve: {
-        alias: {}
+        alias: {
+          "@": path.resolve(__dirname, "./")
+        }
       }
     };
 });
