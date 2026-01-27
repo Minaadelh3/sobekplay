@@ -1,5 +1,6 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import MobileBottomNav from './components/MobileBottomNav';
