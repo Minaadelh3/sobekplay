@@ -3,139 +3,98 @@
 
 // --- CONFIG ---
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
 
-// --- STRICT TYPES ---
-export type GameMode = 'PASS_BOOM' | 'TRUTH_DARE' | 'EMOJI_MOVIES' | 'PROVERBS' | 'STORY_CHAIN';
-export type GameType = 'QUESTION' | 'TASK' | 'EMOJI' | 'PROVERB' | 'STARTER' | 'PENALTY';
+// --- TYPES (Matching User Request) ---
+export type GameMode = 'عدّيها 💣' | 'قول ولا تفوّت؟ 😏' | 'فيلم بالإيموجي 🎬' | 'كمّلها بقى…' | 'حدوتة على الطاير ✨' | string;
 
 export interface GameCard {
-    id: string; // Unique ID for debug/key
-    game: GameMode;
-    type: GameType;
+    id: string;
+    type: 'QUESTION' | 'TASK' | 'EMOJI' | 'PROVERB' | 'STARTER' | 'PENALTY';
     text: string;
     emoji?: string | null;
     answer?: string | null;
     minTimeRequired: number;
-    maxTimeAllowed: number;
     safe: boolean;
-    debug?: {
-        model: string;
-        latency: number;
-        promptTokens: number;
-        timestamp: string;
-    };
 }
 
-// --- SYSTEM PROMPT ---
-const SYSTEM_PROMPT = `
-YOU ARE A HUMAN PARTY HOST — NOT A MACHINE (EGYPTIAN ARABIC)
+// --- NEW EGYPTIAN SYSTEM PROMPT ---
+const SYSTEM_PROMPT_TEMPLATE = (timerSeconds: number) => `
+أنت مصري قاعد في قعدة لعب.
+طلّع كارت واحد فقط.
 
-ROLE:
-You are a smart, funny Egyptian friend hosting a game night. 
-Keep the vibe warm, social, and "Ibn Balad".
-Language: Egyptian Arabic (Masry) ONLY.
+قواعد:
+- اللغة: مصري فقط
+- ما تكررشي أي حاجة شبه اللي فات
+- لازم يناسب تايمر ${timerSeconds} ثانية
+- لو التايمر أقل من 10 ثواني: سؤال كلامي سريع فقط
+- ممنوع أي محتوى محرج أو صريح
 
-INPUT CONTEXT:
-- Game Mode
-- Category
-- Timer (Seconds)
-- Intensity (Low/Medium/High)
-- History (Avoid repetition)
-
-LOGIC RULES (CRITICAL):
-1. **Timer Check**: If timer <= 10s, output MUST be an instant verbal question. NO acting, NO drawing, NO storytelling.
-2. **Safety**: "Spicy" is allowed (cheeky/bold) but NO explicit, NO sexual, NO hate, NO political.
-3. **Emoji Movies**: Emojis must spell the title phonetically or conceptually. Answer = Exact Title.
-4. **Proverbs**: Output first half only. Answer = Exact completion.
-
-OUTPUT FORMAT (JSON ONLY):
+رجّع JSON فقط بالشكل ده:
 {
-  "game": "string",
-  "type": "string",
-  "text": "Masry string",
-  "emoji": "string | null",
-  "answer": "string | null",
-  "minTimeRequired": number, 
-  "maxTimeAllowed": number,
-  "safe": boolean
+  "id": "unique-id",
+  "type": "QUESTION | TASK | EMOJI | PROVERB | STARTER | PENALTY",
+  "text": "نص مصري",
+  "emoji": null,
+  "answer": null,
+  "minTimeRequired": number,
+  "safe": true
 }
 `;
 
-// --- GENERATOR ---
 export async function generateGameCard(
-    gameMode: GameMode,
+    gameMode: string,
     category: string,
     timerSeconds: number,
-    intensity: string,
-    history: string[]
+    difficulty: any,
+    recentHistory: string[]
 ): Promise<GameCard | null> {
 
     if (!API_KEY) {
-        console.error("GameAI: No API Key found.");
-        throw new Error("API Key Missing");
+        console.warn("Missing API Key");
+        return null;
     }
 
-    const startTime = Date.now();
-    const userPrompt = `
-    MODE: ${gameMode}
-    CATEGORY: ${category}
-    TIMER: ${timerSeconds}s
-    INTENSITY: ${intensity}
-    HISTORY: [${history.slice(-10).join(', ')}]
-    
-    GENERATE 1 NEW CARD.
+    const prompt = `
+    نوع اللعبة: ${gameMode}
+    الفئة: ${category}
+    الصعوبة: ${difficulty}
+
+    آخر كروت:
+    ${recentHistory.slice(-20).join("\n")}
   `;
 
-    // Retry Loop (Max 5)
-    for (let i = 0; i < 5; i++) {
-        try {
-            const response = await fetch(API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: SYSTEM_PROMPT + "\n" + userPrompt }] }],
-                    generationConfig: { responseMimeType: "application/json" }
-                })
-            });
+    try {
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                contents: [
+                    {
+                        role: "user",
+                        parts: [{ text: SYSTEM_PROMPT_TEMPLATE(timerSeconds) + "\n" + prompt }]
+                    }
+                ]
+            })
+        });
 
-            if (!response.ok) throw new Error(`Gemini Error: ${response.status}`);
+        if (!response.ok) throw new Error("API Error");
 
-            const data = await response.json();
-            const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (!jsonText) throw new Error("Empty AI Response");
+        const data = await response.json();
+        const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
-            const rawCard = JSON.parse(jsonText);
-            const latency = Date.now() - startTime;
+        if (!rawText) throw new Error("Empty Response");
 
-            // --- VALIDATION ---
-            if (!rawCard.safe) throw new Error("Unsafe content detected");
-            if (rawCard.minTimeRequired > timerSeconds && timerSeconds > 0) throw new Error("Task too long for timer");
-            if (history.includes(rawCard.text)) throw new Error("Duplicate content");
+        const card = JSON.parse(rawText);
 
-            // Valid Card
-            return {
-                id: crypto.randomUUID(),
-                game: gameMode,
-                type: rawCard.type,
-                text: rawCard.text,
-                emoji: rawCard.emoji || null,
-                answer: rawCard.answer || null,
-                minTimeRequired: rawCard.minTimeRequired || 5,
-                maxTimeAllowed: rawCard.maxTimeAllowed || 60,
-                safe: true,
-                debug: {
-                    model: 'gemini-2.0-flash',
-                    latency,
-                    promptTokens: userPrompt.length,
-                    timestamp: new Date().toISOString()
-                }
-            };
+        // Ensure ID exists
+        if (!card.id) card.id = crypto.randomUUID();
 
-        } catch (err) {
-            console.warn(`AI Retry ${i + 1}/5:`, err);
-            if (i === 4) return null; // Let UI handle failure after 5 tries
-        }
+        return card;
+
+    } catch (err) {
+        console.error("Gemini Failure:", err);
+        // Retry Logic could go here, but for now returning null lets UI handle "Retry"
+        return null;
     }
-    return null;
 }
