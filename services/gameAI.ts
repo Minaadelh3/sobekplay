@@ -2,8 +2,8 @@
 // services/gameAI.ts
 
 // --- CONFIG ---
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
-// Using gemini-1.5-flash for speed
+// 🚨 DIRECT KEY AS REQUESTED BY USER
+const API_KEY = "AIzaSyD6LWEoWnDMlSq7-JkO3LSQ8hZmUuMLbj4";
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
 // --- TYPES (Matching User Request) ---
