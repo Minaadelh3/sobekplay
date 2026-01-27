@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PosterItem } from '../types';
 import PosterCard from '../components/PosterCard';
+import { Link } from 'react-router-dom';
+import Navbar from '../components/Navbar';
+import MobileBottomNav from '../components/MobileBottomNav';
 import { useSession } from '../components/SessionProvider';
 
 interface MyListProps {
@@ -11,13 +14,6 @@ interface MyListProps {
 const MyList: React.FC<MyListProps> = ({ posters }) => {
   const { myList, removeFromMyList, loading } = useSession();
   const watchlistIds = myList;
-
-  const removeItem = (id: string) => {
-    setWatchlistIds(prev => prev.filter(prevId => prevId !== id));
-    const local = JSON.parse(localStorage.getItem('uncleJoyWatchlist') || '[]');
-    const newList = local.filter((lid: string) => lid !== id);
-    localStorage.setItem('uncleJoyWatchlist', JSON.stringify(newList));
-  };
 
   const savedPosters = posters.filter(p => watchlistIds.includes(p.id));
 

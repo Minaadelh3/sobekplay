@@ -1,4 +1,5 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
+import { useSession } from '../components/SessionProvider';
 import Navbar from '../components/Navbar';
 import MobileBottomNav from '../components/MobileBottomNav';
 import Hero from '../components/Hero';
@@ -11,29 +12,33 @@ import { motion } from 'framer-motion';
 
 const Home: React.FC = () => {
   const { analyzedPosters, isAnalyzing } = usePosterMetrics(initialPosters);
+  const { recentlyWatched } = useSession();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [continueWatchingIds, setContinueWatchingIds] = useState<string[]>([]);
-
-  useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('sobek_continue_watching') || '[]');
-    setContinueWatchingIds(saved);
-  }, []);
 
   const rows = useMemo(() => {
     if (isAnalyzing) return [];
-    
-    const continueWatching = analyzedPosters.filter(p => continueWatchingIds.includes(p.id));
+
+    // Sort recently watched by index in the array (most recent first)
+    const cwItems = recentlyWatched
+      .map(id => analyzedPosters.find(p => p.id === id))
+      .filter((p): p is typeof analyzedPosters[0] => !!p);
+
+    // Reverse to show most recent first if array is ordered chronologically by push
+    // In SessionProvider we did [id, ...old], so index 0 is newest.
+    // So simple mapping is fine.
+
+    const continueWatching = cwItems;
     const sobekExclusives = analyzedPosters.filter(p => p.isOriginal);
-    
+
     const topEgyptianContent = analyzedPosters.filter(p => {
-        const t = p.title.toLowerCase();
-        const f = p.filename.toLowerCase();
-        if (t.includes('harry potter') || t.includes('lord of rings') || t.includes('la casa')) return false;
-        if (p.isOriginal || t.includes('sobek')) return false;
-        const hasArabic = /[\u0600-\u06FF]/.test(p.title);
-        const knownEgyptianFiles = ['grand_hotel', 'crocodile_gangster', 'project_x', 'nubanji', 'bakkar'];
-        return hasArabic || knownEgyptianFiles.some(k => f.includes(k));
+      const t = p.title.toLowerCase();
+      const f = p.filename.toLowerCase();
+      if (t.includes('harry potter') || t.includes('lord of rings') || t.includes('la casa')) return false;
+      if (p.isOriginal || t.includes('sobek')) return false;
+      const hasArabic = /[\u0600-\u06FF]/.test(p.title);
+      const knownEgyptianFiles = ['grand_hotel', 'crocodile_gangster', 'project_x', 'nubanji', 'bakkar'];
+      return hasArabic || knownEgyptianFiles.some(k => f.includes(k));
     }).sort((a, b) => (b.metrics?.impactScore || 0) - (a.metrics?.impactScore || 0)).slice(0, 10);
 
     return [
@@ -45,7 +50,7 @@ const Home: React.FC = () => {
       { title: "Egyptian Classics Reimagined", items: analyzedPosters.filter(p => p.isClassic && !p.isOriginal && !p.title.toLowerCase().includes('harry')) },
       { title: "Coming Soon", items: analyzedPosters.filter(p => p.isComingSoon) },
     ];
-  }, [analyzedPosters, isAnalyzing, continueWatchingIds]);
+  }, [analyzedPosters, isAnalyzing, recentlyWatched]);
 
   if (isAnalyzing) {
     return (
@@ -53,11 +58,11 @@ const Home: React.FC = () => {
         <div className="text-accent-green animate-pulse flex flex-col items-center">
           <div className="text-xl font-black mb-4 tracking-widest uppercase">SOBEK PLAY</div>
           <div className="w-12 h-1 bg-white/10 rounded-full overflow-hidden">
-            <motion.div 
+            <motion.div
               initial={{ x: '-100%' }}
               animate={{ x: '100%' }}
               transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
-              className="w-full h-full bg-accent-green" 
+              className="w-full h-full bg-accent-green"
             />
           </div>
         </div>
@@ -67,22 +72,22 @@ const Home: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-nearblack selection:bg-accent-green selection:text-white">
-      <Navbar 
-        onSearchOpen={() => setIsSearchOpen(true)} 
-        isMobileMenuOpen={isMobileMenuOpen} 
-        setIsMobileMenuOpen={setIsMobileMenuOpen} 
+      <Navbar
+        onSearchOpen={() => setIsSearchOpen(true)}
+        isMobileMenuOpen={isMobileMenuOpen}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
       />
-      <MobileBottomNav 
+      <MobileBottomNav
         onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         isMenuOpen={isMobileMenuOpen}
       />
-      
-      <SearchModal 
-        isOpen={isSearchOpen} 
-        onClose={() => setIsSearchOpen(false)} 
-        posters={analyzedPosters} 
+
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        posters={analyzedPosters}
       />
-      
+
       <main className="pb-24">
         <Hero posters={analyzedPosters} />
         <div className="relative z-20 -mt-24 md:-mt-48 space-y-12">
@@ -91,7 +96,7 @@ const Home: React.FC = () => {
           ))}
         </div>
       </main>
-      
+
       <SobekChatbot isHidden={isMobileMenuOpen} />
     </div>
   );
