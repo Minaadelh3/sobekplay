@@ -38,16 +38,29 @@ const VerseOfTheDay: React.FC = () => {
   const [verse, setVerse] = useState<{ text: string; ref: string } | null>(null);
 
   useEffect(() => {
+    // Extended pool of water/Nile themed verses
     const verses = [
-      { text: "الرَّبُّ فِي الْعُلاَ أَقْدَرُ مِنْ أَصْوَاتِ مِيَاهٍ كَثِيرَةٍ، مِنْ أَمْوَاجِ الْبَحْرِ الْعَظِيمَةِ.", ref: "مزامير ٩٣: ٤" }, // Mighty waters
-      { text: "يَرْوِيكَ الرَّبُّ دَائِمًا، وَيُشْبِعُ نَفْسَكَ فِي الْيَبُوسِ... فَتَكُونُ كَجَنَّةٍ رَيَّا وَكَنَبْعِ مِيَاهٍ لاَ تَنْقَطِعُ مِيَاهُهُ.", ref: "إشعياء ٥٨: ١١" }, // Spring of water
-      { text: "مَجَارِي الْمِيَاهِ تَفْرَحُ مَدِينَةَ اللهِ، مَقْدِسَ مَسَاكِنِ الْعَلِيِّ.", ref: "مزامير ٤٦: ٤" }, // Streams make glad
-      { text: "لأَنَّهُ يَشُقُّ صُخُورًا فِي الْبَرِّيَّةِ وَيَسْقِيهِمْ كَأَنَّهُ مِنْ لُجَجٍ عَظِيمَةٍ.", ref: "مزامير ٧٨: ١٥" }, // Split rocks/water
-      { text: "كُلُّ الأَنْهَارِ تَجْرِي إِلَى الْبَحْرِ، وَالْبَحْرُ لَيْسَ بِمَلآنَ. إِلَى الْمَكَانِ الَّذِي جَرَتْ مِنْهُ الأَنْهَارُ إِلَى هُنَاكَ تَذْهَبُ رَاجِعَةً.", ref: "الجامعة ١: ٧" }, // Rivers to sea
-      { text: "مُبَارَكٌ الرَّجُلُ الَّذِي يَتَّكِلُ عَلَى الرَّبِّ... فَيَكُونُ كَشَجَرَةٍ مَغْرُوسَةٍ عَلَى الْمِيَاهِ، وَعَلَى النَّهْرِ تَمُدُّ أُصُولَهَا.", ref: "إرميا ١٧: ٧-٨" }, // Planted by water
-      { text: "أَنَا أُعْطِيَّ الْعَطْشَانَ مِنْ يَنْبُوعِ مَاءِ الْحَيَاةِ مَجَّانًا.", ref: "رؤيا ٢١: ٦" }, // Water of life
+      { text: "الرَّبُّ فِي الْعُلاَ أَقْدَرُ مِنْ أَصْوَاتِ مِيَاهٍ كَثِيرَةٍ، مِنْ أَمْوَاجِ الْبَحْرِ الْعَظِيمَةِ.", ref: "مزامير ٩٣: ٤" },
+      { text: "يَرْوِيكَ الرَّبُّ دَائِمًا، وَيُشْبِعُ نَفْسَكَ فِي الْيَبُوسِ... فَتَكُونُ كَجَنَّةٍ رَيَّا وَكَنَبْعِ مِيَاهٍ لاَ تَنْقَطِعُ مِيَاهُهُ.", ref: "إشعياء ٥٨: ١١" },
+      { text: "مَجَارِي الْمِيَاهِ تَفْرَحُ مَدِينَةَ اللهِ، مَقْدِسَ مَسَاكِنِ الْعَلِيِّ.", ref: "مزامير ٤٦: ٤" },
+      { text: "لأَنَّهُ يَشُقُّ صُخُورًا فِي الْبَرِّيَّةِ وَيَسْقِيهِمْ كَأَنَّهُ مِنْ لُجَجٍ عَظِيمَةٍ.", ref: "مزامير ٧٨: ١٥" },
+      { text: "كُلُّ الأَنْهَارِ تَجْرِي إِلَى الْبَحْرِ، وَالْبَحْرُ لَيْسَ بِمَلآنَ. إِلَى الْمَكَانِ الَّذِي جَرَتْ مِنْهُ الأَنْهَارُ إِلَى هُنَاكَ تَذْهَبُ رَاجِعَةً.", ref: "الجامعة ١: ٧" },
+      { text: "مُبَارَكٌ الرَّجُلُ الَّذِي يَتَّكِلُ عَلَى الرَّبِّ... فَيَكُونُ كَشَجَرَةٍ مَغْرُوسَةٍ عَلَى الْمِيَاهِ، وَعَلَى النَّهْرِ تَمُدُّ أُصُولَهَا.", ref: "إرميا ١٧: ٧-٨" },
+      { text: "أَنَا أُعْطِيَّ الْعَطْشَانَ مِنْ يَنْبُوعِ مَاءِ الْحَيَاةِ مَجَّانًا.", ref: "رؤيا ٢١: ٦" },
+      { text: "مَنْ يَشْرَبُ مِنَ الْمَاءِ الَّذِي أُعْطِيهِ أَنَا فَلَنْ يَعْطَشَ إِلَى الأَبَدِ، بَلِ الْمَاءُ الَّذِي أُعْطِيهِ يَصِيرُ فِيهِ يَنْبُوعَ مَاءٍ يَنْبَعُ إِلَى حَيَاةٍ أَبَدِيَّةٍ.", ref: "يوحنا ٤: ١٤" },
+      { text: "كَأَنْهَارِ مَاءٍ فِي مَكَانٍ يَابِسٍ، كَظِلِّ صَخْرَةٍ عَظِيمَةٍ فِي أَرْضٍ مُعْيِيَةٍ.", ref: "إشعياء ٣٢: ٢" },
+      { text: "عِنْدَ مِيَاهِ الرَّاحَةِ يُورِدُنِي. يَرُدُّ نَفْسِي.", ref: "مزامير ٢٣: ٢-٣" },
+      { text: "فَتَفَجَّرَتْ مِيَاهٌ وَجَرَتْ فِي الْيَابِسَةِ أَنْهَارًا.", ref: "مزامير ١٠٥: ٤١" },
+      { text: "أَنْضَحُ عَلَيْكُمْ مَاءً طَاهِرًا فَتُطَهَّرُونَ... وَمِنْ كُلِّ أَصْنَامِكُمْ أُطَهِّرُكُمْ.", ref: "حزقيال ٣٦: ٢٥" },
+      { text: "صَوْتُ الرَّبِّ عَلَى الْمِيَاهِ. إِلهُ الْمَجْدِ أَرْعَدَ. الرَّبُّ فَوْقَ الْمِيَاهِ الْكَثِيرَةِ.", ref: "مزامير ٢٩: ٣" },
+      { text: "الْمُحَوِّلِ الصَّخْرَةَ إِلَى غُدْرَانِ مِيَاهٍ، الصَّوَّانَ إِلَى يَنَابِيعِ مِيَاهٍ.", ref: "مزامير ١١٤: ٨" },
+      { text: "تَعَالَوْا إِلَى الْمِيَاهِ، وَالَّذِي لَيْسَ لَهُ فِضَّةٌ تَعَالَوْا اشْتَرُوا وَكُلُوا.", ref: "إشعياء ٥٥: ١" }
     ];
-    // Randomly select one on mount
+
+    // Logic to ensure variety and no repeats within session could be stored in sessionStorage, 
+    // but for simple "refresh changes it" behavior, pure random is robust enough given pool size.
+    // For "freshness", we rely on the random selection on mount.
+
     const randomVerse = verses[Math.floor(Math.random() * verses.length)];
     setVerse(randomVerse);
   }, []);
@@ -56,18 +69,56 @@ const VerseOfTheDay: React.FC = () => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 1, delay: 0.5 }}
-      className="relative w-full max-w-4xl mx-auto my-16 px-6 text-center z-30"
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 1.2, ease: "easeOut" }}
+      className="relative w-full max-w-5xl mx-auto my-20 px-4 z-30 flex flex-col items-center"
     >
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-32 bg-accent-gold/5 blur-[80px] rounded-full" />
-      <div className="relative border-y border-white/10 py-8 md:py-10">
-        <span className="text-accent-gold text-xs font-bold tracking-[0.2em] uppercase mb-4 block">Verse of the Day 🌊</span>
-        <p className="text-xl md:text-3xl text-white font-medium leading-relaxed font-serif" dir="rtl">
-          "{verse.text}"
-        </p>
-        <p className="text-white/40 text-sm mt-4 font-mono">{verse.ref}</p>
+      {/* Cinematic Glow Container */}
+      <div className="relative w-full bg-linear-to-b from-blue-900/10 to-transparent border-y border-white/5 md:border border-white/5 md:rounded-3xl p-8 md:p-12 overflow-hidden backdrop-blur-sm group">
+
+        {/* Animated Background Elements */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-1 bg-gradient-to-r from-transparent via-accent-blue/40 to-transparent opacity-60" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2/3 h-1 bg-gradient-to-r from-transparent via-accent-gold/20 to-transparent opacity-40" />
+        <div className="absolute -top-24 -left-24 w-64 h-64 bg-accent-blue/5 rounded-full blur-[100px] animate-pulse-slow" />
+        <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-accent-gold/5 rounded-full blur-[100px] animate-pulse-slow delay-1000" />
+
+        <div className="relative z-10 flex flex-col items-center text-center space-y-6">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className="flex items-center gap-3"
+          >
+            <span className="h-px w-8 md:w-16 bg-gradient-to-l from-accent-gold/50 to-transparent" />
+            <span className="text-accent-gold text-xs md:text-sm font-bold tracking-[0.3em] uppercase drop-shadow-sm">
+              آية اليوم 🌊
+            </span>
+            <span className="h-px w-8 md:w-16 bg-gradient-to-r from-accent-gold/50 to-transparent" />
+          </motion.div>
+
+          <motion.p
+            key={verse.text}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8, duration: 1 }}
+            className="text-2xl md:text-4xl lg:text-5xl text-white font-medium leading-relaxed md:leading-normal font-serif max-w-4xl drop-shadow-lg"
+            dir="rtl"
+          >
+            "{verse.text}"
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.2, duration: 1 }}
+            className="mt-4 px-4 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-md"
+          >
+            <p className="text-white/50 text-xs md:text-sm font-mono tracking-widest uppercase">
+              {verse.ref}
+            </p>
+          </motion.div>
+        </div>
       </div>
     </motion.div>
   );
