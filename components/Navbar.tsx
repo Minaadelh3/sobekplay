@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import BrandLogo from './BrandLogo';
@@ -10,21 +10,21 @@ interface NavbarProps {
   setIsMobileMenuOpen?: (isOpen: boolean) => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ 
-  onSearchOpen, 
-  isMobileMenuOpen: externalIsMobileMenuOpen, 
-  setIsMobileMenuOpen: externalSetIsMobileMenuOpen 
+const Navbar: React.FC<NavbarProps> = ({
+  onSearchOpen,
+  isMobileMenuOpen: externalIsMobileMenuOpen,
+  setIsMobileMenuOpen: externalSetIsMobileMenuOpen
 }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [internalIsMobileMenuOpen, setInternalIsMobileMenuOpen] = useState(false);
-  
+
   const isMobileMenuOpen = externalIsMobileMenuOpen !== undefined ? externalIsMobileMenuOpen : internalIsMobileMenuOpen;
   const setIsMobileMenuOpen = externalSetIsMobileMenuOpen || setInternalIsMobileMenuOpen;
-  
+
   const { scrollDirection, isAtTop } = useScrollDirection();
   const location = useLocation();
-  
+
   const isVisible = isAtTop || scrollDirection === 'up';
 
   const handleNavClick = () => {
@@ -58,21 +58,20 @@ const Navbar: React.FC<NavbarProps> = ({
     { name: 'About', path: '/about' },
   ];
 
-  // Mobile Menu Links with Emojis
+  // Mobile Menu Links
   const mobileLinks = [
-    { name: 'Home', path: '/', emoji: '🏠' },
-    { name: 'El Agpeya', path: '/prayers', emoji: '❤️' },
     { name: 'Subscription', path: '/subscription', emoji: '💳' },
     { name: 'Coming Soon', path: '/coming-soon', emoji: '⏳' },
     { name: 'News', path: '/news', emoji: '📰' },
     { name: 'Community', path: '/community', emoji: '👥' },
     { name: 'Shop', path: '/shop', emoji: '🛍️' },
     { name: 'About', path: '/about', emoji: 'ℹ️' },
+    { name: 'Settings', path: '/profile', emoji: '⚙️' },
   ];
 
   return (
     <>
-      <motion.nav 
+      <motion.nav
         initial={{ y: 0 }}
         animate={{ y: isVisible ? 0 : -100 }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
@@ -81,55 +80,40 @@ const Navbar: React.FC<NavbarProps> = ({
         <div className="max-w-[1920px] mx-auto px-4 md:px-12">
           <div className="h-16 md:h-20 flex items-center justify-between">
             <div className="flex items-center gap-4 lg:gap-12">
-              {/* Hamburger Button (Mobile) */}
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="lg:hidden text-white p-2 focus:outline-none transition-transform active:scale-90"
-                aria-label="Toggle menu"
-              >
-                <div className="w-6 flex flex-col items-start gap-1.5">
-                  <span className={`block h-0.5 w-full bg-white transition-all duration-300 ${isMobileMenuOpen ? 'rotate-45 translate-y-2' : ''}`} />
-                  <span className={`block h-0.5 w-3/4 bg-white transition-all duration-300 ${isMobileMenuOpen ? 'opacity-0' : ''}`} />
-                  <span className={`block h-0.5 w-full bg-white transition-all duration-300 ${isMobileMenuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
-                </div>
-              </button>
-
               <Link to="/" onClick={handleNavClick}>
                 <BrandLogo className="h-8 md:h-10 w-auto text-white hover:opacity-80 transition-opacity" />
               </Link>
-              
+
               {/* Desktop Nav */}
               <div className="hidden lg:flex items-center space-x-6">
                 {primaryTabs.map((tab) => (
-                  <Link 
+                  <Link
                     key={tab.path}
-                    to={tab.path} 
+                    to={tab.path}
                     onClick={handleNavClick}
-                    className={`text-sm font-medium transition-colors hover:text-accent-green tracking-wide ${
-                      isLinkActive(tab.path) ? 'text-white font-bold' : 'text-muted'
-                    }`}
+                    className={`text-sm font-medium transition-colors hover:text-accent-green tracking-wide ${isLinkActive(tab.path) ? 'text-white font-bold' : 'text-muted'
+                      }`}
                   >
                     {tab.name}
                   </Link>
                 ))}
 
                 {/* Explore Dropdown Desktop */}
-                <div 
+                <div
                   className="relative h-full flex items-center group"
                   onMouseEnter={() => setActiveDropdown('explore')}
                   onMouseLeave={() => setActiveDropdown(null)}
                 >
-                  <button 
-                    className={`text-sm font-medium transition-colors hover:text-accent-green flex items-center gap-1 tracking-wide ${
-                      exploreDropdown.some(i => isLinkActive(i.path)) ? 'text-white font-bold' : 'text-muted'
-                    }`}
+                  <button
+                    className={`text-sm font-medium transition-colors hover:text-accent-green flex items-center gap-1 tracking-wide ${exploreDropdown.some(i => isLinkActive(i.path)) ? 'text-white font-bold' : 'text-muted'
+                      }`}
                   >
                     Explore
                     <svg className={`w-3 h-3 transition-transform duration-200 ${activeDropdown === 'explore' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                   </button>
                   <AnimatePresence>
                     {activeDropdown === 'explore' && (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
@@ -151,22 +135,21 @@ const Navbar: React.FC<NavbarProps> = ({
                 </div>
 
                 {/* More Dropdown Desktop */}
-                <div 
+                <div
                   className="relative h-full flex items-center group"
                   onMouseEnter={() => setActiveDropdown('more')}
                   onMouseLeave={() => setActiveDropdown(null)}
                 >
-                  <button 
-                    className={`text-sm font-medium transition-colors hover:text-accent-green flex items-center gap-1 tracking-wide ${
-                      moreDropdown.some(i => isLinkActive(i.path)) ? 'text-white font-bold' : 'text-muted'
-                    }`}
+                  <button
+                    className={`text-sm font-medium transition-colors hover:text-accent-green flex items-center gap-1 tracking-wide ${moreDropdown.some(i => isLinkActive(i.path)) ? 'text-white font-bold' : 'text-muted'
+                      }`}
                   >
                     More
                     <svg className={`w-3 h-3 transition-transform duration-200 ${activeDropdown === 'more' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                   </button>
                   <AnimatePresence>
                     {activeDropdown === 'more' && (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
@@ -190,7 +173,7 @@ const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             <div className="flex items-center space-x-4 md:space-x-6">
-              <button 
+              <button
                 onClick={onSearchOpen}
                 className="text-white/70 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full"
                 aria-label="Search"
@@ -200,16 +183,16 @@ const Navbar: React.FC<NavbarProps> = ({
                 </svg>
               </button>
 
-              <Link 
-                to="/subscription" 
+              <Link
+                to="/subscription"
                 onClick={handleNavClick}
                 className="hidden sm:inline-flex bg-gradient-to-r from-accent-gold to-yellow-600 text-black px-6 py-2 rounded-full text-sm font-bold hover:brightness-110 transition-all shadow-lg shadow-accent-gold/20 transform hover:scale-105"
               >
                 Subscribe
               </Link>
 
-              <div className="relative">
-                <button 
+              <div className="relative hidden lg:block">
+                <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   className="flex items-center space-x-2 focus:outline-none group"
                 >
@@ -219,7 +202,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 </button>
                 <AnimatePresence>
                   {isProfileOpen && (
-                    <motion.div 
+                    <motion.div
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -230,7 +213,7 @@ const Navbar: React.FC<NavbarProps> = ({
                         <p className="text-xs text-muted">Premium Member</p>
                       </div>
                       <button className="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 transition-colors border-t border-white/5 font-medium flex items-center gap-3">
-                           Sign Out
+                        Sign Out
                       </button>
                     </motion.div>
                   )}
@@ -241,70 +224,81 @@ const Navbar: React.FC<NavbarProps> = ({
         </div>
       </motion.nav>
 
-      {/* Full-Screen Mobile Menu Overlay */}
+      {/* Mobile Menu Overlay - Activated by Bottom Nav 'More' */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, x: '100%' }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-0 z-[100] bg-nearblack overflow-hidden flex flex-col"
-          >
-            {/* Header Area */}
-            <div className="h-20 px-6 flex items-center justify-between border-b border-white/5 bg-nearblack/80 backdrop-blur-md">
-              <button 
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="p-2 text-white/70 hover:text-white transition-colors active:scale-90"
-              >
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-              <BrandLogo className="h-8 w-auto" />
-              <div className="w-10" /> {/* Spacer */}
-            </div>
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[80] md:hidden"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
 
-            {/* Scrollable Links */}
-            <div className="flex-1 overflow-y-auto px-6 py-8 pb-32">
-              <div className="flex flex-col space-y-4">
-                {mobileLinks.map((link, idx) => (
-                  <motion.div
-                    key={link.path}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                  >
+            {/* Menu Sheet */}
+            <motion.div
+              initial={{ opacity: 0, y: '100%' }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              drag="y"
+              dragConstraints={{ top: 0, bottom: 0 }}
+              onDragEnd={(_, info) => {
+                if (info.offset.y > 100) setIsMobileMenuOpen(false);
+              }}
+              className="fixed bottom-0 left-0 right-0 z-[100] bg-nearblack rounded-t-3xl overflow-hidden flex flex-col max-h-[85vh] md:hidden shadow-[0_-10px_40px_rgba(0,0,0,0.8)] border-t border-white/10"
+            >
+              {/* Handle */}
+              <div className="w-full flex justify-center pt-3 pb-2" onClick={() => setIsMobileMenuOpen(false)}>
+                <div className="w-12 h-1.5 bg-white/20 rounded-full" />
+              </div>
+
+              {/* Header Area */}
+              <div className="px-6 py-4 flex items-center justify-between border-b border-white/5">
+                <span className="text-xl font-bold text-white">More Options</span>
+                <button
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="p-2 bg-white/5 rounded-full text-white/70 hover:text-white transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+
+              {/* Scrollable Links */}
+              <div className="flex-1 overflow-y-auto px-6 py-4 pb-24">
+                <div className="grid grid-cols-1 gap-2">
+                  {mobileLinks.map((link, idx) => (
                     <Link
+                      key={link.path}
                       to={link.path}
                       onClick={handleNavClick}
-                      className={`flex items-center space-x-5 px-4 py-4 rounded-2xl transition-all duration-300 ${
-                        isLinkActive(link.path) 
-                          ? 'bg-white/10 text-accent-green' 
-                          : 'text-white/80 hover:bg-white/5 active:bg-white/10'
-                      }`}
+                      className={`flex items-center space-x-4 px-4 py-4 rounded-xl transition-all ${isLinkActive(link.path)
+                          ? 'bg-accent-green/10 text-accent-green border border-accent-green/20'
+                          : 'text-white/80 hover:bg-white/5 active:bg-white/10 border border-transparent'
+                        }`}
                     >
-                      <span className="text-2xl">{link.emoji}</span>
-                      <span className={`text-xl font-bold tracking-tight ${isLinkActive(link.path) ? 'text-accent-green' : 'text-white'}`}>
-                        {link.name}
-                      </span>
+                      <span className="text-xl">{link.emoji}</span>
+                      <span className="text-base font-bold tracking-wide">{link.name}</span>
+                      <div className="flex-1" />
+                      <svg className="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                     </Link>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
+                  ))}
+                </div>
 
-            {/* Fixed CTA Area */}
-            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-nearblack via-nearblack to-transparent">
-              <Link
-                to="/subscription"
-                onClick={handleNavClick}
-                className="flex items-center justify-center w-full bg-accent-gold text-black py-5 rounded-2xl text-xl font-black shadow-[0_8px_32px_rgba(191,160,90,0.3)] transform transition-transform active:scale-95"
-              >
-                Subscribe Now
-              </Link>
-            </div>
-          </motion.div>
+                <div className="mt-8">
+                  <Link
+                    to="/subscription"
+                    onClick={handleNavClick}
+                    className="flex items-center justify-center w-full bg-accent-gold text-black py-4 rounded-xl text-lg font-black shadow-lg shadow-accent-gold/20 active:scale-95 transition-transform"
+                  >
+                    Subscribe Now
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </>
