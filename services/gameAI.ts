@@ -2,11 +2,11 @@
 // services/gameAI.ts
 
 // --- CONFIG ---
-// 🚨 تأكد إن المفتاح مكتوب صح ومافيش مسافات قبله أو بعده
+// 🚨 Hardcoded Key as requested for connectivity test
 const API_KEY = "AIzaSyD6LWEoWnDMlSq7-JkO3LSQ8hZmUuMLbj4";
 
-// استخدمنا v1 بدل v1beta واستخدمنا موديل 1.5 flash لأنه الأسرع والأضمن حالياً
-const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+// Using v1beta and gemini-1.5-flash (Supported & Fast)
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
 // --- TYPES ---
 export type GameMode = 'عدّيها 💣' | 'قول ولا تفوّت؟ 😏' | 'فيلم بالإيموجي 🎬' | 'كمّلها بقى…' | 'حدوتة على الطاير ✨' | string;
@@ -63,7 +63,7 @@ export async function generateGameCard(
   `;
 
     try {
-        console.log("🐊 Sobek AI: Sending Request..."); // Debug log
+        console.log("🐊 Sobek AI: Sending Request to", API_URL);
 
         const response = await fetch(API_URL, {
             method: "POST",
@@ -78,17 +78,17 @@ export async function generateGameCard(
             })
         });
 
-        // 🚨 هنا التغيير المهم: لو فيه خطأ، نقرأ الرسالة اللي جاية من جوجل
+        // Deep Debugging: Log full error text if not OK
         if (!response.ok) {
             const errorBody = await response.text();
             console.error(`🔥 API Error ${response.status}:`, errorBody);
-            throw new Error(`Google API Error: ${response.status}`);
+            throw new Error(`Google API Error: ${response.status} - ${errorBody}`);
         }
 
         const data = await response.json();
         const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
-        if (!rawText) throw new Error("Empty Response");
+        if (!rawText) throw new Error("Empty Response from AI");
 
         // Clean Markdown code blocks if present
         const cleanJson = rawText.replace(/```json\n?|```/g, '').trim();
