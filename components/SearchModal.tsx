@@ -15,7 +15,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, posters }) =
 
   const filteredResults = useMemo(() => {
     if (!query.trim()) return [];
-    return posters.filter(p => 
+    return posters.filter(p =>
       p.title.toLowerCase().includes(query.toLowerCase())
     );
   }, [query, posters]);
@@ -30,7 +30,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, posters }) =
           className="fixed inset-0 z-[100] bg-nearblack/95 backdrop-blur-xl flex flex-col"
         >
           <div className="p-8 flex justify-end">
-            <button 
+            <button
               onClick={onClose}
               className="p-2 hover:bg-white/10 rounded-full transition-colors text-white"
             >
@@ -59,7 +59,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, posters }) =
               {query && filteredResults.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 pb-20">
                   {filteredResults.map(poster => (
-                    <motion.div 
+                    <motion.div
                       key={poster.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}

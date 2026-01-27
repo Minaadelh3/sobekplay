@@ -1,6 +1,5 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import MobileBottomNav from './components/MobileBottomNav';
@@ -30,7 +29,7 @@ import SeriesPage from './pages/SeriesPage';
 import KidsPage from './pages/KidsPage';
 import MenuPage from './pages/MenuPage';
 import MyListPage from './pages/MyListPage';
-import GamesPage from './pages/GamesPage';
+import { motion } from 'framer-motion';
 import SobekChatbot from './components/SobekChatbot';
 import ScrollToTop from './components/ScrollToTop';
 
@@ -40,134 +39,37 @@ const VerseOfTheDay: React.FC = () => {
 
   useEffect(() => {
     const verses = [
-      { text: "الرَّبُّ فِي الْعُلاَ أَقْدَرُ مِنْ أَصْوَاتِ مِيَاهٍ كَثِيرَةٍ، مِنْ أَمْوَاجِ الْبَحْرِ الْعَظِيمَةِ.", ref: "مزامير ٩٣: ٤" }, // Psalms 93:4
-      { text: "يَرْوِيكَ الرَّبُّ دَائِمًا، وَيُشْبِعُ نَفْسَكَ فِي الْيَبُوسِ... فَتَكُونُ كَجَنَّةٍ رَيَّا وَكَنَبْعِ مِيَاهٍ لاَ تَنْقَطِعُ مِيَاهُهُ.", ref: "إشعياء ٥٨: ١١" }, // Isaiah 58:11
-      { text: "مَجَارِي الْمِيَاهِ تَفْرَحُ مَدِينَةَ اللهِ، مَقْدِسَ مَسَاكِنِ الْعَلِيِّ.", ref: "مزامير ٤٦: ٤" }, // Psalms 46:4
-      { text: "لأَنَّهُ يَشُقُّ صُخُورًا فِي الْبَرِّيَّةِ وَيَسْقِيهِمْ كَأَنَّهُ مِنْ لُجَجٍ عَظِيمَةٍ.", ref: "مزامير ٧٨: ١٥" }, // Psalms 78:15
-      { text: "كُلُّ الأَنْهَارِ تَجْرِي إِلَى الْبَحْرِ، وَالْبَحْرُ لَيْسَ بِمَلآنَ. إِلَى الْمَكَانِ الَّذِي جَرَتْ مِنْهُ الأَنْهَارُ إِلَى هُنَاكَ تَذْهَبُ رَاجِعَةً.", ref: "الجامعة ١: ٧" }, // Ecclesiastes 1:7
-      { text: "مُبَارَكٌ الرَّجُلُ الَّذِي يَتَّكِلُ عَلَى الرَّبِّ... فَيَكُونُ كَشَجَرَةٍ مَغْرُوسَةٍ عَلَى الْمِيَاهِ، وَعَلَى النَّهْرِ تَمُدُّ أُصُولَهَا.", ref: "إرميا ١٧: ٧-٨" }, // Jeremiah 17:7-8
-      { text: "أَنَا أُعْطِيَّ الْعَطْشَانَ مِنْ يَنْبُوعِ مَاءِ الْحَيَاةِ مَجَّانًا.", ref: "رؤيا ٢١: ٦" }, // Revelation 21:6
-      { text: "مَنْ آمَنَ بِي، كَمَا قَالَ الْكِتَابُ، تَجْرِي مِنْ بَطْنِهِ أَنْهَارُ مَاءٍ حَيٍّ.", ref: "يوحنا ٧: ٣٨" }, // John 7:38
-      { text: "كَالأَيِّلِ الَّذِي يَشْتَاقُ إِلَى جَدَاوِلِ الْمِيَاهِ، هكَذَا تَشْتَاقُ نَفْسِي إِلَيْكَ يَا اللهُ.", ref: "مزامير ٤٢: ١" }, // Psalms 42:1
-      { text: "لأَنَّهُ يُورِدُنِي إِلَى مِيَاهٍ الرَّاحَةِ. يَرُدُّ نَفْسِي.", ref: "مزامير ٢٣: ٢-٣" }, // Psalms 23:2-3
-      { text: "أَيُّهَا الْعِطَاشُ جَمِيعًا هَلُمُّوا إِلَى الْمِيَاهِ، وَالَّذِي لَيْسَ لَهُ فِضَّةٌ تَعَالَوْا اشْتَرُوا.", ref: "إشعياء ٥٥: ١" }, // Isaiah 55:1
-      { text: "لأَنِّي أَسْكُبُ مَاءً عَلَى الْعَطْشَانِ، وَسُيُولاً عَلَى الْيَابِسَةِ.", ref: "إشعياء ٤٤: ٣" }, // Isaiah 44:3
-      { text: "وَيَكُونُ إِنْسَانٌ كَمَخْبَأٍ مِنَ الرِّيحِ... كَسَوَاقِي مَاءٍ فِي مَكَانٍ يَابِسٍ.", ref: "إشعياء ٣٢: ٢" }, // Isaiah 32:2
-      { text: "وَيَكُونُ إِيمَانُكَ قُوَّةً، وَيَمْلأُ اللهُ قَلْبَكَ سَلاَمًا كَنَهْرٍ.", ref: "إشعياء ٤٨: ١٨" }, // Isaiah 48:18 (Paraphrased spirit) - Replacing with accurate KJV/Van Dyck: "لَيْتَكَ أَصْغَيْتَ لِوَصَايَايَ، فَكَانَ كَنَهْرٍ سَلاَمُكَ."
-      { text: "هُوَذَا اللهُ خَلاَصِي... فَتَسْتَقُونَ مِيَاهًا بِفَرَحٍ مِنْ يَنَابِيعِ الْخَلاَصِ.", ref: "إشعياء ١٢: ٢-٣" }, // Isaiah 12:2-3
-      { text: "وَلكِنْ مَنْ يَشْرَبُ مِنَ الْمَاءِ الَّذِي أُعْطِيهِ أَنَا فَلَنْ يَعْطَشَ إِلَى الأَبَدِ.", ref: "يوحنا ٤: ١٤" }, // John 4:14
-      { text: "صَوْتُ الرَّبِّ عَلَى الْمِيَاهِ. إِلهُ الْمَجْدِ أَرْعَدَ. الرَّبُّ فَوْقَ الْمِيَاهِ الْكَثِيرَةِ.", ref: "مزامير ٢٩: ٣" }, // Psalms 29:3
-      { text: "أَنْتَ فَجَّرْتَ عَيْنًا وَسَيْلاً. أَنْتَ يَبَّسْتَ أَنْهَارًا دَائِمَةَ الْجَرَيَانِ.", ref: "مزامير ٧٤: ١٥" }, // Psalms 74:15
-      { text: "الْمُحَوِّلِ الصَّخْرَةَ إِلَى غُدْرَانِ مِيَاهٍ، الصَّوَّانَ إِلَى يَنَابِيعِ مِيَاهٍ.", ref: "مزامير ١١٤: ٨" }, // Psalms 114:8
-      { text: "تَعَهَّدْتَ الأَرْضَ وَجَعَلْتَهَا تَفِيضُ. تُغْنِيهَا جِدًّا. سِوَاقِي اللهِ مَلآنَةٌ مَاءً.", ref: "مزامير ٦٥: ٩" }, // Psalms 65:9
+      { text: "الرَّبُّ فِي الْعُلاَ أَقْدَرُ مِنْ أَصْوَاتِ مِيَاهٍ كَثِيرَةٍ، مِنْ أَمْوَاجِ الْبَحْرِ الْعَظِيمَةِ.", ref: "مزامير ٩٣: ٤" }, // Mighty waters
+      { text: "يَرْوِيكَ الرَّبُّ دَائِمًا، وَيُشْبِعُ نَفْسَكَ فِي الْيَبُوسِ... فَتَكُونُ كَجَنَّةٍ رَيَّا وَكَنَبْعِ مِيَاهٍ لاَ تَنْقَطِعُ مِيَاهُهُ.", ref: "إشعياء ٥٨: ١١" }, // Spring of water
+      { text: "مَجَارِي الْمِيَاهِ تَفْرَحُ مَدِينَةَ اللهِ، مَقْدِسَ مَسَاكِنِ الْعَلِيِّ.", ref: "مزامير ٤٦: ٤" }, // Streams make glad
+      { text: "لأَنَّهُ يَشُقُّ صُخُورًا فِي الْبَرِّيَّةِ وَيَسْقِيهِمْ كَأَنَّهُ مِنْ لُجَجٍ عَظِيمَةٍ.", ref: "مزامير ٧٨: ١٥" }, // Split rocks/water
+      { text: "كُلُّ الأَنْهَارِ تَجْرِي إِلَى الْبَحْرِ، وَالْبَحْرُ لَيْسَ بِمَلآنَ. إِلَى الْمَكَانِ الَّذِي جَرَتْ مِنْهُ الأَنْهَارُ إِلَى هُنَاكَ تَذْهَبُ رَاجِعَةً.", ref: "الجامعة ١: ٧" }, // Rivers to sea
+      { text: "مُبَارَكٌ الرَّجُلُ الَّذِي يَتَّكِلُ عَلَى الرَّبِّ... فَيَكُونُ كَشَجَرَةٍ مَغْرُوسَةٍ عَلَى الْمِيَاهِ، وَعَلَى النَّهْرِ تَمُدُّ أُصُولَهَا.", ref: "إرميا ١٧: ٧-٨" }, // Planted by water
+      { text: "أَنَا أُعْطِيَّ الْعَطْشَانَ مِنْ يَنْبُوعِ مَاءِ الْحَيَاةِ مَجَّانًا.", ref: "رؤيا ٢١: ٦" }, // Water of life
     ];
-
-    // Improved Randomization: Use session storage to avoid immediate repeats if possible
-    const lastIndex = sessionStorage.getItem('lastVerseIndex');
-    let newIndex;
-    do {
-      newIndex = Math.floor(Math.random() * verses.length);
-    } while (verses.length > 1 && newIndex.toString() === lastIndex);
-
-    sessionStorage.setItem('lastVerseIndex', newIndex.toString());
-    setVerse(verses[newIndex]);
+    // Randomly select one on mount
+    const randomVerse = verses[Math.floor(Math.random() * verses.length)];
+    setVerse(randomVerse);
   }, []);
 
   if (!verse) return null;
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 1.2, ease: "easeOut" }}
-      className="w-full px-4 mb-20 md:mb-24 mt-8 flex justify-center z-10"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 1, delay: 0.5 }}
+      className="relative w-full max-w-4xl mx-auto my-16 px-6 text-center z-30"
     >
-      <div className="relative w-full max-w-5xl rounded-[2rem] overflow-hidden bg-gradient-to-br from-[#0c1220] via-[#0f1729] to-[#0c1220] border border-white/5 shadow-2xl group">
-
-        {/* Cinematic Background Glows */}
-        <div className="absolute top-0 right-0 w-2/3 h-full bg-accent-blue/5 blur-[100px] rounded-full mix-blend-screen opacity-60 group-hover:opacity-80 transition-opacity duration-1000" />
-        <div className="absolute bottom-0 left-0 w-2/3 h-full bg-accent-gold/5 blur-[100px] rounded-full mix-blend-screen opacity-40 group-hover:opacity-60 transition-opacity duration-1000" />
-
-        <div className="relative px-6 py-12 md:px-16 md:py-16 flex flex-col items-center text-center">
-
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.8 }}
-            className="mb-8"
-          >
-            <span className="px-4 py-1.5 rounded-full border border-accent-blue/30 bg-accent-blue/10 text-accent-blue text-[10px] md:text-xs font-bold tracking-[0.2em] uppercase backdrop-blur-sm">
-              آية اليوم 🌊
-            </span>
-          </motion.div>
-
-          <motion.p
-            key={verse.text}
-            initial={{ opacity: 0, filter: "blur(4px)" }}
-            animate={{ opacity: 1, filter: "blur(0px)" }}
-            transition={{ delay: 0.2, duration: 1 }}
-            className="text-2xl md:text-4xl lg:text-5xl text-white font-medium leading-[1.6] md:leading-[1.5] font-serif tracking-wide drop-shadow-lg max-w-4xl"
-            dir="rtl"
-          >
-            "{verse.text}"
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1, duration: 1 }}
-            className="mt-8 flex flex-col items-center gap-2"
-          >
-            <div className="w-16 h-px bg-gradient-to-r from-transparent via-accent-gold/50 to-transparent" />
-            <p className="text-white/50 text-sm md:text-base font-mono tracking-widest uppercase">
-              {verse.ref}
-            </p>
-          </motion.div>
-
-        </div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-32 bg-accent-gold/5 blur-[80px] rounded-full" />
+      <div className="relative border-y border-white/10 py-8 md:py-10">
+        <span className="text-accent-gold text-xs font-bold tracking-[0.2em] uppercase mb-4 block">Verse of the Day 🌊</span>
+        <p className="text-xl md:text-3xl text-white font-medium leading-relaxed font-serif" dir="rtl">
+          "{verse.text}"
+        </p>
+        <p className="text-white/40 text-sm mt-4 font-mono">{verse.ref}</p>
       </div>
     </motion.div>
-  );
-};
-
-const TripTips: React.FC = () => {
-  const tips = [
-    { text: "متنساش القبعة، الشمس مش بتهزر! 🧢", category: "essential" },
-    { text: "جزمة مريحة = رحلة أحسن بكتير 👟", category: "essential" },
-    { text: "كريم الشمس مش رفاهية، ده ضرورة 🌞", category: "essential" },
-    { text: "الجو حر شوية… بس المناظر تستاهل 😎", category: "weather" },
-    { text: "خدها بهدوووء… إحنا في فسحة ❤️", category: "vibe" },
-    { text: "باور بانك عشان الموبايل ميفصلش 🔋", category: "tech" },
-    { text: "نستمتع سوا، ونسيب أي زعل ورا ✨", category: "vibe" },
-    { text: "الضحكة الحلوة بتكمّل الرحلة 😄", category: "vibe" },
-    { text: "الهوا على النيل حلو بالليل 🌊", category: "weather" },
-    { text: "صور ذكريات كتير متتعوضش 📸", category: "fun" },
-  ];
-
-  return (
-    <div className="py-6 mb-4">
-      <h3 className="text-white text-lg md:text-xl font-bold mb-4 px-6 md:px-12 flex items-center gap-2">
-        <span className="text-2xl">🧳✨</span>
-        تنبيهات
-      </h3>
-      <div className="flex overflow-x-auto gap-4 px-6 md:px-12 pb-8 scrollbar-hide snap-x snap-mandatory">
-        {tips.map((tip, index) => (
-          <motion.div
-            key={index}
-            whileHover={{ scale: 1.05, rotate: 1 }}
-            className="flex-none snap-start w-48 md:w-56 aspect-[4/3] bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col justify-center items-center text-center group hover:bg-white/10 transition-colors cursor-default"
-          >
-            <p className="text-white/90 font-medium leading-relaxed font-serif text-sm md:text-base dir-rtl">
-              {tip.text}
-            </p>
-            <div className={`mt-3 w-12 h-1 rounded-full opacity-30 group-hover:opacity-60 transition-opacity ${tip.category === 'essential' ? 'bg-accent-blue' :
-              tip.category === 'vibe' ? 'bg-accent-gold' :
-                tip.category === 'weather' ? 'bg-green-400' : 'bg-purple-400'
-              }`} />
-          </motion.div>
-        ))}
-      </div>
-    </div>
   );
 };
 
@@ -199,18 +101,15 @@ const Home: React.FC<{ posters: any[] }> = ({ posters }) => {
   }, [posters]);
 
   return (
-    <div className="pb-24 md:pb-12 bg-[#090b10]">
+    <div className="pb-24">
+      <Hero posters={posters} />
+
+      {/* Verse of the Day Injection */}
       <VerseOfTheDay />
-      <Hero poster={posters[0]} />
 
-      <div className="relative z-10 -mt-20 md:-mt-32 space-y-8 md:space-y-12 pb-12">
-        {/* Inject TripTips early in the flow but not overlapping Hero too awkwardly */}
-        <div className="mt-12 md:mt-0">
-          <TripTips />
-        </div>
-
+      <div className="relative z-20 -mt-12 md:-mt-24 space-y-12">
         {rows.map((row) => (
-          <Carousel key={row.title} title={row.title} items={row.items} />
+          <Carousel key={row.title} title={row.title} posters={row.items} />
         ))}
       </div>
     </div>
@@ -307,8 +206,7 @@ const MainLayout: React.FC = () => {
           <Route path="/" element={<Home posters={analyzedPosters} />} />
           <Route path="/movies" element={<MoviesPage posters={analyzedPosters} />} />
           <Route path="/series" element={<SeriesPage posters={analyzedPosters} />} />
-          <Route path="/kids" element={<KidsPage />} />
-          <Route path="/games" element={<GamesPage />} />
+          <Route path="/kids" element={<KidsPage posters={analyzedPosters} />} />
           <Route path="/my-list" element={<MyListPage posters={analyzedPosters} />} />
           <Route path="/coming-soon" element={<Home posters={analyzedPosters.filter(p => p.isComingSoon)} />} />
           <Route path="/title/:id" element={<TitleDetails posters={analyzedPosters} />} />

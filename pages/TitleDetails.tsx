@@ -17,7 +17,7 @@ const TitleDetails: React.FC<TitleDetailsProps> = ({ posters }) => {
   const [inList, setInList] = useState(false);
   const [user, setUser] = useState<any>(null);
 
-  const poster = (posters || []).find(p => p && p.id === id);
+  const poster = posters.find(p => p.id === id);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
