@@ -43,6 +43,23 @@ const CommunityPage: React.FC = () => {
             </p>
           </div>
 
+          <div className="bg-white/5 rounded-2xl p-6 border border-white/5 mt-6 relative overflow-hidden group hover:border-accent-gold/30 transition-colors cursor-pointer" onClick={() => window.open('https://photos.app.goo.gl/ZwC5xnvfy2H4pPia8', '_blank')}>
+            <div className="absolute inset-0 bg-gradient-to-r from-accent-gold/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="relative flex items-center justify-between gap-4">
+              <div className="text-right">
+                <p className="text-lg text-white font-bold leading-tight">
+                  صور الرحلة 📸
+                </p>
+                <p className="text-sm text-white/60 mt-1">
+                  دوس هنا وارفع صورك أو اتفرج
+                </p>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-accent-gold/20 flex items-center justify-center text-accent-gold">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+              </div>
+            </div>
+          </div>
+
           <p className="text-2xl text-accent-gold font-bold leading-relaxed pt-2 rotate-1 inline-block transform">
             لسه ما حجزتش؟ فاتك نص عمرك! 😜
           </p>
