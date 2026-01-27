@@ -2,11 +2,13 @@
 // services/gameAI.ts
 
 // --- CONFIG ---
-// 🚨 DIRECT KEY AS REQUESTED BY USER
+// 🚨 تأكد إن المفتاح مكتوب صح ومافيش مسافات قبله أو بعده
 const API_KEY = "AIzaSyD6LWEoWnDMlSq7-JkO3LSQ8hZmUuMLbj4";
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
 
-// --- TYPES (Matching User Request) ---
+// استخدمنا v1 بدل v1beta واستخدمنا موديل 1.5 flash لأنه الأسرع والأضمن حالياً
+const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+
+// --- TYPES ---
 export type GameMode = 'عدّيها 💣' | 'قول ولا تفوّت؟ 😏' | 'فيلم بالإيموجي 🎬' | 'كمّلها بقى…' | 'حدوتة على الطاير ✨' | string;
 
 export interface GameCard {
@@ -19,7 +21,7 @@ export interface GameCard {
     safe: boolean;
 }
 
-// --- NEW EGYPTIAN SYSTEM PROMPT ---
+// --- SYSTEM PROMPT ---
 const SYSTEM_PROMPT_TEMPLATE = (timerSeconds: number) => `
 أنت مصري قاعد في قعدة لعب.
 طلّع كارت واحد فقط.
@@ -34,7 +36,7 @@ const SYSTEM_PROMPT_TEMPLATE = (timerSeconds: number) => `
 رجّع JSON فقط بالشكل ده:
 {
   "id": "unique-id",
-  "type": "QUESTION | TASK | EMOJI | PROVERB | STARTER | PENALTY",
+  "type": "QUESTION",
   "text": "نص مصري",
   "emoji": null,
   "answer": null,
@@ -51,14 +53,6 @@ export async function generateGameCard(
     recentHistory: string[]
 ): Promise<GameCard | null> {
 
-    // DEBUG: Check if Key is loaded
-    console.log("API Key Status:", !!API_KEY);
-
-    if (!API_KEY) {
-        console.warn("Missing API Key");
-        return null;
-    }
-
     const prompt = `
     نوع اللعبة: ${gameMode}
     الفئة: ${category}
@@ -69,6 +63,8 @@ export async function generateGameCard(
   `;
 
     try {
+        console.log("🐊 Sobek AI: Sending Request..."); // Debug log
+
         const response = await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -82,7 +78,12 @@ export async function generateGameCard(
             })
         });
 
-        if (!response.ok) throw new Error("API Error");
+        // 🚨 هنا التغيير المهم: لو فيه خطأ، نقرأ الرسالة اللي جاية من جوجل
+        if (!response.ok) {
+            const errorBody = await response.text();
+            console.error(`🔥 API Error ${response.status}:`, errorBody);
+            throw new Error(`Google API Error: ${response.status}`);
+        }
 
         const data = await response.json();
         const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -107,7 +108,6 @@ export async function generateGameCard(
 
     } catch (err) {
         console.error("Gemini Failure:", err);
-        // Retry Logic could go here, but for now returning null lets UI handle "Retry"
         return null;
     }
 }
