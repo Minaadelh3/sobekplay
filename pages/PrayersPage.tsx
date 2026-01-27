@@ -566,8 +566,156 @@ const PrayersPage: React.FC = () => {
     }
   ];
 
+  // Scroll to section helper
+  const scrollToElement = (elementId: string) => {
+    const element = document.getElementById(elementId);
+    if (element) {
+      const offset = 100; // Adjust for fixed header
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      });
+    }
+  };
+
+  // Content Renderer with Auto-Anchors
+  const renderPrayerContent = (content: string, prayerId: string) => {
+    if (!content) return (
+      <div className="w-full flex flex-col items-center justify-center py-12 text-white/20">
+        <p className="font-mono text-sm uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full">
+          Content Pending
+        </p>
+      </div>
+    );
+
+    const lines = content.split('\n');
+    let psalmCount = 0;
+
+    return (
+      <div className="space-y-6 text-white/90 font-medium dir-rtl">
+        {lines.map((line, index) => {
+          // Identify headers for navigation targets
+          let elementId = '';
+          let isHeader = false;
+          let extraClasses = '';
+
+          const trimLine = line.trim();
+
+          // Define headers clearly
+          if (trimLine.includes('مقدمة') || trimLine.includes('بدء الصلاة')) {
+            elementId = `${prayerId}-intro`;
+            isHeader = true;
+            extraClasses = 'text-accent-gold text-xl md:text-2xl mt-8 mb-4 border-b border-white/10 pb-2';
+          } else if (trimLine.includes('المزمور')) {
+            psalmCount++;
+            elementId = `${prayerId}-psalm-${psalmCount}`;
+            isHeader = true;
+            extraClasses = 'text-accent-blue text-lg md:text-xl mt-6 mb-2 font-bold';
+          } else if (trimLine.includes('الإنجيل') || trimLine.includes('إنجيل')) {
+            elementId = `${prayerId}-gospel`;
+            isHeader = true;
+            extraClasses = 'text-accent-green text-xl md:text-2xl mt-8 mb-4 border-b border-white/10 pb-2';
+          } else if (trimLine.includes('القطع')) {
+            elementId = `${prayerId}-litanies`;
+            isHeader = true;
+            extraClasses = 'text-accent-gold text-xl md:text-2xl mt-8 mb-4';
+          } else if (trimLine.includes('التحليل')) {
+            elementId = `${prayerId}-absolution`;
+            isHeader = true;
+            extraClasses = 'text-accent-gold text-xl md:text-2xl mt-8 mb-4';
+          } else if (trimLine.includes('طلبة')) {
+            elementId = `${prayerId}-request`;
+            isHeader = true;
+            extraClasses = 'text-accent-gold text-xl md:text-2xl mt-8 mb-4';
+          } else if (trimLine.includes('كيريى ليسون')) {
+            extraClasses = 'text-accent-gold/70 text-center font-bold my-4';
+          }
+
+          if (isHeader) {
+            return (
+              <h3 key={index} id={elementId} className={`font-serif ${extraClasses}`}>
+                {line}
+              </h3>
+            );
+          }
+
+          return (
+            <p key={index} className={`whitespace-pre-line leading-loose text-lg md:text-xl ${extraClasses}`}>
+              {line}
+            </p>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const navItems = [
+    { id: 'intro', label: 'مقدمة', icon: '✨' },
+    { id: 'psalm-1', label: 'المزامير', icon: '⛪' },
+    { id: 'gospel', label: 'الإنجيل', icon: '📖' },
+    { id: 'litanies', label: 'القطع', icon: '🤲' },
+    { id: 'absolution', label: 'التحليل', icon: '✝️' },
+  ];
+
   return (
-    <div className="min-h-screen bg-[#090b10] pt-24 pb-32 text-white selection:bg-accent-gold/40 flex flex-col items-center">
+    <div className="min-h-screen bg-[#090b10] pt-24 pb-32 text-white selection:bg-accent-gold/40 flex flex-col items-center relative">
+
+      {/* Side Navigation - Desktop (Sticky Left) */}
+      <AnimatePresence>
+        {openSection && (
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="hidden md:flex flex-col fixed left-8 top-1/2 -translate-y-1/2 z-40 bg-nearblack/80 backdrop-blur-md p-2 rounded-2xl border border-white/5 shadow-2xl space-y-2 pointer-events-auto"
+          >
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => scrollToElement(`${openSection}-${item.id}`)}
+                className="group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 hover:bg-white/10 w-full"
+                title={item.label}
+              >
+                <span className="text-xl filter drop-shadow-sm group-hover:scale-110 transition-transform">{item.icon}</span>
+                <span className="hidden group-hover:block text-sm font-medium text-white/70 group-hover:text-white group-hover:translate-x-1 transition-all whitespace-nowrap">{item.label}</span>
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Floating Nav (Bottom Right) */}
+      <AnimatePresence>
+        {openSection && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="md:hidden fixed bottom-32 right-6 z-40 pointer-events-auto"
+          >
+            <div className="relative group">
+              <div className="absolute bottom-full mb-4 right-0 flex flex-col items-end space-y-2 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-300">
+                {navItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => scrollToElement(`${openSection}-${item.id}`)}
+                    className="bg-nearblack/90 backdrop-blur-md border border-white/10 shadow-xl px-4 py-2 rounded-full flex items-center gap-2"
+                  >
+                    <span className="text-white/90 text-sm font-bold">{item.label}</span>
+                    <span className="text-lg">{item.icon}</span>
+                  </button>
+                ))}
+              </div>
+
+              <button className="bg-accent-gold text-black w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-2xl filter drop-shadow hover:scale-110 transition-transform active:scale-95">
+                📑
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <motion.div
         initial={{ opacity: 0, y: -20 }}
