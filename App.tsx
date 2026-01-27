@@ -266,6 +266,7 @@ const MainLayout: React.FC = () => {
           <Route path="/watch/:id" element={<WatchPlayer posters={analyzedPosters} />} />
           <Route path="/she3ar-al-re7la" element={<TripAnthem />} />
           <Route path="/program" element={<Program />} />
+          <Route path="/games" element={<GamesPage />} />
           <Route path="/rooms" element={<RoomsPage />} />
           <Route path="/prayers" element={<PrayersPage />} />
           <Route path="/policy" element={<PolicyPage />} />

@@ -5,9 +5,10 @@ import { motion } from 'framer-motion';
 
 const MobileBottomNav: React.FC = () => {
   const tabs = [
+    { name: 'Home', path: '/', icon: '🏠' },
     { name: 'Program', path: '/program', icon: '🎬' },
-    { name: 'El She3ar', path: '/she3ar-al-re7la', icon: '🎶' },
     { name: 'El Agpyea', path: '/prayers', icon: '🙏' },
+    { name: 'Games', path: '/games', icon: '🎮' },
     { name: 'Rooms', path: '/rooms', icon: '🏨' },
   ];
 
