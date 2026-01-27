@@ -30,14 +30,6 @@ import KidsPage from './pages/KidsPage';
 import MenuPage from './pages/MenuPage';
 import MyListPage from './pages/MyListPage';
 import GamesPage from './pages/GamesPage';
-
-// ... (existing imports)
-
-// Inside Routes:
-          <Route path="/series" element={<SeriesPage posters={analyzedPosters} />} />
-          <Route path="/kids" element={<KidsPage />} />
-          <Route path="/games" element={<GamesPage />} />
-          <Route path="/my-list" element={<MyListPage posters={analyzedPosters} />} />
 import SobekChatbot from './components/SobekChatbot';
 import ScrollToTop from './components/ScrollToTop';
 
@@ -314,7 +306,8 @@ const MainLayout: React.FC = () => {
           <Route path="/" element={<Home posters={analyzedPosters} />} />
           <Route path="/movies" element={<MoviesPage posters={analyzedPosters} />} />
           <Route path="/series" element={<SeriesPage posters={analyzedPosters} />} />
-          <Route path="/kids" element={<KidsPage posters={analyzedPosters} />} />
+          <Route path="/kids" element={<KidsPage />} />
+          <Route path="/games" element={<GamesPage />} />
           <Route path="/my-list" element={<MyListPage posters={analyzedPosters} />} />
           <Route path="/coming-soon" element={<Home posters={analyzedPosters.filter(p => p.isComingSoon)} />} />
           <Route path="/title/:id" element={<TitleDetails posters={analyzedPosters} />} />
