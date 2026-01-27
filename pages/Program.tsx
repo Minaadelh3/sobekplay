@@ -121,46 +121,75 @@ const Program: React.FC = () => {
             transition={{ duration: 0.5, delay: index * 0.1 }}
             className="group"
           >
-            initial={false}
-            animate={{ height: expandedEpisode === ep.id ? 'auto' : 0, opacity: expandedEpisode === ep.id ? 1 : 0 }}
-            transition={{ duration: 0.3 }}
-            className="overflow-hidden bg-[#0d0f14]"
-              >
-            <div className="p-6 md:p-8 border-t border-white/5 space-y-6 relative">
-              <div className="absolute top-0 right-8 w-px h-full bg-white/10 hidden md:block" />
-
-              {ep.scenes.map((scene, i) => (
-                <div key={i} className="flex flex-col md:flex-row-reverse gap-4 md:gap-8 items-start md:items-center relative z-10" dir="rtl">
-                  <div className="md:w-32 shrink-0 text-left md:text-right">
-                    <span className="text-accent-green font-mono text-sm font-bold bg-accent-green/10 px-2 py-1 rounded">
-                      {scene.time}
-                    </span>
-                  </div>
-                  <div className="flex-1 text-right">
-                    <h4 className="text-white text-lg font-bold">{scene.title}</h4>
-                    <p className="text-white/50 text-sm mt-1">{scene.desc}</p>
-                  </div>
+            <button
+              onClick={() => setExpandedEpisode(expandedEpisode === ep.id ? null : ep.id)}
+              className={`w-full text-right bg-charcoal/40 border border-white/5 rounded-2xl overflow-hidden transition-all duration-300 relative ${expandedEpisode === ep.id ? 'ring-1 ring-accent-gold/50 bg-charcoal' : 'hover:bg-charcoal/60'}`}
+            >
+              <div className="p-6 md:p-8 max-h-[300px] relative flex flex-row-reverse md:flex-row items-center gap-6">
+                <div className="hidden md:block w-32 h-32 shrink-0 rounded-xl overflow-hidden relative">
+                  <img src={ep.image} alt={ep.title} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/20" />
                 </div>
-              ))}
-            </div>
 
-            {/* Image for Mobile (Inside expand) */}
-            <div className="md:hidden w-full h-48 relative">
-              <img src={ep.image} alt="" className="w-full h-full object-cover opacity-60" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0d0f14] to-transparent" />
-            </div>
-          </motion.div>
+                <div className="flex-1 text-right md:text-left flex flex-col items-end md:items-start select-none">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-accent-gold text-xs font-bold tracking-widest uppercase">{ep.date}</span>
+                    <div className="w-1 h-1 rounded-full bg-white/20" />
+                    <span className="text-white/40 font-mono text-xs">EP 0{index + 1}</span>
+                  </div>
+
+                  <h2 className="text-2xl md:text-3xl font-black text-white mb-2 leading-tight">
+                    {ep.title}
+                  </h2>
+                  <p className="text-white/60 text-sm md:text-base line-clamp-2 md:line-clamp-none" dir="rtl">
+                    {ep.description}
+                  </p>
+                </div>
+
+                <div className={`w-10 h-10 rounded-full border border-white/10 flex items-center justify-center shrink-0 transition-all duration-300 ${expandedEpisode === ep.id ? 'bg-accent-gold text-black rotate-180' : 'bg-transparent text-white/50 group-hover:text-white'}`}>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                </div>
+              </div>
+
+              <motion.div
+                initial={false}
+                animate={{ height: expandedEpisode === ep.id ? 'auto' : 0, opacity: expandedEpisode === ep.id ? 1 : 0 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden bg-[#0d0f14]"
+              >
+                <div className="p-6 md:p-8 border-t border-white/5 space-y-6 relative">
+                  <div className="absolute top-0 right-8 w-px h-full bg-white/10 hidden md:block" />
+
+                  {ep.scenes.map((scene, i) => (
+                    <div key={i} className="flex flex-col md:flex-row-reverse gap-4 md:gap-8 items-start md:items-center relative z-10" dir="rtl">
+                      <div className="md:w-32 shrink-0 text-left md:text-right">
+                        <span className="text-accent-green font-mono text-sm font-bold bg-accent-green/10 px-2 py-1 rounded">
+                          {scene.time}
+                        </span>
+                      </div>
+                      <div className="flex-1 text-right">
+                        <h4 className="text-white text-lg font-bold">{scene.title}</h4>
+                        <p className="text-white/50 text-sm mt-1">{scene.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="md:hidden w-full h-48 relative">
+                  <img src={ep.image} alt="" className="w-full h-full object-cover opacity-60" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0d0f14] to-transparent" />
+                </div>
+              </motion.div>
             </button>
-    </motion.div>
-  ))
-}
+          </motion.div>
+        ))}
       </div >
 
 
 
-  <div className="mt-32 text-center pb-12">
-    <p className="text-white/30 text-sm font-mono uppercase tracking-widest">End of Season 1</p>
-  </div>
+      <div className="mt-32 text-center pb-12">
+        <p className="text-white/30 text-sm font-mono uppercase tracking-widest">End of Season 1</p>
+      </div>
     </div >
   );
 };
