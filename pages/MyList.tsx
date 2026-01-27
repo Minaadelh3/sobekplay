@@ -2,24 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PosterItem } from '../types';
 import PosterCard from '../components/PosterCard';
-import { supabase } from '../supabaseClient';
-import { Link } from 'react-router-dom';
-import Navbar from '../components/Navbar';
-import MobileBottomNav from '../components/MobileBottomNav';
+import { useSession } from '../components/SessionProvider';
 
 interface MyListProps {
   posters: PosterItem[];
 }
 
 const MyList: React.FC<MyListProps> = ({ posters }) => {
-  const [watchlistIds, setWatchlistIds] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const local = JSON.parse(localStorage.getItem('uncleJoyWatchlist') || '[]');
-    setWatchlistIds(local);
-    setLoading(false);
-  }, []);
+  const { myList, removeFromMyList, loading } = useSession();
+  const watchlistIds = myList;
 
   const removeItem = (id: string) => {
     setWatchlistIds(prev => prev.filter(prevId => prevId !== id));
@@ -68,7 +59,7 @@ const MyList: React.FC<MyListProps> = ({ posters }) => {
                 >
                   <PosterCard poster={poster} />
                   <button
-                    onClick={(e) => { e.preventDefault(); removeItem(poster.id); }}
+                    onClick={(e) => { e.preventDefault(); removeFromMyList(poster.id); }}
                     className="absolute -top-2 -right-2 z-40 bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-xl opacity-0 group-hover:opacity-100 transition-all active:scale-90"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>

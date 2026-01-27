@@ -21,37 +21,39 @@ import PolicyPage from "./pages/PolicyPage";
 import { posters } from "./data/posters";
 
 import { KioskProvider } from "./components/KioskProvider";
+import { SessionProvider } from "./components/SessionProvider";
 
 export default function App() {
   return (
     <KioskProvider>
-      <Routes>
-        <Route element={<AppLayout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
+      <SessionProvider>
+        <Routes>
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
 
-          {/* Public Routes (Uncle Joy Mode) */}
-          <Route path="/my-list" element={<MyList posters={posters} />} />
-          <Route path="/watch/:id" element={<WatchPlayer posters={posters} />} />
+            {/* Public Routes (Uncle Joy Mode) */}
+            <Route path="/my-list" element={<MyList posters={posters} />} />
+            <Route path="/watch/:id" element={<WatchPlayer posters={posters} />} />
 
-          {/* Content Routes */}
-          <Route path="/title/:id" element={<TitleDetails posters={posters} />} />
-          <Route path="/movies" element={<Home />} />
-          <Route path="/series" element={<Home />} />
-          <Route path="/kids" element={<Home />} />
-          <Route path="/prayers" element={<PrayersPage />} />
-          <Route path="/community" element={<CommunityPage />} />
-          <Route path="/she3ar-al-re7la" element={<TripAnthem />} />
-          <Route path="/program" element={<Program />} />
-          <Route path="/rooms" element={<RoomsPage />} />
-          <Route path="/coming-soon" element={<Home />} />
-          <Route path="/news" element={<NewsPage />} />
-          <Route path="/shop" element={<ShopPage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/subscription" element={<SubscriptionPage />} />
-          <Route path="/policy" element={<PolicyPage />} />
-          <Route path="/photos" element={<PhotosPage />} />
-        </Route>
-      </Routes>
-      );
+            {/* Content Routes */}
+            <Route path="/title/:id" element={<TitleDetails posters={posters} />} />
+            <Route path="/movies" element={<Home />} />
+            <Route path="/series" element={<Home />} />
+            <Route path="/kids" element={<Home />} />
+            <Route path="/prayers" element={<PrayersPage />} />
+            <Route path="/community" element={<CommunityPage />} />
+            <Route path="/she3ar-al-re7la" element={<TripAnthem />} />
+            <Route path="/program" element={<Program />} />
+            <Route path="/rooms" element={<RoomsPage />} />
+            <Route path="/coming-soon" element={<Home />} />
+            <Route path="/news" element={<NewsPage />} />
+            <Route path="/shop" element={<ShopPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/subscription" element={<SubscriptionPage />} />
+            <Route path="/policy" element={<PolicyPage />} />
+            <Route path="/photos" element={<PhotosPage />} />
+          </Route>
+        </Routes>
+        );
 }

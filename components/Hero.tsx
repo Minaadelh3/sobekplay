@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { PosterItem } from '../types';
 import { useNavigate } from 'react-router-dom';
 import ImageWithFallback from './ImageWithFallback';
-import { supabase } from '../supabaseClient';
+import { useSession } from '../components/SessionProvider';
 
 interface HeroProps {
   posters: PosterItem[];
@@ -12,7 +12,7 @@ interface HeroProps {
 
 const Hero: React.FC<HeroProps> = ({ posters }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [inList, setInList] = useState(false);
+  const { myList, addToMyList, removeFromMyList } = useSession();
   const navigate = useNavigate();
 
   // Uncle Joy Mode: No Auth Listener needed
@@ -33,23 +33,14 @@ const Hero: React.FC<HeroProps> = ({ posters }) => {
   }, [heroPosters.length]);
 
   const active = heroPosters[currentIndex];
+  const inList = active ? myList.includes(active.id) : false;
 
-  useEffect(() => {
-    if (!active) return;
-    const local = JSON.parse(localStorage.getItem('uncleJoyWatchlist') || '[]');
-    setInList(local.includes(active.id));
-  }, [active]);
-
-  const toggleWatchlist = () => {
-    const local = JSON.parse(localStorage.getItem('uncleJoyWatchlist') || '[]');
-    let newList;
+  const toggleWatchlist = async () => {
     if (inList) {
-      newList = local.filter((id: string) => id !== active.id);
+      await removeFromMyList(active.id);
     } else {
-      newList = [...local, active.id];
+      await addToMyList(active.id);
     }
-    localStorage.setItem('uncleJoyWatchlist', JSON.stringify(newList));
-    setInList(!inList);
   };
 
   if (!active) return null;

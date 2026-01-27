@@ -4,8 +4,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { PosterItem } from '../types';
 import ImageWithFallback from '../components/ImageWithFallback';
+import { useSession } from '../components/SessionProvider';
 import FeedbackSection from '../components/FeedbackSection';
-import { supabase } from '../supabaseClient';
 
 interface TitleDetailsProps {
   posters: PosterItem[];
@@ -14,24 +14,25 @@ interface TitleDetailsProps {
 const TitleDetails: React.FC<TitleDetailsProps> = ({ posters }) => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [inList, setInList] = useState(false);
-  // Uncle Joy Mode: No Auth Listener
+  const { myList, addToMyList, removeFromMyList, reactions, addReaction, polls, votePoll } = useSession();
 
   const poster = posters.find(p => p.id === id);
+  const inList = poster ? myList.includes(poster.id) : false;
+  const userReaction = poster ? reactions[poster.id] : null;
+  const userPoll = poster ? polls[poster.id] : null;
 
+  const handleReaction = (emoji: string) => {
+    if (poster) addReaction(poster.id, emoji);
+  };
 
-  useEffect(() => {
+  const handlePoll = (option: string) => {
+    if (poster) votePoll(poster.id, option);
+  };
+
+  const toggleWatchlist = async () => {
     if (!poster) return;
-    const local = JSON.parse(localStorage.getItem('uncleJoyWatchlist') || '[]');
-    setInList(local.includes(poster.id));
-  }, [poster]);
-
-  const toggleWatchlist = () => {
-    if (!poster) return;
-    const local = JSON.parse(localStorage.getItem('uncleJoyWatchlist') || '[]');
-    const newList = inList ? local.filter((lid: string) => lid !== poster.id) : [...local, poster.id];
-    localStorage.setItem('uncleJoyWatchlist', JSON.stringify(newList));
-    setInList(!inList);
+    if (inList) await removeFromMyList(poster.id);
+    else await addToMyList(poster.id);
   };
 
   if (!poster) return <div className="min-h-screen bg-nearblack pt-32 text-center text-white font-bold">Title not found</div>;
@@ -115,6 +116,41 @@ const TitleDetails: React.FC<TitleDetailsProps> = ({ posters }) => {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                 </svg>
               </button>
+            </div>
+
+            {/* Reactions & Polls */}
+            <div className="py-8 border-t border-white/10 mt-8 space-y-8">
+              <div>
+                <h3 className="text-white font-bold uppercase tracking-widest text-sm mb-4">Quick Reaction</h3>
+                <div className="flex gap-4">
+                  {['👍', '😍', '😂', '😱', '🔥', '🤔'].map(emoji => (
+                    <button
+                      key={emoji}
+                      onClick={() => handleReaction(emoji)}
+                      className={`text-2xl p-4 rounded-xl transition-all ${userReaction === emoji ? 'bg-accent-green text-white scale-110' : 'bg-white/5 hover:bg-white/10 text-white/50 grayscale hover:grayscale-0'}`}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Simple Poll (Mock) */}
+              <div>
+                <h3 className="text-white font-bold uppercase tracking-widest text-sm mb-4">Community Poll: Best Character?</h3>
+                <div className="space-y-3 max-w-md">
+                  {['The Hero', 'The Villain', 'The Sidekick'].map(opt => (
+                    <button
+                      key={opt}
+                      onClick={() => handlePoll(opt)}
+                      className={`w-full p-4 rounded-xl text-left font-bold transition-all relative overflow-hidden ${userPoll === opt ? 'bg-accent-gold text-black' : 'bg-white/5 hover:bg-white/10'}`}
+                    >
+                      <span className="relative z-10">{opt}</span>
+                      {userPoll === opt && <span className="absolute right-4 top-1/2 -translate-y-1/2">✓</span>}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </motion.div>
         </div>
