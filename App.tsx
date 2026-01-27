@@ -30,6 +30,7 @@ import KidsPage from './pages/KidsPage';
 import MenuPage from './pages/MenuPage';
 import MyListPage from './pages/MyListPage';
 import HotelPage from './pages/HotelPage';
+import VersePage from './pages/VersePage';
 
 // ... (in routes)
 <Route path="/hotel" element={<HotelPage />} />
@@ -291,7 +292,8 @@ const MainLayout: React.FC = () => {
           <Route path="/shop" element={<ShopPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/community" element={<CommunityPage />} />
-          <Route path="/help" element={<HelpPage />} />
+          <Route path="/hotel" element={<HotelPage />} />
+          <Route path="/verse" element={<VersePage />} />
           <Route path="/gallery" element={<PhotosPage />} />
 
 
