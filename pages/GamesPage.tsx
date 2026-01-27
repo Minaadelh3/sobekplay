@@ -682,40 +682,66 @@ const getAIMockCard = (category: string) => {
     return card;
 };
 
+// --- AI & Audio Logic for Pass & Boom ---
+
 const PassAndBoomGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
-    const [gameState, setGameState] = useState<'SETUP' | 'PLAYING' | 'BOOM'>('SETUP');
+    const [gameState, setGameState] = useState<'SETUP' | 'PLAYING' | 'FEEDBACK' | 'BOOM'>('SETUP');
     const [category, setCategory] = useState(BOOM_CATEGORIES[0]);
     const [timerSettings, setTimerSettings] = useState(30);
     const [currentTimer, setCurrentTimer] = useState(30);
     const [currentCard, setCurrentCard] = useState<any>(null);
     const [score, setScore] = useState(0);
+    const [isMuted, setIsMuted] = useState(false);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Audio effects refs (placeholders)
-    // const tickSound = useRef(new Audio('/tick.mp3'));
-    // const boomSound = useRef(new Audio('/boom.mp3'));
+    // Audio Refs (Using HTML5 Audio for simplicity in this env)
+    const tickAudio = useRef<HTMLAudioElement | null>(null);
+    const boomAudio = useRef<HTMLAudioElement | null>(null);
 
+    // Initialize Audio
+    useEffect(() => {
+        tickAudio.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.m4a'); // Soft tick
+        boomAudio.current = new Audio('https://assets.mixkit.co/active_storage/sfx/3002/3002-preview.m4a'); // Explosion
+
+        return () => {
+            if (timerRef.current) clearInterval(timerRef.current);
+        };
+    }, []);
+
+    // Timer Logic
     useEffect(() => {
         if (gameState === 'PLAYING') {
             timerRef.current = setInterval(() => {
                 setCurrentTimer((prev) => {
-                    if (prev <= 1) {
+                    const newValue = prev - 1;
+
+                    // Audio Cues
+                    if (!isMuted && newValue <= 5 && newValue > 0) {
+                        if (tickAudio.current) {
+                            tickAudio.current.currentTime = 0;
+                            tickAudio.current.play().catch(() => { });
+                        }
+                    }
+
+                    if (newValue <= 0) {
                         clearInterval(timerRef.current!);
                         handleBoom();
                         return 0;
                     }
-                    return prev - 1;
+                    return newValue;
                 });
             }, 1000);
         }
         return () => {
             if (timerRef.current) clearInterval(timerRef.current);
         };
-    }, [gameState]);
+    }, [gameState, isMuted]);
 
     const handleBoom = () => {
         setGameState('BOOM');
-        // Play boom sound here
+        if (!isMuted && boomAudio.current) {
+            boomAudio.current.play().catch(() => { });
+        }
     };
 
     const startGame = () => {
@@ -723,9 +749,33 @@ const PassAndBoomGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         nextRound(true);
     };
 
+    // AI SIMULATION & VALIDATION
     const nextRound = (isFirst = false) => {
-        // 1. Get new card (Simulate AI)
-        const newCard = getAIMockCard(category.id);
+        // 1. Generate Valid AI Card
+        let isValid = false;
+        let attempts = 0;
+        let newCard = null;
+
+        while (!isValid && attempts < 5) {
+            const candidate = getAIMockCard(category.id);
+
+            // LOGIC CHECK:
+            // 1. Intensity shouldn't be too high for 'mix' category (example rule)
+            // 2. Text shouldn't be too long for short timers (estimated reading time)
+            const readingTime = candidate.text.split(' ').length * 0.5; // ~2 words/sec
+
+            if (readingTime < timerSettings) {
+                isValid = true;
+                newCard = candidate;
+            }
+            attempts++;
+        }
+
+        // Fallback if AI fails validation
+        if (!newCard) {
+            newCard = { type: 'QUESTION', text: 'سؤال سريع: مين جنبك؟', intensity: 1 };
+        }
+
         setCurrentCard(newCard);
 
         // 2. Reset Timer
@@ -736,7 +786,12 @@ const PassAndBoomGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     };
 
     const handleAnswered = () => {
+        if (timerRef.current) clearInterval(timerRef.current);
         setScore(s => s + 1);
+        setGameState('FEEDBACK');
+    };
+
+    const handlePassPhone = () => {
         nextRound();
     };
 
@@ -755,7 +810,16 @@ const PassAndBoomGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         return (
             <div className="flex flex-col min-h-[90vh] bg-neutral-900 p-6 text-white pb-24">
                 <BackButton onClick={onBack} />
-                <h2 className="text-4xl font-black text-white mb-2 text-center mt-8">PASS & BOOM 💣</h2>
+                <div className="flex justify-between items-center mt-4 mb-8">
+                    <button
+                        onClick={() => setIsMuted(!isMuted)}
+                        className={`p-3 rounded-full ${isMuted ? 'bg-red-500/20 text-red-400' : 'bg-white/10 text-white'}`}
+                    >
+                        {isMuted ? '🔇' : '🔊'}
+                    </button>
+                </div>
+
+                <h2 className="text-4xl font-black text-white mb-2 text-center">PASS & BOOM 💣</h2>
                 <p className="text-white/60 text-center mb-8">جاوب بسرعة وباصيها قبل ما تفرقع!</p>
 
                 {/* Category Selection */}
@@ -843,6 +907,29 @@ const PassAndBoomGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         );
     }
 
+    if (gameState === 'FEEDBACK') {
+        return (
+            <div className={`flex flex-col items-center justify-center min-h-[90vh] p-6 text-center text-white bg-green-900`}>
+                <motion.div
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="text-6xl mb-6"
+                >
+                    👏
+                </motion.div>
+                <h2 className="text-4xl font-black mb-4">عاش يا وحش!</h2>
+                <p className="text-xl text-white/80 mb-12">باصي الموبايل للي جنبك بسرعة</p>
+
+                <button
+                    onClick={handlePassPhone}
+                    className="w-full max-w-md py-6 bg-white text-black font-black text-2xl rounded-2xl shadow-xl animate-bounce"
+                >
+                    جاهز للي بعده 🔥
+                </button>
+            </div>
+        )
+    }
+
     return (
         <div className={`flex flex-col items-center justify-center min-h-[90vh] p-6 text-center text-white relative transition-colors duration-500
             ${currentTimer <= 5 ? 'bg-red-900/50' : category.id === 'aswan' ? 'bg-amber-900/30' : 'bg-neutral-900'}
@@ -851,8 +938,8 @@ const PassAndBoomGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
             {/* Timer HUD */}
             <div className="absolute top-6 right-6 z-20">
-                <div className={`relative w-20 h-20 flex items-center justify-center rounded-full border-4 font-black text-3xl shadow-lg
-                    ${currentTimer <= 5 ? 'border-red-500 text-red-500 animate-ping-slow bg-white' : 'border-white/20 text-white bg-black/40'}
+                <div className={`relative w-24 h-24 flex items-center justify-center rounded-full border-8 font-black text-4xl shadow-xl transition-all
+                    ${currentTimer <= 5 ? 'border-red-500 text-red-500 bg-white scale-110' : 'border-white/20 text-white bg-black/40'}
                 `}>
                     {currentTimer}
                 </div>
