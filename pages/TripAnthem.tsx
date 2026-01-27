@@ -8,13 +8,18 @@ const TripAnthem: React.FC = () => {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
-      transition: { staggerChildren: 0.3, delayChildren: 0.5 }
+      transition: { staggerChildren: 0.8, delayChildren: 1.5 }
     }
   };
 
   const lineVariant = {
-    hidden: { opacity: 0, y: 20, filter: 'blur(5px)' },
-    show: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.8 } }
+    hidden: { opacity: 0, y: 30, filter: 'blur(10px)' },
+    show: {
+      opacity: 1,
+      y: 0,
+      filter: 'blur(0px)',
+      transition: { duration: 1.5, ease: [0.16, 1, 0.3, 1] }
+    }
   };
 
   return (
