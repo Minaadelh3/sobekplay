@@ -1,8 +1,10 @@
 import { useNavigate, Link } from "react-router-dom";
+import { useKiosk } from "../components/KioskProvider";
 
 export default function Navbar() {
   // Uncle Joy Mode: No Auth, always logged in visually
   const navigate = useNavigate();
+  const { enterKiosk, isKiosk } = useKiosk();
 
   return (
     <nav className="w-full px-6 py-4 flex items-center justify-between bg-black text-white">
@@ -11,6 +13,14 @@ export default function Navbar() {
       </Link>
 
       <div className="hidden md:flex items-center gap-6">
+        {!isKiosk && (
+          <button
+            onClick={enterKiosk}
+            className="text-xs font-bold text-accent-gold uppercase tracking-widest hover:text-white transition-colors"
+          >
+            [ Enter Kiosk ]
+          </button>
+        )}
         <span className="text-sm font-medium text-white/60">
           Hi, <span className="text-white font-bold">Uncle Joy</span>
         </span>
