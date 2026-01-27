@@ -7,10 +7,11 @@ const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
 
 // --- STRICT TYPES (User Defined) ---
+export type GameMode = 'PASS_BOOM' | 'TRUTH_DARE' | 'EMOJI_MOVIES' | 'PROVERBS' | 'STORY_CHAIN';
 export type GameType = 'QUESTION' | 'TASK' | 'EMOJI' | 'PROVERB' | 'STARTER' | 'PENALTY';
 
 export interface GameCard {
-    game: string; // e.g., 'PASS_BOOM', 'TRUTH_DARE'
+    game: GameMode; // e.g., 'PASS_BOOM'
     type: GameType;
     text: string;
     emoji?: string | null;
@@ -183,7 +184,7 @@ function getFallbackCard(gameMode: string): GameCard {
     // Map existing fallback data to new schema
     const list = DATA_FALLBACK[gameMode] || [];
     if (list.length === 0) return {
-        game: gameMode,
+        game: gameMode as GameMode,
         type: 'QUESTION',
         text: 'System Error: No cards available.',
         minTimeRequired: 0,
@@ -195,7 +196,7 @@ function getFallbackCard(gameMode: string): GameCard {
 
     // Adapt old schema to new strict schema
     return {
-        game: gameMode,
+        game: gameMode as GameMode,
         type: random.type, // Assumes type names match roughly or are compatible
         text: random.text,
         emoji: random.emoji || null,

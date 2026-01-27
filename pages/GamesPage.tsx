@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateGameCard, GameCard, GameMode } from '../services/gameAI';
-import { DATA_FALLBACK, SAFE_PENALTIES } from '../data/partyGames';
+import { SAFE_PENALTIES } from '../data/partyGames';
 
 // --- CONFIG ---
 const TICK_SOUND = '/assets/tick.mp3'; // Placeholder path
@@ -255,25 +255,25 @@ const GamesPage: React.FC = () => {
                 </motion.div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-                    <GameCard
+                    <GameModeCard
                         title="Pass & Boom 💣"
                         desc="Speed questions. Don't explode."
                         color="from-red-900 to-black"
                         onClick={() => setActiveGame('PASS_BOOM')}
                     />
-                    <GameCard
+                    <GameModeCard
                         title="Emoji Movies 🎬"
                         desc="Guess the movie from emojis."
                         color="from-blue-900 to-black"
                         onClick={() => setActiveGame('EMOJI_MOVIES')}
                     />
-                    <GameCard
+                    <GameModeCard
                         title="Proverbs 📜"
                         desc="Complete the Egyptian proverb."
                         color="from-green-900 to-black"
                         onClick={() => setActiveGame('PROVERBS')}
                     />
-                    <GameCard
+                    <GameModeCard
                         title="Story Chain 🧙‍♂️"
                         desc="Build a fantasy story together."
                         color="from-purple-900 to-black"
@@ -285,7 +285,7 @@ const GamesPage: React.FC = () => {
     );
 };
 
-const GameCard = ({ title, desc, color, onClick }: any) => (
+const GameModeCard = ({ title, desc, color, onClick }: { title: string, desc: string, color: string, onClick: () => void }) => (
     <motion.div
         whileHover={{ y: -5 }}
         onClick={onClick}
