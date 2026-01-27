@@ -185,7 +185,7 @@ const MainLayout: React.FC = () => {
 
   const isWatchPage = location.pathname.startsWith('/watch/');
   const isAgpeyaPage = location.pathname === '/prayers';
-  const isTripPage = ['/program', '/she3ar-al-re7la', '/prayers', '/rooms'].includes(location.pathname);
+  const isTripPage = ['/', '/program', '/she3ar-al-re7la', '/prayers', '/rooms'].includes(location.pathname);
 
   return (
     <div className="min-h-screen selection:bg-accent-green selection:text-white">
