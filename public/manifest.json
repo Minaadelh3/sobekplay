@@ -1,0 +1,13 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Sobek Play",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "SobekTV",
+  "start_url": "/",
+  "theme_color": "#0b5e3c",
+  "id": "sobek.play.app",
+  "description": "Sobek Play is an interactive digital experience for programs, rooms, and journeys — designed to explore, engage, and play."
+}
