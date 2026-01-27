@@ -1,4 +1,6 @@
 import { Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import MyList from "./pages/MyList";
@@ -19,27 +21,37 @@ import { posters } from "./data/posters";
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/my-list" element={<MyList posters={posters} />} />
-      <Route path="/title/:id" element={<TitleDetails posters={posters} />} />
-      <Route path="/watch/:id" element={<WatchPlayer posters={posters} />} />
-      <Route path="/movies" element={<Home />} />
-      <Route path="/series" element={<Home />} />
-      <Route path="/kids" element={<Home />} />
-      <Route path="/prayers" element={<PrayersPage />} />
-      <Route path="/community" element={<CommunityPage />} />
-      <Route path="/she3ar-al-re7la" element={<TripAnthem />} />
-      <Route path="/program" element={<Program />} />
-      <Route path="/rooms" element={<RoomsPage />} />
-      <Route path="/coming-soon" element={<Home />} />
-      <Route path="/news" element={<NewsPage />} />
-      <Route path="/shop" element={<ShopPage />} />
-      <Route path="/about" element={<AboutPage />} />
-      <Route path="/subscription" element={<SubscriptionPage />} />
-      <Route path="/policy" element={<PolicyPage />} />
-      <Route path="/photos" element={<PhotosPage />} />
-    </Routes>
+    <>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/my-list"
+          element={
+            <ProtectedRoute>
+              <MyList posters={posters} />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/title/:id" element={<TitleDetails posters={posters} />} />
+        <Route path="/watch/:id" element={<WatchPlayer posters={posters} />} />
+        <Route path="/movies" element={<Home />} />
+        <Route path="/series" element={<Home />} />
+        <Route path="/kids" element={<Home />} />
+        <Route path="/prayers" element={<PrayersPage />} />
+        <Route path="/community" element={<CommunityPage />} />
+        <Route path="/she3ar-al-re7la" element={<TripAnthem />} />
+        <Route path="/program" element={<Program />} />
+        <Route path="/rooms" element={<RoomsPage />} />
+        <Route path="/coming-soon" element={<Home />} />
+        <Route path="/news" element={<NewsPage />} />
+        <Route path="/shop" element={<ShopPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/subscription" element={<SubscriptionPage />} />
+        <Route path="/policy" element={<PolicyPage />} />
+        <Route path="/photos" element={<PhotosPage />} />
+      </Routes>
+    </>
   );
 }
