@@ -147,15 +147,6 @@ const MainLayout: React.FC = () => {
       {!isWatchPage && (
         <Navbar
           onSearchOpen={() => setIsSearchOpen(true)}
-          isMobileMenuOpen={isMobileMenuOpen}
-          setIsMobileMenuOpen={setIsMobileMenuOpen}
-        />
-      )}
-      {!isWatchPage && (
-        <MobileBottomNav
-          onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          isMenuOpen={isMobileMenuOpen}
-          onSearchOpen={() => setIsSearchOpen(true)}
         />
       )}
 
@@ -165,7 +156,7 @@ const MainLayout: React.FC = () => {
         posters={analyzedPosters}
       />
 
-      <main className={!isWatchPage ? "pt-0" : ""}>
+      <main className={!isWatchPage ? "pt-20" : ""}>
         <Routes>
           <Route path="/" element={<Home posters={analyzedPosters} />} />
           <Route path="/movies" element={<MoviesPage posters={analyzedPosters} />} />
