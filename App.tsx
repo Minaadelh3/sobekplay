@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import AppLayout from "./components/AppLayout";
-import ProtectedRoute from "./components/ProtectedRoute";
+
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import MyList from "./pages/MyList";

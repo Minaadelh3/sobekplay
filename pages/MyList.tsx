@@ -14,49 +14,18 @@ interface MyListProps {
 const MyList: React.FC<MyListProps> = ({ posters }) => {
   const [watchlistIds, setWatchlistIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    const init = async () => {
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      setUser(authUser);
-      
-      if (!authUser) {
-        const local = JSON.parse(localStorage.getItem('sobek_guest_list') || '[]');
-        setWatchlistIds(local);
-        setLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('watchlist')
-        .select('content_id')
-        .eq('user_id', authUser.id);
-
-      if (!error && data) {
-        setWatchlistIds(data.map(item => item.content_id));
-      }
-      setLoading(false);
-    };
-
-    init();
+    const local = JSON.parse(localStorage.getItem('uncleJoyWatchlist') || '[]');
+    setWatchlistIds(local);
+    setLoading(false);
   }, []);
 
-  const removeItem = async (id: string) => {
+  const removeItem = (id: string) => {
     setWatchlistIds(prev => prev.filter(prevId => prevId !== id));
-
-    if (!user) {
-      const local = JSON.parse(localStorage.getItem('sobek_guest_list') || '[]');
-      const newList = local.filter((lid: string) => lid !== id);
-      localStorage.setItem('sobek_guest_list', JSON.stringify(newList));
-      return;
-    }
-
-    await supabase
-      .from('watchlist')
-      .delete()
-      .eq('user_id', user.id)
-      .eq('content_id', id);
+    const local = JSON.parse(localStorage.getItem('uncleJoyWatchlist') || '[]');
+    const newList = local.filter((lid: string) => lid !== id);
+    localStorage.setItem('uncleJoyWatchlist', JSON.stringify(newList));
   };
 
   const savedPosters = posters.filter(p => watchlistIds.includes(p.id));
@@ -64,9 +33,9 @@ const MyList: React.FC<MyListProps> = ({ posters }) => {
   return (
     <div className="min-h-screen bg-nearblack">
       <Navbar />
-      
+
       <div className="pt-32 pb-32 px-4 md:px-12 max-w-[1920px] mx-auto">
-        <motion.header 
+        <motion.header
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-16"
@@ -76,7 +45,7 @@ const MyList: React.FC<MyListProps> = ({ posters }) => {
             <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter uppercase">My List</h1>
           </div>
           <p className="text-muted text-xl md:text-2xl font-medium max-w-2xl leading-relaxed">
-            {user ? "Your personal selection of cinematic journeys." : "Titles saved to this device. Sign in to sync across devices."}
+            Your personal selection of cinematic journeys.
           </p>
         </motion.header>
 
@@ -109,7 +78,7 @@ const MyList: React.FC<MyListProps> = ({ posters }) => {
             </AnimatePresence>
           </div>
         ) : (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="text-center py-40 bg-charcoal/20 rounded-[60px] border border-white/5 relative overflow-hidden"
@@ -128,7 +97,7 @@ const MyList: React.FC<MyListProps> = ({ posters }) => {
         )}
       </div>
 
-      <MobileBottomNav isMenuOpen={false} onMenuToggle={() => {}} />
+      <MobileBottomNav isMenuOpen={false} onMenuToggle={() => { }} />
     </div>
   );
 };

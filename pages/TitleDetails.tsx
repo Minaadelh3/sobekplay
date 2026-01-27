@@ -15,43 +15,20 @@ const TitleDetails: React.FC<TitleDetailsProps> = ({ posters }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [inList, setInList] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  // Uncle Joy Mode: No Auth Listener
 
-  const poster = posters.find(p => p.id === id);
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
-  }, []);
 
   useEffect(() => {
     if (!poster) return;
-    const checkList = async () => {
-      if (!user) {
-        const local = JSON.parse(localStorage.getItem('sobek_guest_list') || '[]');
-        setInList(local.includes(poster.id));
-        return;
-      }
-      const { data } = await supabase.from('watchlist').select('id').eq('user_id', user.id).eq('content_id', poster.id);
-      setInList(!!data && data.length > 0);
-    };
-    checkList();
-  }, [user, poster]);
+    const local = JSON.parse(localStorage.getItem('uncleJoyWatchlist') || '[]');
+    setInList(local.includes(poster.id));
+  }, [poster]);
 
-  const toggleWatchlist = async () => {
+  const toggleWatchlist = () => {
     if (!poster) return;
-    if (!user) {
-      const local = JSON.parse(localStorage.getItem('sobek_guest_list') || '[]');
-      const newList = inList ? local.filter((lid: string) => lid !== poster.id) : [...local, poster.id];
-      localStorage.setItem('sobek_guest_list', JSON.stringify(newList));
-      setInList(!inList);
-      return;
-    }
-
-    if (inList) {
-      await supabase.from('watchlist').delete().eq('user_id', user.id).eq('content_id', poster.id);
-    } else {
-      await supabase.from('watchlist').insert({ user_id: user.id, content_id: poster.id });
-    }
+    const local = JSON.parse(localStorage.getItem('uncleJoyWatchlist') || '[]');
+    const newList = inList ? local.filter((lid: string) => lid !== poster.id) : [...local, poster.id];
+    localStorage.setItem('uncleJoyWatchlist', JSON.stringify(newList));
     setInList(!inList);
   };
 

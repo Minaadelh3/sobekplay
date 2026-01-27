@@ -12,17 +12,10 @@ interface HeroProps {
 
 const Hero: React.FC<HeroProps> = ({ posters }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [user, setUser] = useState<any>(null);
   const [inList, setInList] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-    return () => listener.subscription.unsubscribe();
-  }, []);
+  // Uncle Joy Mode: No Auth Listener needed
 
   const coverPoster = posters.find(p => p.id === 'sobek_universe_cover');
   const otherHighImpactPosters = posters
@@ -43,30 +36,19 @@ const Hero: React.FC<HeroProps> = ({ posters }) => {
 
   useEffect(() => {
     if (!active) return;
+    const local = JSON.parse(localStorage.getItem('uncleJoyWatchlist') || '[]');
+    setInList(local.includes(active.id));
+  }, [active]);
 
-    const checkWatchlist = async () => {
-      if (!user) {
-        setInList(false);
-        return;
-      }
-      const { data } = await supabase.from('watchlist').select('id').eq('user_id', user.id).eq('content_id', active.id);
-      setInList(!!data && data.length > 0);
-    };
-
-    checkWatchlist();
-  }, [user, active]);
-
-  const toggleWatchlist = async () => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-
+  const toggleWatchlist = () => {
+    const local = JSON.parse(localStorage.getItem('uncleJoyWatchlist') || '[]');
+    let newList;
     if (inList) {
-      await supabase.from('watchlist').delete().eq('user_id', user.id).eq('content_id', active.id);
+      newList = local.filter((id: string) => id !== active.id);
     } else {
-      await supabase.from('watchlist').insert({ user_id: user.id, content_id: active.id });
+      newList = [...local, active.id];
     }
+    localStorage.setItem('uncleJoyWatchlist', JSON.stringify(newList));
     setInList(!inList);
   };
 
