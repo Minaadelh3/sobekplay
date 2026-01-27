@@ -3,7 +3,8 @@
 
 // --- CONFIG ---
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
+// Using gemini-1.5-flash for speed
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
 // --- TYPES (Matching User Request) ---
 export type GameMode = 'عدّيها 💣' | 'قول ولا تفوّت؟ 😏' | 'فيلم بالإيموجي 🎬' | 'كمّلها بقى…' | 'حدوتة على الطاير ✨' | string;
@@ -49,6 +50,9 @@ export async function generateGameCard(
     difficulty: any,
     recentHistory: string[]
 ): Promise<GameCard | null> {
+
+    // DEBUG: Check if Key is loaded
+    console.log("API Key Status:", !!API_KEY);
 
     if (!API_KEY) {
         console.warn("Missing API Key");
