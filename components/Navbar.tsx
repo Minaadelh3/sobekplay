@@ -37,8 +37,6 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
   ];
 
   const exploreItems = [
-    { name: 'Veo', path: '/veo' },
-    { name: 'Art', path: '/art' },
     { name: 'Gallery', path: '/gallery' },
   ];
 

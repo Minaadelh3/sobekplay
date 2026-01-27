@@ -22,8 +22,7 @@ import PolicyPage from './pages/PolicyPage';
 import SubscriptionPage from './pages/SubscriptionPage';
 import HelpPage from './pages/HelpPage';
 import PhotosPage from './pages/PhotosPage';
-import ImageGenPage from './pages/ImageGenPage';
-import VeoPage from './pages/VeoPage';
+
 import MoviesPage from './pages/MoviesPage';
 import SeriesPage from './pages/SeriesPage';
 import KidsPage from './pages/KidsPage';
@@ -290,8 +289,7 @@ const MainLayout: React.FC = () => {
           <Route path="/community" element={<CommunityPage />} />
           <Route path="/help" element={<HelpPage />} />
           <Route path="/gallery" element={<PhotosPage />} />
-          <Route path="/art" element={<ImageGenPage />} />
-          <Route path="/veo" element={<VeoPage />} />
+
           <Route path="/menu" element={<MenuPage />} />
         </Routes>
       </main>
