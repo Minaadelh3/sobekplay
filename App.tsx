@@ -29,7 +29,10 @@ import SeriesPage from './pages/SeriesPage';
 import KidsPage from './pages/KidsPage';
 import MenuPage from './pages/MenuPage';
 import MyListPage from './pages/MyListPage';
-import GamesPage from './pages/GamesPage';
+import HotelPage from './pages/HotelPage';
+
+// ... (in routes)
+<Route path="/hotel" element={<HotelPage />} />
 import RemindersPage from './pages/RemindersPage';
 import { motion } from 'framer-motion';
 import SobekChatbot from './components/SobekChatbot';
