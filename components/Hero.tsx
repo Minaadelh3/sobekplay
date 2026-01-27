@@ -43,11 +43,10 @@ const Hero: React.FC<HeroProps> = ({ posters }) => {
 
   useEffect(() => {
     if (!active) return;
-    
+
     const checkWatchlist = async () => {
       if (!user) {
-        const local = JSON.parse(localStorage.getItem('sobek_guest_list') || '[]');
-        setInList(local.includes(active.id));
+        setInList(false);
         return;
       }
       const { data } = await supabase.from('watchlist').select('id').eq('user_id', user.id).eq('content_id', active.id);
@@ -59,15 +58,7 @@ const Hero: React.FC<HeroProps> = ({ posters }) => {
 
   const toggleWatchlist = async () => {
     if (!user) {
-      const local = JSON.parse(localStorage.getItem('sobek_guest_list') || '[]');
-      let newList;
-      if (inList) {
-        newList = local.filter((id: string) => id !== active.id);
-      } else {
-        newList = [...local, active.id];
-      }
-      localStorage.setItem('sobek_guest_list', JSON.stringify(newList));
-      setInList(!inList);
+      navigate('/login');
       return;
     }
 
@@ -127,7 +118,7 @@ const Hero: React.FC<HeroProps> = ({ posters }) => {
               onClick={() => navigate(`/watch/${active.id}`)}
               className="bg-white text-black px-10 py-4 rounded-xl font-black text-lg md:text-xl flex items-center gap-3 hover:scale-105 transition-all shadow-2xl shadow-white/10 active:scale-95"
             >
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
               <span>Play Now</span>
             </button>
 
@@ -136,11 +127,11 @@ const Hero: React.FC<HeroProps> = ({ posters }) => {
               className="bg-white/10 backdrop-blur-xl text-white border border-white/20 px-8 py-4 rounded-xl font-bold text-lg flex items-center gap-3 hover:bg-white/20 transition-all active:scale-95"
             >
               {inList ? (
-                <svg className="w-6 h-6 text-accent-green" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                <svg className="w-6 h-6 text-accent-green" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" /></svg>
               ) : (
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
               )}
-              <span>My List</span>
+              <span>{inList ? '✓ In My List' : '+ My List'}</span>
             </button>
           </div>
         </motion.div>
