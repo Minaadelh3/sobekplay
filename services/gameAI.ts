@@ -4,7 +4,7 @@
 // --- CONFIG ---
 // 🚨 DIRECT KEY AS REQUESTED BY USER
 const API_KEY = "AIzaSyD6LWEoWnDMlSq7-JkO3LSQ8hZmUuMLbj4";
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
 
 // --- TYPES (Matching User Request) ---
 export type GameMode = 'عدّيها 💣' | 'قول ولا تفوّت؟ 😏' | 'فيلم بالإيموجي 🎬' | 'كمّلها بقى…' | 'حدوتة على الطاير ✨' | string;
