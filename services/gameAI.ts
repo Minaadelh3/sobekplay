@@ -85,7 +85,16 @@ export async function generateGameCard(
 
         if (!rawText) throw new Error("Empty Response");
 
-        const card = JSON.parse(rawText);
+        // Clean Markdown code blocks if present
+        const cleanJson = rawText.replace(/```json\n?|```/g, '').trim();
+
+        let card;
+        try {
+            card = JSON.parse(cleanJson);
+        } catch (parseErr) {
+            console.error("JSON Parse Error:", parseErr, "Raw Text:", rawText);
+            throw new Error("Invalid JSON from AI");
+        }
 
         // Ensure ID exists
         if (!card.id) card.id = crypto.randomUUID();
