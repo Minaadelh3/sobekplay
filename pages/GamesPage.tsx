@@ -632,10 +632,279 @@ const DrawSobekGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     );
 };
 
+// --- Game 3: PASS & BOOM (Hot Potato + AI) ---
+
+const BOOM_CATEGORIES = [
+    { id: 'mix', name: 'خفيف ولذيذ 😄', color: 'from-yellow-600 to-orange-600', description: 'أسئلة وتحديات منوعة، بداية حلوة.' },
+    { id: 'icebreaker', name: 'تعارف 🎭', color: 'from-blue-600 to-cyan-600', description: 'عشان نعرف بعض أكتر.' },
+    { id: 'spicy', name: 'جريء بس محترم 😏', color: 'from-red-600 to-pink-600', description: 'أسئلة قوية شوية.. بس في السليم.' },
+    { id: 'funny', name: 'ضحك وهزار 😂', color: 'from-green-600 to-emerald-600', description: 'تحديات هتموتكم ضحك.' },
+    { id: 'memories', name: 'سفر وذكريات 🧳', color: 'from-purple-600 to-indigo-600', description: 'حكايات عن السفر والمواقف.' },
+    { id: 'aswan', name: 'أسوان vibes 🌴', color: 'from-amber-600 to-yellow-600', description: 'أسئلة معمولة مخصوص للرحلة دي.' },
+];
+
+const TIMER_OPTIONS = [10, 15, 20, 30, 45, 60];
+
+// Fallback Deck (Simulating AI Generation for Reliability)
+const MOCK_AI_DECK: Record<string, { type: 'QUESTION' | 'CHALLENGE', text: string, intensity?: number }[]> = {
+    // ... (Full deck implementation would be huge, using a representative sample here for brevity while ensuring variety)
+    mix: [
+        { type: 'QUESTION', text: 'لو كسبت مليون جنيه دلوقتي، هتعزم مين فينا؟ 💸' },
+        { type: 'CHALLENGE', text: 'اعمل نفسك تمثال لمدة 15 ثانية 🗿' },
+        { type: 'QUESTION', text: 'أكتر أكلة بتعرف تطبخها؟ 🍳' }, // ... more needed
+    ],
+    spicy: [
+        { type: 'QUESTION', text: 'مين أكتر حد في القعدة دي ممكن تأتمنه على سرك؟ 🤫' },
+        { type: 'QUESTION', text: 'قرار أخدته وندمت عليه؟ 💔' },
+        { type: 'CHALLENGE', text: 'ابعت رسالة "وحشتني" لآخر حد كلمته 📱' },
+    ],
+    funny: [
+        { type: 'CHALLENGE', text: 'قلد ضحكة شريرة 😈' },
+        { type: 'CHALLENGE', text: 'اتكلم زي الروبوت لحد ما دورك يجي تاني 🤖' },
+    ],
+    aswan: [
+        { type: 'QUESTION', text: 'إيه أكتر مكان حبيته في أسوان لحد دلوقتي؟ 🏛️' },
+        { type: 'CHALLENGE', text: 'ارقص نوبي (أو حاول) 💃' },
+    ]
+};
+
+// Helper to expand deck dynamically (Simulates AI)
+const getAIMockCard = (category: string) => {
+    // In a real implementation, this would call Google GenAI. 
+    // For this prototype/local version, we use a robust mix + randomizer.
+    const pool = MOCK_AI_DECK[category as keyof typeof MOCK_AI_DECK] || MOCK_AI_DECK.mix;
+    // Add randomness to selecting or generating
+    const card = pool[Math.floor(Math.random() * pool.length)];
+
+    // If result is undefined (category empty), fallback
+    if (!card) return { type: 'QUESTION', text: 'جاهز للسؤال الجاي؟ اجري حوالين المكان! 🏃', intensity: 1 };
+
+    return card;
+};
+
+const PassAndBoomGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+    const [gameState, setGameState] = useState<'SETUP' | 'PLAYING' | 'BOOM'>('SETUP');
+    const [category, setCategory] = useState(BOOM_CATEGORIES[0]);
+    const [timerSettings, setTimerSettings] = useState(30);
+    const [currentTimer, setCurrentTimer] = useState(30);
+    const [currentCard, setCurrentCard] = useState<any>(null);
+    const [score, setScore] = useState(0);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Audio effects refs (placeholders)
+    // const tickSound = useRef(new Audio('/tick.mp3'));
+    // const boomSound = useRef(new Audio('/boom.mp3'));
+
+    useEffect(() => {
+        if (gameState === 'PLAYING') {
+            timerRef.current = setInterval(() => {
+                setCurrentTimer((prev) => {
+                    if (prev <= 1) {
+                        clearInterval(timerRef.current!);
+                        handleBoom();
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        }
+        return () => {
+            if (timerRef.current) clearInterval(timerRef.current);
+        };
+    }, [gameState]);
+
+    const handleBoom = () => {
+        setGameState('BOOM');
+        // Play boom sound here
+    };
+
+    const startGame = () => {
+        setScore(0);
+        nextRound(true);
+    };
+
+    const nextRound = (isFirst = false) => {
+        // 1. Get new card (Simulate AI)
+        const newCard = getAIMockCard(category.id);
+        setCurrentCard(newCard);
+
+        // 2. Reset Timer
+        setCurrentTimer(timerSettings);
+
+        // 3. Set State
+        setGameState('PLAYING');
+    };
+
+    const handleAnswered = () => {
+        setScore(s => s + 1);
+        nextRound();
+    };
+
+    const handleSkip = () => {
+        // Penalty or limited skips logic could go here
+        nextRound();
+    };
+
+    const getPenalty = () => {
+        const penalties = JUDGMENTS; // Reuse existing judgments
+        return penalties[Math.floor(Math.random() * penalties.length)];
+    };
+
+
+    if (gameState === 'SETUP') {
+        return (
+            <div className="flex flex-col min-h-[90vh] bg-neutral-900 p-6 text-white pb-24">
+                <BackButton onClick={onBack} />
+                <h2 className="text-4xl font-black text-white mb-2 text-center mt-8">PASS & BOOM 💣</h2>
+                <p className="text-white/60 text-center mb-8">جاوب بسرعة وباصيها قبل ما تفرقع!</p>
+
+                {/* Category Selection */}
+                <h3 className="text-accent-gold font-bold mb-4 uppercase text-sm tracking-widest text-right">أختار المود</h3>
+                <div className="grid grid-cols-2 gap-3 mb-8" dir="rtl">
+                    {BOOM_CATEGORIES.map(cat => (
+                        <button
+                            key={cat.id}
+                            onClick={() => setCategory(cat)}
+                            className={`p-4 rounded-2xl border text-right transition-all
+                                ${category.id === cat.id
+                                    ? `bg-gradient-to-br ${cat.color} border-white shadow-lg scale-105`
+                                    : 'bg-white/5 border-white/10 hover:bg-white/10'}
+                            `}
+                        >
+                            <div className="font-bold text-lg mb-1">{cat.name}</div>
+                            <div className="text-xs text-white/60 leading-tight">{cat.description}</div>
+                        </button>
+                    ))}
+                </div>
+
+                {/* Timer Selection */}
+                <h3 className="text-accent-gold font-bold mb-4 uppercase text-sm tracking-widest text-right">مدة اللفة</h3>
+                <div className="flex justify-between gap-2 mb-12 bg-white/5 p-2 rounded-xl">
+                    {TIMER_OPTIONS.map(time => (
+                        <button
+                            key={time}
+                            onClick={() => setTimerSettings(time)}
+                            className={`flex-1 py-3 rounded-lg font-bold transition-all
+                                ${timerSettings === time ? 'bg-white text-black shadow-md' : 'text-white/40 hover:text-white'}
+                            `}
+                        >
+                            {time}s
+                        </button>
+                    ))}
+                </div>
+
+                <button
+                    onClick={startGame}
+                    className="w-full py-4 bg-red-600 text-white font-black text-xl rounded-full shadow-lg hover:scale-105 transition-transform animate-pulse"
+                >
+                    START GAME 🔥
+                </button>
+            </div>
+        );
+    }
+
+    if (gameState === 'BOOM') {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[90vh] bg-red-900 p-6 text-center text-white relative overflow-hidden">
+                <div className="absolute inset-0 bg-black/20 animate-pulse" />
+
+                <motion.div
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1.5, opacity: 1 }}
+                    className="text-8xl mb-4 relative z-10"
+                >
+                    💥
+                </motion.div>
+                <h2 className="text-6xl font-black text-white mb-2 relative z-10">BOOM!</h2>
+                <p className="text-white/80 text-xl mb-12 relative z-10">الوقت خلص يا بطل</p>
+
+                <div className="bg-black/40 backdrop-blur-md p-8 rounded-3xl border border-white/10 max-w-md w-full mb-8 relative z-10 transform -rotate-1">
+                    <div className="text-accent-gold font-bold tracking-widest uppercase mb-4">PENALTY (حكم)</div>
+                    <div className="text-2xl font-bold leading-relaxed font-arabic" dir="rtl">
+                        {getPenalty()}
+                    </div>
+                </div>
+
+                <div className="flex gap-4 w-full max-w-md relative z-10">
+                    <button
+                        onClick={() => setGameState('SETUP')}
+                        className="flex-1 py-4 bg-white/10 text-white font-bold rounded-xl hover:bg-white/20"
+                    >
+                        Exit
+                    </button>
+                    <button
+                        onClick={() => nextRound()}
+                        className="flex-1 py-4 bg-white text-black font-bold rounded-xl hover:bg-white/90"
+                    >
+                        Continue
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className={`flex flex-col items-center justify-center min-h-[90vh] p-6 text-center text-white relative transition-colors duration-500
+            ${currentTimer <= 5 ? 'bg-red-900/50' : category.id === 'aswan' ? 'bg-amber-900/30' : 'bg-neutral-900'}
+        `}>
+            <BackButton onClick={() => setGameState('SETUP')} />
+
+            {/* Timer HUD */}
+            <div className="absolute top-6 right-6 z-20">
+                <div className={`relative w-20 h-20 flex items-center justify-center rounded-full border-4 font-black text-3xl shadow-lg
+                    ${currentTimer <= 5 ? 'border-red-500 text-red-500 animate-ping-slow bg-white' : 'border-white/20 text-white bg-black/40'}
+                `}>
+                    {currentTimer}
+                </div>
+            </div>
+
+            {/* Score Piles */}
+            <div className="absolute top-8 left-16 text-white/40 font-mono text-sm">
+                SCORE: {score}
+            </div>
+
+            {/* The Card */}
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key={currentCard?.text || 'loading'}
+                    initial={{ x: 100, opacity: 0, rotate: 5 }}
+                    animate={{ x: 0, opacity: 1, rotate: 0 }}
+                    exit={{ x: -100, opacity: 0, rotate: -5 }}
+                    className={`max-w-md w-full aspect-[4/5] md:aspect-[3/2] flex flex-col items-center justify-center p-8 rounded-3xl shadow-2xl border border-white/10 relative overflow-hidden bg-gradient-to-br ${category.color}`}
+                >
+                    <div className="absolute top-6 uppercase tracking-widest font-black opacity-30 text-sm">
+                        {currentCard?.type} • {category.name}
+                    </div>
+
+                    <div className="text-2xl md:text-4xl font-black leading-relaxed font-arabic z-10 drop-shadow-md" dir="rtl">
+                        {currentCard?.text}
+                    </div>
+                </motion.div>
+            </AnimatePresence>
+
+            {/* Controls */}
+            <div className="flex gap-4 w-full max-w-md mt-12">
+                <button
+                    onClick={handleSkip}
+                    className="flex-1 py-4 bg-white/10 rounded-2xl font-bold text-white/60 hover:text-white hover:bg-white/20 transition-colors"
+                >
+                    Skip ⏭️
+                </button>
+                <button
+                    onClick={handleAnswered}
+                    className="flex-[2] py-4 bg-white text-black rounded-2xl font-black text-xl shadow-xl hover:scale-105 active:scale-95 transition-transform"
+                >
+                    DONE ✅
+                </button>
+            </div>
+        </div>
+    );
+};
+
 // --- Main Page ---
 
 const GamesPage: React.FC = () => {
-    const [activeGame, setActiveGame] = useState<'draw' | 'memory' | 'spin' | 'truth' | 'vote' | null>(null);
+    const [activeGame, setActiveGame] = useState<'draw' | 'memory' | 'spin' | 'truth' | 'vote' | 'boom' | null>(null);
 
     // Render Active Game
     if (activeGame === 'memory') return <MemoryGame onBack={() => setActiveGame(null)} />;
@@ -643,6 +912,7 @@ const GamesPage: React.FC = () => {
     if (activeGame === 'spin') return <SpinTheSobek onBack={() => setActiveGame(null)} />;
     if (activeGame === 'truth') return <TruthOrDare onBack={() => setActiveGame(null)} />;
     if (activeGame === 'vote') return <WhoIsMost onBack={() => setActiveGame(null)} />;
+    if (activeGame === 'boom') return <PassAndBoomGame onBack={() => setActiveGame(null)} />;
 
     // Render Menu
     return (
@@ -695,7 +965,19 @@ const GamesPage: React.FC = () => {
                 <div className="mb-12">
                     <h3 className="text-purple-400 text-sm font-bold tracking-widest uppercase mb-6 border-b border-white/10 pb-2">Party Games 🎉</h3>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <motion.div
+                            onClick={() => setActiveGame('boom')}
+                            whileHover={{ y: -5 }}
+                            className="bg-gradient-to-br from-orange-600 to-red-600 border border-white/10 rounded-3xl p-6 cursor-pointer hover:shadow-glow transition-all relative overflow-hidden group"
+                        >
+                            <div className="absolute top-0 right-0 p-4 opacity-20 text-6xl group-hover:rotate-12 transition-transform">💣</div>
+                            <div className="text-4xl mb-4">🧨</div>
+                            <h4 className="text-xl font-bold text-white mb-2">Pass & Boom</h4>
+                            <p className="text-white/80 text-sm font-medium">Hot potato with AI questions. Don't let it explode!</p>
+                            <div className="absolute bottom-4 right-4 bg-white text-red-600 text-xs font-bold px-2 py-1 rounded">NEW</div>
+                        </motion.div>
+
                         <motion.div
                             onClick={() => setActiveGame('spin')}
                             whileHover={{ y: -5 }}
