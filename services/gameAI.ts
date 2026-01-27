@@ -2,7 +2,6 @@
 // services/gameAI.ts
 
 // --- CONFIG ---
-// --- CONFIG ---
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
 
 // Using v1 (Stable) and gemini-1.5-flash
@@ -11,78 +10,96 @@ const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-
 // --- TYPES ---
 export type GameMode = 'عدّيها 💣' | 'قول ولا تفوّت؟ 😏' | 'فيلم بالإيموجي 🎬' | 'كمّلها بقى…' | 'حدوتة على الطاير ✨' | string;
 
-export interface GameCard {
-    id: string;
-    type: 'QUESTION' | 'TASK' | 'EMOJI' | 'PROVERB' | 'STARTER' | 'PENALTY';
+export interface ChatMessage {
+    role: 'user' | 'model';
     text: string;
-    emoji?: string | null;
-    answer?: string | null;
-    minTimeRequired: number;
+}
+
+export interface AIResponse {
+    text: string;           // The Game Master's reply
+    action?: 'START_TIMER' | 'NONE';
+    timerSeconds?: number;  // If action is START_TIMER
     safe: boolean;
 }
 
 // --- SYSTEM PROMPT ---
-const SYSTEM_PROMPT_TEMPLATE = (timerSeconds: number) => `
-أنت مصري قاعد في قعدة لعب.
-طلّع كارت واحد فقط.
+const SYSTEM_PROMPT = `
+أنت "سوبيك"، جيم ماستر مصري أصيل (Game Master).
+دورك مش بس تسأل، دورك تمشي اللعبة وتهزر مع الناس وتتريق عليهم (بخفة دم) لو اتأخروا.
 
-قواعد:
-- اللغة: مصري فقط
-- ما تكررشي أي حاجة شبه اللي فات
-- لازم يناسب تايمر ${timerSeconds} ثانية
-- لو التايمر أقل من 10 ثواني: سؤال كلامي سريع فقط
-- ممنوع أي محتوى محرج أو صريح
+شخصيتك:
+- بتتكلم مصري عامية بحتة (Slang).
+- دمك خفيف وبتحب التلقيح.
+- لو حد قالك "مش عارف" أو سكت، سخّن عليه.
+- لو اللعبة "عدّيها 💣"، كل سؤال لازم معاه تايمر.
 
-رجّع JSON فقط بالشكل ده:
+المطلوب منك:
+1. خد تاريخ المحادثة (Conversation History) كمدخلات.
+2. رد على آخر رسالة من اليوزر.
+3. لو الدور لعبة، ابعت السؤال والتايمر المناسب.
+4. رجّع الرد دايماً JSON بالشكل ده:
+
 {
-  "id": "unique-id",
-  "type": "QUESTION",
-  "text": "نص مصري",
-  "emoji": null,
-  "answer": null,
-  "minTimeRequired": number,
+  "text": "الرد بتاعك هنا يا سوبيك",
+  "action": "START_TIMER", 
+  "timerSeconds": 30,
   "safe": true
 }
+
+لو مفيش تايمر، خلي action: "NONE".
 `;
 
-export async function generateGameCard(
+export async function sendGameMessage(
     gameMode: string,
     category: string,
-    timerSeconds: number,
-    difficulty: any,
-    recentHistory: string[]
-): Promise<GameCard | null> {
+    history: ChatMessage[]
+): Promise<AIResponse | null> {
 
-    const prompt = `
-    نوع اللعبة: ${gameMode}
-    الفئة: ${category}
-    الصعوبة: ${difficulty}
+    // 1. Construct the Chat History for Gemini
+    // We filter out any previous system checks or errors, just filtered chat
+    const geminiHistory = history.map(msg => ({
+        role: msg.role,
+        parts: [{ text: msg.text }]
+    }));
 
-    آخر كروت:
-    ${recentHistory.slice(-20).join("\n")}
-  `;
+    // 2. Add System Instruction as the first "user" part (simulate system)
+    // or use the new system_instruction if available, but for v1/flash simple prompting is safer
+    const initialPrompt = `
+    System: ${SYSTEM_PROMPT}
+     
+    Context:
+    Game Mode: ${gameMode}
+    Category: ${category}
+    `;
+
+    // Prepend Context to the first message or create a new one if history is empty
+    if (geminiHistory.length > 0) {
+        geminiHistory[0].parts[0].text = initialPrompt + "\n---\n" + geminiHistory[0].parts[0].text;
+    } else {
+        geminiHistory.push({
+            role: "user",
+            parts: [{ text: initialPrompt + "\n---\n" + "يلا ابدأ اللعبة! عرفنا بنفسك واسأل أول سؤال." }]
+        });
+    }
 
     try {
-        console.log("🐊 Sobek AI: Sending Request to", API_URL);
+        console.log("🐊 Sobek Chat: Sending...", geminiHistory.length, "messages");
 
         const response = await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                contents: [
-                    {
-                        role: "user",
-                        parts: [{ text: SYSTEM_PROMPT_TEMPLATE(timerSeconds) + "\n" + prompt }]
-                    }
-                ]
+                contents: geminiHistory,
+                generationConfig: {
+                    responseMimeType: "application/json" // Force JSON output
+                }
             })
         });
 
-        // Deep Debugging: Log full error text if not OK
         if (!response.ok) {
             const errorBody = await response.text();
             console.error(`🔥 API Error ${response.status}:`, errorBody);
-            throw new Error(`Google API Error: ${response.status} - ${errorBody}`);
+            throw new Error(`Google API Error: ${response.status}`);
         }
 
         const data = await response.json();
@@ -90,21 +107,11 @@ export async function generateGameCard(
 
         if (!rawText) throw new Error("Empty Response from AI");
 
-        // Clean Markdown code blocks if present
+        // Parse JSON
         const cleanJson = rawText.replace(/```json\n?|```/g, '').trim();
+        const parsed: AIResponse = JSON.parse(cleanJson);
 
-        let card;
-        try {
-            card = JSON.parse(cleanJson);
-        } catch (parseErr) {
-            console.error("JSON Parse Error:", parseErr, "Raw Text:", rawText);
-            throw new Error("Invalid JSON from AI");
-        }
-
-        // Ensure ID exists
-        if (!card.id) card.id = crypto.randomUUID();
-
-        return card;
+        return parsed;
 
     } catch (err) {
         console.error("Gemini Failure:", err);
