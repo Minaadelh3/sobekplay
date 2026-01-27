@@ -54,6 +54,14 @@ const gameModes = [
         accent: "from-emerald-600 to-teal-600",
     },
     {
+        id: "vector-shift",
+        mode: "Vector Shift 🌌",
+        title: "Vector Shift (Alpha)",
+        description: "سباق ضد الجاذبية. لسه تحت الإنشاء... جرب بنفسك!",
+        accent: "from-cyan-600 to-blue-800",
+        route: "/vector-shift"
+    },
+    {
         id: "proverbs",
         mode: "كمّلها بقى…",
         title: "كمّلها بقى…",
@@ -298,7 +306,11 @@ const GamesPage = () => {
     const [selection, setSelection] = useState<string | null>(null);
     const [lobbyState, setLobbyState] = useState({ category: 'عام', difficulty: 2 });
 
-    const handleSelect = (mode: string) => {
+    const handleSelect = (mode: string, route?: string) => {
+        if (route) {
+            window.location.hash = route;
+            return;
+        }
         setSelection(mode);
         // Default Settings
         setLobbyState({
@@ -326,7 +338,7 @@ const GamesPage = () => {
                             {gameModes.map((game) => (
                                 <button
                                     key={game.id}
-                                    onClick={() => handleSelect(game.mode)}
+                                    onClick={() => handleSelect(game.mode, (game as any).route)}
                                     className={`
                                 group relative overflow-hidden rounded-3xl p-[1px]
                                 bg-gradient-to-br ${game.accent}

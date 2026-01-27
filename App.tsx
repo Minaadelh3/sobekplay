@@ -29,8 +29,16 @@ import KidsPage from './pages/KidsPage';
 import MenuPage from './pages/MenuPage';
 import MyListPage from './pages/MyListPage';
 import GamesPage from './pages/GamesPage';
-import RemindersPage from './pages/RemindersPage';
+import VectorShiftPage from './pages/VectorShiftPage';
 import { motion } from 'framer-motion';
+
+// ... (existing imports)
+
+// ...
+
+          <Route path="/games" element={<GamesPage />} />
+          <Route path="/vector-shift" element={<VectorShiftPage />} />
+          <Route path="/reminders" element={<RemindersPage />} />
 import SobekChatbot from './components/SobekChatbot';
 import ScrollToTop from './components/ScrollToTop';
 
