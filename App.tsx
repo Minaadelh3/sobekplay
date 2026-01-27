@@ -29,7 +29,15 @@ import SeriesPage from './pages/SeriesPage';
 import KidsPage from './pages/KidsPage';
 import MenuPage from './pages/MenuPage';
 import MyListPage from './pages/MyListPage';
-import { motion } from 'framer-motion';
+import GamesPage from './pages/GamesPage';
+
+// ... (existing imports)
+
+// Inside Routes:
+          <Route path="/series" element={<SeriesPage posters={analyzedPosters} />} />
+          <Route path="/kids" element={<KidsPage />} />
+          <Route path="/games" element={<GamesPage />} />
+          <Route path="/my-list" element={<MyListPage posters={analyzedPosters} />} />
 import SobekChatbot from './components/SobekChatbot';
 import ScrollToTop from './components/ScrollToTop';
 
@@ -160,8 +168,8 @@ const TripTips: React.FC = () => {
               {tip.text}
             </p>
             <div className={`mt-3 w-12 h-1 rounded-full opacity-30 group-hover:opacity-60 transition-opacity ${tip.category === 'essential' ? 'bg-accent-blue' :
-                tip.category === 'vibe' ? 'bg-accent-gold' :
-                  tip.category === 'weather' ? 'bg-green-400' : 'bg-purple-400'
+              tip.category === 'vibe' ? 'bg-accent-gold' :
+                tip.category === 'weather' ? 'bg-green-400' : 'bg-purple-400'
               }`} />
           </motion.div>
         ))}
