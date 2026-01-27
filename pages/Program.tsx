@@ -156,33 +156,7 @@ const Program: React.FC = () => {
 }
       </div >
 
-      <h2 className="text-3xl md:text-4xl font-black text-white mb-4 leading-tight">
-        {ep.title}
-      </h2>
 
-      <p className="text-lg text-white/70 mb-8 border-r-4 border-accent-green pr-4 leading-relaxed">
-        {ep.description}
-      </p>
-
-      <div className="space-y-6 relative">
-        {/* Connection Line */}
-        <div className="absolute top-2 right-[7px] bottom-0 w-px bg-white/10" />
-
-        {ep.scenes.map((scene, i) => (
-          <div key={i} className="flex gap-6 relative">
-            <div className="w-4 h-4 rounded-full bg-nearblack border-2 border-accent-gold relative z-10 mt-1 shrink-0" />
-            <div>
-              <h4 className="text-white font-bold text-lg">{scene.title}</h4>
-              <p className="text-white/50 text-sm mt-1">{scene.desc}</p>
-              <span className="text-xs text-accent-green font-mono mt-2 block">{scene.time}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div >
-          </motion.div >
-        ))}
-      </div >
 
   <div className="mt-32 text-center pb-12">
     <p className="text-white/30 text-sm font-mono uppercase tracking-widest">End of Season 1</p>
