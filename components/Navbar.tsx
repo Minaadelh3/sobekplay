@@ -22,19 +22,19 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
   };
 
   const navLinks = [
-    { name: 'Home', path: '/' }, // Always keep home first
+    { name: 'Home', path: '/' },
     { name: 'Movies', path: '/movies' },
     { name: 'Series', path: '/series' },
     { name: 'Kids', path: '/kids' },
     { name: 'My List', path: '/my-list' },
-    { name: 'El Agpeya', path: '/prayers' }, // Requested addition
+    { name: 'El Agpyea', path: '/prayers' },
+    { name: 'El She3ar', path: '/she3ar-al-re7la' },
+    { name: 'Trip Program', path: '/program' },
+    { name: 'Hotel Rooms', path: '/rooms' },
     { name: 'Community', path: '/community' },
   ];
 
   const exploreItems = [
-    { name: 'Program', path: '/program' },
-    { name: 'She3ar El Re7la', path: '/she3ar-al-re7la' },
-    { name: 'Rooms', path: '/rooms' },
     { name: 'Veo', path: '/veo' },
     { name: 'Art', path: '/art' },
     { name: 'Gallery', path: '/gallery' },
@@ -108,8 +108,8 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
                   to={link.path}
                   onClick={() => setActiveDropdown(null)}
                   className={`text-sm md:text-base font-medium whitespace-nowrap transition-all duration-200 select-none ${isLinkActive(link.path)
-                      ? 'text-white font-bold border-b-2 border-accent-green pb-1'
-                      : 'text-white/60 hover:text-white'
+                    ? 'text-white font-bold border-b-2 border-accent-green pb-1'
+                    : 'text-white/60 hover:text-white'
                     }`}
                 >
                   {link.name}
