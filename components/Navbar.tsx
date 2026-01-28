@@ -22,60 +22,18 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
   };
 
   const navLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'Movies', path: '/movies' },
-    { name: 'Series', path: '/series' },
-    { name: 'Kids', path: '/kids' },
-    { name: 'My List', path: '/my-list' },
+    { name: 'Home 🏠', path: '/' },
     { name: 'Games 🎮', path: '/games' },
-    { name: 'Reminders 🧳', path: '/reminders' },
-    { name: 'El Agpyea', path: '/prayers' },
-    { name: 'El She3ar', path: '/she3ar-al-re7la' },
-    { name: 'Trip Program', path: '/program' },
-    { name: 'Hotel Rooms', path: '/rooms' },
-    { name: 'Community', path: '/community' },
-  ];
-
-  const exploreItems = [
-    { name: 'Veo', path: '/veo' },
-    { name: 'Art', path: '/art' },
-    { name: 'Gallery', path: '/gallery' },
-  ];
-
-  const moreItems = [
-    { name: 'Subscription', path: '/subscription' },
-    { name: 'Coming Soon', path: '/coming-soon' },
-    { name: 'News', path: '/news' },
-    { name: 'Shop', path: '/shop' },
-    { name: 'About', path: '/about' },
-    { name: 'Help Center', path: '/help' },
+    { name: 'Program 🧭', path: '/program' },
+    { name: 'Reminders 🔔', path: '/reminders' },
+    { name: 'Agpeya 🕯️', path: '/prayers' },
+    { name: 'El-She3ar 🎶', path: '/she3ar-al-re7la' },
+    { name: 'Kids 🎈', path: '/kids' },
+    { name: 'Rooms 🔑', path: '/rooms' },
+    { name: 'Community 💬', path: '/community' },
   ];
 
   const isLinkActive = (path: string) => location.pathname === path;
-
-  // Render a Dropdown Menu
-  const renderDropdown = (items: { name: string; path: string }[], alignRight = false) => (
-    <motion.div
-      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-      transition={{ duration: 0.2 }}
-      className={`absolute top-full mt-2 w-56 bg-nearblack border border-white/10 rounded-xl shadow-2xl py-2 overflow-hidden z-[110] ${alignRight ? 'right-0 origin-top-right' : 'left-0 origin-top-left'}`}
-    >
-      <div className="absolute inset-0 bg-white/5 backdrop-blur-md -z-10" />
-      {items.map((item) => (
-        <Link
-          key={item.path}
-          to={item.path}
-          onClick={() => setActiveDropdown(null)}
-          className={`block px-5 py-3 text-sm font-medium transition-colors hover:bg-white/10 ${isLinkActive(item.path) ? 'text-accent-green font-bold bg-white/5' : 'text-white/70 hover:text-white'
-            }`}
-        >
-          {item.name}
-        </Link>
-      ))}
-    </motion.div>
-  );
 
   // Mobile Menu State
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -93,7 +51,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
   }, [isMobileMenuOpen]);
 
   // Combined nav items for mobile
-  const allNavItems = [...navLinks, ...exploreItems, ...moreItems];
+  const allNavItems = [...navLinks];
 
   return (
     <>
@@ -159,36 +117,6 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
                   {link.name}
                 </Link>
               ))}
-
-              {/* Explore Dropdown Trigger */}
-              <div className="relative">
-                <button
-                  onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === 'explore' ? null : 'explore'); }}
-                  className={`text-base font-medium whitespace-nowrap flex items-center gap-1 transition-all duration-200 ${activeDropdown === 'explore' || exploreItems.some(i => isLinkActive(i.path)) ? 'text-white font-bold' : 'text-white/60 hover:text-white'
-                    }`}
-                >
-                  Explore
-                  <svg className={`w-3 h-3 transition-transform ${activeDropdown === 'explore' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                </button>
-                <AnimatePresence>
-                  {activeDropdown === 'explore' && renderDropdown(exploreItems)}
-                </AnimatePresence>
-              </div>
-
-              {/* More Dropdown Trigger */}
-              <div className="relative">
-                <button
-                  onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === 'more' ? null : 'more'); }}
-                  className={`text-base font-medium whitespace-nowrap flex items-center gap-1 transition-all duration-200 ${activeDropdown === 'more' || moreItems.some(i => isLinkActive(i.path)) ? 'text-white font-bold' : 'text-white/60 hover:text-white'
-                    }`}
-                >
-                  More
-                  <svg className={`w-3 h-3 transition-transform ${activeDropdown === 'more' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                </button>
-                <AnimatePresence>
-                  {activeDropdown === 'more' && renderDropdown(moreItems)}
-                </AnimatePresence>
-              </div>
             </div>
           </div>
 

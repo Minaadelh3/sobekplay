@@ -3,8 +3,10 @@
 @tailwind utilities;
 
 /* Global Scroll & Touch Fixes */
-html, body {
-  overscroll-behavior-y: none; /* Prevent pull-to-refresh if not needed */
+html,
+body {
+  overscroll-behavior-y: none;
+  /* Prevent pull-to-refresh if not needed */
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -31,6 +33,7 @@ html, body {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -40,6 +43,7 @@ html, body {
 .safe-area-pt {
   padding-top: env(safe-area-inset-top);
 }
+
 .safe-area-pb {
   padding-bottom: env(safe-area-inset-bottom);
 }
@@ -48,6 +52,7 @@ html, body {
 .pointer-events-auto {
   pointer-events: auto;
 }
+
 .pointer-events-none {
   pointer-events: none;
 }

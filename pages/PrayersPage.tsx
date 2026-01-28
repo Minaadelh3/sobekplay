@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const PrayersPage: React.FC = () => {
-  const [openSection, setOpenSection] = useState<string | null>('prime');
+  const [openSection, setOpenSection] = useState<string | null>(null);
 
   const toggleSection = (id: string) => {
     setOpenSection(openSection === id ? null : id);
@@ -13,8 +13,8 @@ const PrayersPage: React.FC = () => {
     {
       id: 'prime',
       title: "صلاة باكر",
-      subtitle: "The Morning Prayer",
-      timeNote: "توافق الساعة السادسة صباحًا، وتُقال بعد الاستيقاظ.",
+      subtitle: "صلاة الصباح",
+      timeNote: "تُصَلَّى في السادسة صباحًا، عند الاستيقاظ.",
       icon: "🌅",
       content: `صلاة باكر
 
@@ -192,7 +192,7 @@ const PrayersPage: React.FC = () => {
     {
       id: 'terce',
       title: "صلاة الساعة الثالثة",
-      subtitle: "The Third Hour",
+      subtitle: "الساعة الثالثة",
       timeNote: "تُصَلَّى في الساعة التاسعة صباحًا.",
       icon: "🕊️",
       content: `صلاة الساعة الثالثة
@@ -300,7 +300,7 @@ const PrayersPage: React.FC = () => {
     {
       id: 'sext',
       title: "صلاة الساعة السادسة",
-      subtitle: "The Sixth Hour",
+      subtitle: "الساعة السادسة",
       timeNote: "تُصَلَّى الساعة الثانية عشر ظهرًا.",
       icon: "☀️",
       content: `صلاة الساعة السادسة
@@ -410,7 +410,7 @@ const PrayersPage: React.FC = () => {
     {
       id: 'none',
       title: "صلاة الساعة التاسعة",
-      subtitle: "The Ninth Hour",
+      subtitle: "الساعة التاسعة",
       timeNote: "توافق الساعة الثالثة بعد الظهر.",
       icon: "✝️",
       content: `صلاة الساعة التاسعة
@@ -512,8 +512,8 @@ const PrayersPage: React.FC = () => {
     {
       id: 'vespers',
       title: "صلاة الغروب",
-      subtitle: "Vespers",
-      timeNote: "تُصَلَّى في الساعة الخامسة مساءً قبل حلول الليل.",
+      subtitle: "صلاة الغروب",
+      timeNote: "تُصَلَّى في الساعة الخامسة مساءً.",
       icon: "🌇",
       content: `صلاة الغروب
 	في مثل هذه الساعة أُنزل جسد المسيح من على الصليب، وكُفِّن ووُضِع في القبر. فلنشكر الله الذي أنامنا الموت ووهبنا راحة، ولنطلب منه أن يمنحنا نوما هادئا، وراحة ترضيه، ويوقظنا من أجل تسبيحه الصلاة وتقابل الحادية عشرة مساء بالتوقيت الإفرنجي.
@@ -559,7 +559,7 @@ const PrayersPage: React.FC = () => {
     {
       id: 'compline',
       title: "صلاة النوم",
-      subtitle: "Compline",
+      subtitle: "صلاة النوم",
       timeNote: "تُصَلَّى قبل النوم.",
       icon: "🌙",
       content: ``
@@ -585,7 +585,7 @@ const PrayersPage: React.FC = () => {
     if (!content) return (
       <div className="w-full flex flex-col items-center justify-center py-12 text-white/20">
         <p className="font-mono text-sm uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full">
-          Content Pending
+          محتوى قادم
         </p>
       </div>
     );
