@@ -265,19 +265,21 @@ export const GamesPage: React.FC = () => {
         return (
             <div className="fixed inset-0 z-[100] bg-black overflow-y-auto w-full h-full flex flex-col">
                 {/* IN-GAME HEADER */}
-                <div className="sticky top-0 z-[110] flex items-center p-4 bg-black/80 backdrop-blur-md border-b border-white/10">
+                <div className="sticky top-0 z-[110] flex items-center p-4 bg-[#080808] border-b border-white/10 shadow-md">
                     <button
                         onClick={exitGame}
-                        className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
+                        className="flex items-center gap-2 text-white/90 hover:text-white transition-colors bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg"
                     >
-                        <svg className="w-6 h-6 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
-                        <span className="font-bold text-lg">رجوع للألعاب</span>
+                        <span className="font-bold text-base">رجوع للألعاب</span>
                     </button>
-                    <div className="flex-1 text-center mr-8 font-black text-xl text-white/90">
+                    <div className="flex-1 text-center mr-8 font-black text-xl text-white tracking-wide">
                         {selectedGame.title}
                     </div>
+                    {/* Placeholder for balance */}
+                    <div className="w-24"></div>
                 </div>
 
                 <div className="flex-1 relative">

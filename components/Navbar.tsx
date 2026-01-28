@@ -22,15 +22,15 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
   };
 
   const navLinks = [
-    { name: 'Home 🏠', path: '/' },
-    { name: 'Games 🎮', path: '/games' },
-    { name: 'Program 🧭', path: '/program' },
-    { name: 'Reminders 🔔', path: '/reminders' },
-    { name: 'Agpeya 🕯️', path: '/prayers' },
-    { name: 'El-She3ar 🎶', path: '/she3ar-al-re7la' },
-    { name: 'Kids 🎈', path: '/kids' },
-    { name: 'Rooms 🔑', path: '/rooms' },
-    { name: 'Community 💬', path: '/community' },
+    { name: '🏠 Home', path: '/' },
+    { name: '🎮 Games', path: '/games' },
+    { name: '🧭 Program', path: '/program' },
+    { name: '🔔 Reminders', path: '/reminders' },
+    { name: '🕯️ Agpeya', path: '/prayers' },
+    { name: '🎶 El-She3ar', path: '/she3ar-al-re7la' },
+    { name: '🎈 Kids', path: '/kids' },
+    { name: '🔑 Rooms', path: '/rooms' },
+    { name: '💬 Community', path: '/community' },
   ];
 
   const isLinkActive = (path: string) => location.pathname === path;
