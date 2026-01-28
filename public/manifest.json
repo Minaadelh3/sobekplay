@@ -1,11 +1,14 @@
 {
   "name": "Sobek Play",
   "short_name": "Sobek",
-  "description": "Egyptian entertainment platform for games, trips, and social experiences.",
-  "start_url": "/",
+  "id": "sobek-play-app",
+  "start_url": "/#/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "background_color": "#070A0F",
+  "theme_color": "#0B5D4B",
+  "orientation": "portrait",
+  "description": "Egyptian entertainment platform for games, trips, and social experiences.",
   "icons": [
     {
       "src": "/icons/icon-192.png",

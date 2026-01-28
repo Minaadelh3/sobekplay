@@ -138,7 +138,7 @@ const MainLayout: React.FC = () => {
       <div className="min-h-screen bg-nearblack flex items-center justify-center">
         <div className="text-accent-green animate-pulse flex flex-col items-center">
           <div className="text-xl font-black mb-4 tracking-widest">SOBEK PLAY</div>
-          <div className="w-12 h-1 bg-white/10 rounded-full overflow-hidden">
+          <div className="w-12 h-1 bg-white/10 rounded-full overflow-hidden pointer-events-none">
             <motion.div
               initial={{ x: '-100%' }}
               animate={{ x: '100%' }}
@@ -156,11 +156,13 @@ const MainLayout: React.FC = () => {
   const isTripPage = ['/', '/program', '/she3ar-al-re7la', '/prayers', '/rooms'].includes(location.pathname);
 
   return (
-    <div className="min-h-screen selection:bg-accent-green selection:text-white">
+    <div className="min-h-[100dvh] flex flex-col selection:bg-accent-green selection:text-white bg-nearblack">
       {!isWatchPage && (
-        <Navbar
-          onSearchOpen={() => setIsSearchOpen(true)}
-        />
+        <div className="fixed top-0 left-0 right-0 z-50 pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] bg-gradient-to-b from-nearblack/90 to-nearblack/0 pointer-events-none">
+          <Navbar
+            onSearchOpen={() => setIsSearchOpen(true)}
+          />
+        </div>
       )}
 
       <SearchModal
@@ -169,7 +171,15 @@ const MainLayout: React.FC = () => {
         posters={analyzedPosters}
       />
 
-      <main className={`${!isWatchPage ? "pt-20" : ""} pb-24 md:pb-0`}>
+      {/* Safe Area Wrapper & Bottom Padding for Nav */}
+      <main
+        className={`
+          flex-1 w-full 
+          ${!isWatchPage ? "pt-[calc(5rem+env(safe-area-inset-top))]" : "pt-[env(safe-area-inset-top)]"} 
+          pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0 
+          pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]
+        `}
+      >
         <Routes>
           <Route path="/" element={<Home posters={analyzedPosters} />} />
           <Route path="/movies" element={<MoviesPage posters={analyzedPosters} />} />
