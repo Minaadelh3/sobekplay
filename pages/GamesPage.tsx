@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { BackButton } from '../components/BackButton.tsx';
+import { BackButton } from '../components/BackButton';
 
 // --- ICONS ---
 const Icons = {

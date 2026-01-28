@@ -110,7 +110,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
         )}
       </AnimatePresence>
 
-      <nav className="fixed top-0 left-0 right-0 z-[100] bg-nearblack/95 backdrop-blur-xl border-b border-white/5 shadow-2xl h-16 md:h-20 transition-all duration-300 pointer-events-auto">
+      <nav className="fixed top-0 left-0 right-0 z-[100] bg-nearblack/95 backdrop-blur-xl border-b border-white/5 shadow-2xl h-16 md:h-20 transition-all duration-300">
         <div className="max-w-[1920px] mx-auto px-4 md:px-12 h-full flex items-center justify-between gap-4">
 
           {/* Logo */}
