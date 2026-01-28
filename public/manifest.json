@@ -2,12 +2,23 @@
   "background_color": "#ffffff",
   "dir": "ltr",
   "display": "standalone",
-  "name": "Sobek Play",
+  "name": "sobekplay.vercel",
   "orientation": "any",
   "scope": "/",
-  "short_name": "SobekTV",
+  "short_name": "sobekplay.vercel",
   "start_url": "/",
-  "theme_color": "#0b5e3c",
-  "id": "sobek.play.app",
-  "description": "Sobek Play is an interactive digital experience for programs, rooms, and journeys — designed to explore, engage, and play."
+  "theme_color": "#070a0f",
+  "description": "Sobek Play is a cinematic streaming and interactive experience inspired by Egyptian culture, stories, and journeys.",
+  "icons": [
+    {
+      "src": "/assets/brand/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/brand/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
 }

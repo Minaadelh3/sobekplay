@@ -6,12 +6,13 @@ import MobileBottomNav from './components/MobileBottomNav';
 import Hero from './components/Hero';
 import Carousel from './components/Carousel';
 import SearchModal from './components/SearchModal';
+import VerseOfTheDay from './components/VerseOfTheDay';
 import { posters } from './data/posters';
 import { usePosterMetrics } from './hooks/usePosterMetrics';
 import TitleDetails from './pages/TitleDetails';
 import WatchPlayer from './pages/WatchPlayer';
 import TripAnthem from './pages/TripAnthem';
-import Program from './pages/Program';
+import ProgramPage from './pages/ProgramPage';
 import RoomsPage from './pages/RoomsPage';
 import PrayersPage from './pages/PrayersPage';
 import NewsPage from './pages/NewsPage';
@@ -22,123 +23,22 @@ import PolicyPage from './pages/PolicyPage';
 import SubscriptionPage from './pages/SubscriptionPage';
 import HelpPage from './pages/HelpPage';
 import PhotosPage from './pages/PhotosPage';
-
-
+import ImageGenPage from './pages/ImageGenPage';
+import VeoPage from './pages/VeoPage';
 import MoviesPage from './pages/MoviesPage';
 import SeriesPage from './pages/SeriesPage';
 import KidsPage from './pages/KidsPage';
 import MenuPage from './pages/MenuPage';
 import MyListPage from './pages/MyListPage';
-import HotelPage from './pages/HotelPage';
-import VersePage from './pages/VersePage';
-
-// ... (in routes)
-<Route path="/hotel" element={<HotelPage />} />
+import GamesPage from './pages/GamesPage';
 import RemindersPage from './pages/RemindersPage';
 import { motion } from 'framer-motion';
 import SobekChatbot from './components/SobekChatbot';
 import ScrollToTop from './components/ScrollToTop';
 
 
-const VerseOfTheDay: React.FC = () => {
-  const [verse, setVerse] = useState<{ text: string; ref: string } | null>(null);
 
-  useEffect(() => {
-    // AVD-ONLY Water-Themed Verses (Strictly Arabic Van Dyck)
-    const verses = [
-      { text: "إِلَى مِيَاهِ الرَّاحَةِ يُورِدُنِي.", ref: "مزامير ٢٣: ٢" },
-      { text: "مَنْ يَشْرَبُ مِنَ الْمَاءِ الَّذِي أُعْطِيهِ أَنَا فَلَنْ يَعْطَشَ إِلَى الأَبَدِ.", ref: "يوحنا ٤: ١٤" },
-      { text: "فَتَسْتَقُونَ مِيَاهًا بِفَرَحٍ مِنْ يَنَابِيعِ الْخَلاَصِ.", ref: "إشعياء ١٢: ٣" },
-      { text: "كَمَا يَشْتَاقُ الإِيَّلُ إِلَى جَدَاوِلِ الْمِيَاهِ، هكَذَا تَشْتَاقُ نَفْسِي إِلَيْكَ يَا اللهُ.", ref: "مزامير ٤٢: ١" },
-      { text: "إِذَا اجْتَزْتَ فِي الْمِيَاهِ فَأَنَا مَعَكَ، وَفِي الأَنْهَارِ فَلاَ تَغْمُرُكَ.", ref: "إشعياء ٤٣: ٢" },
-      { text: "مَنْ آمَنَ بِي، كَمَا قَالَ الْكِتَابُ، تَجْرِي مِنْ بَطْنِهِ أَنْهَارُ مَاءٍ حَيٍّ.", ref: "يوحنا ٧: ٣٨" },
-      { text: "وَيَقْتَادُهُمْ إِلَى يَنَابِيعِ مَاءٍ حَيَّةٍ، وَيَمْسَحُ اللهُ كُلَّ دَمْعَةٍ مِنْ عُيُونِهِمْ.", ref: "رؤيا ٧: ١٧" },
-      { text: "فَيَكُونُ كَشَجَرَةٍ مَغْرُوسَةٍ عِنْدَ مَجَارِي الْمِيَاهِ.", ref: "مزامير ١: ٣" },
-      { text: "نَهْرُ اللهِ مَلآنٌ مَاءً.", ref: "مزامير ٦٥: ٩" },
-      { text: "أَنَا أُعْطِي الْعَطْشَانَ مِنْ يَنْبُوعِ مَاءِ الْحَيَاةِ مَجَّانًا.", ref: "رؤيا ٢١: ٦" },
-      { text: "لأَنِّي أَسْكُبُ مَاءً عَلَى الْعَطْشَانِ، وَسُيُولًا عَلَى الْيَابِسَةِ.", ref: "إشعياء ٤٤: ٣" },
-      { text: "نَهْرٌ سَوَاقِيهِ تُفَرِّحُ مَدِينَةَ اللهِ، مَقْدِسَ مَسَاكِنِ الْعَلِيِّ.", ref: "مزامير ٤٦: ٤" },
-      { text: "أَجْعَلُ الْقَفْرَ أَجَمَةَ مَاءٍ، وَالأَرْضَ الْيَابِسَةَ يَنَابِيعَ مِيَاهٍ.", ref: "إشعياء ٤١: ١٨" },
-      { text: "يَنْبُوعُ جَنَّاتٍ، بِئْرُ مِيَاهٍ حَيَّةٍ، وَسُيُولٌ مِنْ لُبْنَانَ.", ref: "نشيد الأنشاد ٤: ١٥" },
-      { text: "صَوْتُ الرَّبِّ عَلَى الْمِيَاهِ. إِلهُ الْمَجْدِ أَرْعَدَ.", ref: "مزامير ٢٩: ٣" },
-      { text: "وَمَنْ يَعْطَشْ فَلْيَأْتِ. وَمَنْ يُرِدْ فَلْيَأْخُذْ مَاءَ حَيَاةٍ مَجَّانًا.", ref: "رؤيا ٢٢: ١٧" },
-      { text: "مِيَاهٌ بَارِدَةٌ لِنَفْسٍ عَطْشَانَةٍ، الْخَبَرُ الطَّيِّبُ مِنْ أَرْضٍ بَعِيدَةٍ.", ref: "أمثال ٢٥: ٢٥" },
-      { text: "يَجْعَلُ الْقَفْرَ غُدْرَانَ مِيَاهٍ، وَالأَرْضَ الْيَابِسَةَ يَنَابِيعَ مِيَاهٍ.", ref: "مزامير ١٠٧: ٣٥" },
-      { text: "وَأَرَانِي نَهْرًا صَافِيًا مِنْ مَاءِ حَيَاةٍ لاَمِعًا كَبَلُّورٍ، خَارِجًا مِنْ عَرْشِ اللهِ.", ref: "رؤيا ٢٢: ١" },
-      { text: "وَعَلَى يَنَابِيعِ الْمِيَاهِ يَهْدِيهِمْ.", ref: "إشعياء ٤٩: ١٠" },
-      { text: "لأَنَّ عِنْدَكَ يَنْبُوعَ الْحَيَاةِ. بِنُورِكَ نَرَى نُورًا.", ref: "مزامير ٣٦: ٩" },
-    ];
 
-    // AI-Simulated Rotation Logic:
-    // Uses the session time + random entropy to ensure a fresh verse on every meaningful visit
-    const randomIndex = Math.floor(Math.random() * verses.length);
-    setVerse(verses[randomIndex]);
-  }, []);
-
-  if (!verse) return null;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95, y: 20 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 1.2, ease: "easeOut" }}
-      className="relative w-full max-w-5xl mx-auto my-16 px-4 z-30 flex flex-col items-center"
-    >
-      {/* Enhanced Glassmorphism Card */}
-      <div className="relative w-full bg-linear-to-b from-blue-900/20 to-transparent border border-white/10 rounded-[2rem] p-8 md:p-16 overflow-hidden backdrop-blur-md shadow-2xl group">
-
-        {/* Living Water Background Effects */}
-        <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 mix-blend-overlay" />
-        <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-gradient-radial from-accent-blue/10 to-transparent opacity-50 animate-pulse-slow" />
-
-        {/* Decorative Elements */}
-        <div className="absolute top-8 left-8 text-6xl text-white/5 font-serif select-none">“</div>
-        <div className="absolute bottom-8 right-8 text-6xl text-white/5 font-serif select-none">”</div>
-
-        <div className="relative z-10 flex flex-col items-center text-center space-y-8">
-
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="flex items-center gap-4"
-          >
-            <div className="h-[1px] w-12 bg-accent-blue/50" />
-            <span className="text-accent-blue text-sm font-bold tracking-[0.4em] uppercase drop-shadow-sm">
-              آية اليوم 🌊
-            </span>
-            <div className="h-[1px] w-12 bg-accent-blue/50" />
-          </motion.div>
-
-          {/* Verse Text */}
-          <motion.p
-            key={verse.text}
-            initial={{ opacity: 0, filter: 'blur(10px)' }}
-            animate={{ opacity: 1, filter: 'blur(0px)' }}
-            transition={{ delay: 0.5, duration: 1 }}
-            className="text-2xl md:text-4xl lg:text-5xl text-white font-medium leading-relaxed md:leading-relaxed font-arabic max-w-4xl drop-shadow-xl"
-            dir="rtl"
-          >
-            {verse.text}
-          </motion.p>
-
-          {/* Reference */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="px-6 py-2 rounded-full border border-accent-gold/20 bg-accent-gold/5 backdrop-blur-sm"
-          >
-            <p className="text-accent-gold text-sm md:text-base font-bold tracking-widest dir-rtl cursor-default">
-              {verse.ref}
-            </p>
-          </motion.div>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
 
 
 const Home: React.FC<{ posters: any[] }> = ({ posters }) => {
@@ -282,7 +182,7 @@ const MainLayout: React.FC = () => {
           <Route path="/title/:id" element={<TitleDetails posters={analyzedPosters} />} />
           <Route path="/watch/:id" element={<WatchPlayer posters={analyzedPosters} />} />
           <Route path="/she3ar-al-re7la" element={<TripAnthem />} />
-          <Route path="/program" element={<Program />} />
+          <Route path="/program" element={<ProgramPage />} />
           <Route path="/games" element={<GamesPage />} />
           <Route path="/rooms" element={<RoomsPage />} />
           <Route path="/prayers" element={<PrayersPage />} />
@@ -292,11 +192,10 @@ const MainLayout: React.FC = () => {
           <Route path="/shop" element={<ShopPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/community" element={<CommunityPage />} />
-          <Route path="/hotel" element={<HotelPage />} />
-          <Route path="/verse" element={<VersePage />} />
+          <Route path="/help" element={<HelpPage />} />
           <Route path="/gallery" element={<PhotosPage />} />
-
-
+          <Route path="/art" element={<ImageGenPage />} />
+          <Route path="/veo" element={<VeoPage />} />
           <Route path="/menu" element={<MenuPage />} />
         </Routes>
       </main>
