@@ -389,7 +389,7 @@ export const GamesPage: React.FC = () => {
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 50 }}
                         transition={{ type: "spring", bounce: 0.3 }}
-                        className="fixed inset-0 z-50 bg-[#080808] flex flex-col"
+                        className="fixed inset-0 z-[200] bg-[#080808] flex flex-col"
                     >
                         {/* Immersive Background */}
                         <div className={`absolute inset-0 bg-gradient-to-br ${selectedGame.gradient} opacity-20 blur-3xl`} />
@@ -406,7 +406,7 @@ export const GamesPage: React.FC = () => {
                         </div>
 
                         {/* Lobby Content */}
-                        <div className="flex-1 overflow-y-auto px-6 pb-40 relative z-10">
+                        <div className="flex-1 overflow-y-auto px-6 pb-48 relative z-10">
                             <div className="text-center mt-4 mb-10">
                                 <motion.div
                                     initial={{ scale: 0, rotate: -180 }}
@@ -455,8 +455,8 @@ export const GamesPage: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Floating Action Button area */}
-                        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-[#080808] via-[#080808]/90 to-transparent z-30">
+                        {/* Floating Action Button area - STICKY BOTTOM */}
+                        <div className="absolute bottom-0 left-0 right-0 p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-[#080808] via-[#080808] to-transparent z-30">
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.95 }}
@@ -469,7 +469,7 @@ export const GamesPage: React.FC = () => {
                                     max-w-md mx-auto ring-4 ring-white/10
                                 `}
                             >
-                                <span>يلا بينا</span>
+                                <span>ابدأ اللعب</span>
                                 <PlayIcon />
                             </motion.button>
                         </div>
