@@ -214,7 +214,7 @@ export const ProgramPage: React.FC = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 bg-[#050505] flex flex-col overflow-y-auto"
+                        className="fixed inset-0 z-[200] bg-[#050505] flex flex-col overflow-y-auto"
                     >
                         {/* Custom Nav for Episode */}
                         <div className="absolute top-0 left-0 right-0 z-30 p-6 flex justify-between items-start bg-gradient-to-b from-black/80 to-transparent">

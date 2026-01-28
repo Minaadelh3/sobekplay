@@ -110,8 +110,8 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
         )}
       </AnimatePresence>
 
-      <nav className="fixed top-0 left-0 right-0 z-[100] bg-nearblack/95 backdrop-blur-xl border-b border-white/5 shadow-2xl h-16 md:h-20 transition-all duration-300">
-        <div className="max-w-[1920px] mx-auto px-4 md:px-12 h-full flex items-center justify-between gap-4">
+      <nav className="fixed top-0 left-0 right-0 z-[100] bg-nearblack/95 backdrop-blur-xl border-b border-white/5 shadow-2xl h-[calc(4rem+env(safe-area-inset-top))] md:h-[calc(5rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] transition-all duration-300 pointer-events-auto touch-pan-y">
+        <div className="max-w-[1920px] mx-auto px-4 md:px-12 h-16 md:h-20 flex items-center justify-between gap-4">
 
           {/* Logo */}
           <Link to="/" onClick={() => { setActiveDropdown(null); setIsMobileMenuOpen(false); }} className="flex-shrink-0 z-[102] relative flex items-center gap-2">
@@ -119,11 +119,11 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
           </Link>
 
           {/* Mobile Burger Trigger (Visible Only on Mobile) */}
-          <div className="md:hidden z-[102] flex items-center gap-4">
+          <div className="md:hidden z-[102] flex items-center gap-2">
             {/* Search in Header for Mobile */}
             <button
               onClick={onSearchOpen}
-              className="text-white/80"
+              className="text-white/80 p-3 hover:bg-white/5 rounded-full transition-colors"
               aria-label="Search"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
@@ -131,7 +131,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
 
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="text-white p-2"
+              className="text-white p-3 hover:bg-white/5 rounded-full transition-colors"
               aria-label="Menu"
             >
               <div className="space-y-1.5 w-6">
@@ -143,7 +143,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
           </div>
 
           {/* DESKTOP NAV (Hidden on Mobile) */}
-          <div className="hidden md:flex flex-1 overflow-x-auto no-scrollbar mx-8 relative z-[101]">
+          <div className="hidden md:flex flex-1 overflow-x-auto mx-8 relative z-[101]">
             <div className="flex items-center space-x-8 min-w-max px-2">
               {/* Standard Links */}
               {navLinks.map((link) => (

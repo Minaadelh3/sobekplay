@@ -175,7 +175,7 @@ const MainLayout: React.FC = () => {
       <main
         className={`
           flex-1 w-full 
-          ${!isWatchPage ? "pt-[calc(5rem+env(safe-area-inset-top))]" : "pt-[env(safe-area-inset-top)]"} 
+          ${!isWatchPage ? "pt-[calc(4rem+env(safe-area-inset-top))] md:pt-[calc(5rem+env(safe-area-inset-top))]" : "pt-[env(safe-area-inset-top)]"} 
           pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0 
           pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]
         `}

@@ -15,7 +15,7 @@ const MobileBottomNav: React.FC = () => {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#121212]/95 backdrop-blur-lg border-t border-white/10 md:hidden pb-safe">
+    <div className="fixed bottom-0 left-0 right-0 z-[150] bg-[#121212]/95 backdrop-blur-lg border-t border-white/10 md:hidden pb-[env(safe-area-inset-bottom)] pointer-events-auto">
       <div className="flex justify-around items-center h-16">
         {tabs.map((tab) => (
           <NavLink

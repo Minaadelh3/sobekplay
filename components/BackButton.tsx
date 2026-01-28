@@ -10,9 +10,9 @@ export const BackButton: React.FC<{ className?: string }> = ({ className = '' })
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             onClick={() => navigate('/')}
-            className={`absolute top-0 left-0 md:top-4 md:left-4 z-50 p-4 text-white/50 hover:text-white transition-colors flex items-center gap-2 font-arabic ${className}`}
+            className={`fixed top-4 left-4 md:top-8 md:left-8 z-50 px-4 py-3 bg-black/20 backdrop-blur-md rounded-full border border-white/10 text-white hover:bg-black/40 transition-all flex items-center gap-2 font-arabic shadow-xl safe-area-pt ${className}`}
         >
-            <span className="text-2xl">➜</span>
+            <span className="text-xl rtl:rotate-180">➜</span>
             <span className="text-sm font-bold uppercase tracking-widest hidden md:inline">Back Home</span>
         </motion.button>
     );
