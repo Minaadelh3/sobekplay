@@ -40,9 +40,7 @@ Return strictly a JSON object (no markdown) with:
 }
     `;
 
-        // TRANSFORM MESSAGES (Simple concatenated history for Flash model cost/speed optimization, or full chat structure)
-        // We will use generateContent with history if needed, but for now single turn with history context is often enough for simple bots.
-        // Let's assume 'messages' is { role, content }[]
+        // TRANSFORM MESSAGES
         const lastMessage = messages[messages.length - 1].content;
         const previousHistory = messages.slice(0, -1).map((m: any) => `${m.role}: ${m.content}`).join('\n');
 
@@ -59,7 +57,7 @@ ${lastMessage}
             contents: [{ role: 'user', parts: [{ text: combinedPrompt }] }],
             config: {
                 systemInstruction: { parts: [{ text: systemPrompt }] },
-                responseMimeType: 'application/json', // Force JSON mode
+                responseMimeType: 'application/json',
                 temperature: 0.8,
                 maxOutputTokens: 500,
             }
