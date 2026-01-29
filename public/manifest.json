@@ -2,21 +2,23 @@
     "name": "Sobek Play",
     "short_name": "SobekPlay",
     "start_url": "/",
+    "id": "sobekplay",
     "display": "standalone",
     "background_color": "#070A0F",
     "theme_color": "#0B5D4B",
     "orientation": "portrait-primary",
-    "id": "sobekplay",
     "icons": [
         {
             "src": "/icons/icon-192x192.png",
             "sizes": "192x192",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any maskable"
         },
         {
             "src": "/icons/icon-512x512.png",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any maskable"
         }
     ]
 }

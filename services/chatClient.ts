@@ -1,12 +1,6 @@
-import { GAMES_CATALOG } from '../pages/GamesPage';
-import { EPISODES } from '../pages/ProgramPage';
-import { findGuest, getRoommates, getRoomLabel, GuestResult } from './roomsDirectory';
+// Types are defined locally to avoid circular dependencies
 
-export interface ChatMessage {
-    role: 'user' | 'assistant';
-    content: string;
-}
-
+// Redefine types to match Component usage
 export interface ChatSuggestion {
     label: string;
     actionType: 'NAVIGATE' | 'ROOM_LOOKUP' | 'OPEN_GAME' | 'OPEN_PROGRAM_DAY' | 'RESET_TAB' | 'CHANGE_NAME';
@@ -18,57 +12,48 @@ export interface ChatResponse {
     suggestions: ChatSuggestion[];
 }
 
-// --- CONTEXT GATHERER ---
-export const gatherContext = (currentGuestId: string | null) => {
-    const context: any = {};
-
-    // 1. Guest Info (if logged in)
-    if (currentGuestId) {
-        const guest = findGuest(currentGuestId);
-        if (guest.found && guest.assignment) {
-            context.user = {
-                name: guest.assignment.personName,
-                room: guest.assignment.room,
-                floor: guest.assignment.floor,
-                roomLabel: getRoomLabel(guest.assignment.room),
-                roommates: getRoommates(guest.assignment)
-            };
-        }
-    }
-
-    // 2. Games Catalog (Titles & Descriptions)
-    context.games = GAMES_CATALOG.map(g => ({ title: g.title, desc: g.desc, id: g.id }));
-
-    // 3. Program (Day Titles)
-    context.program = EPISODES.map(e => ({ day: e.date, title: e.title, id: e.id }));
-
-    return context;
-};
-
-// --- API CLIENT ---
-export const sendMessageToApi = async (messages: ChatMessage[], currentGuestId: string | null): Promise<ChatResponse> => {
+/**
+ * Sends a message to the Sobek AI API.
+ * Now simplified to send only the latest message string.
+ */
+export const sendMessageToApi = async (messages: any[], currentGuestId: string | null): Promise<ChatResponse> => {
     try {
-        const websiteContext = gatherContext(currentGuestId);
+        // Extract the last user message text
+        const lastUserMessage = messages[messages.length - 1];
+        if (!lastUserMessage || !lastUserMessage.content) {
+            throw new Error("No message content found to send.");
+        }
+
+        const messageText = lastUserMessage.content;
 
         const res = await fetch('/api/chat', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messages, websiteContext })
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ message: messageText })
         });
 
         if (!res.ok) {
             const errData = await res.json().catch(() => ({}));
-            console.error("Server API Error:", errData);
-            throw new Error(errData.details || `API Error: ${res.status}`);
+            console.error("Global API Error:", res.status, errData);
+            throw new Error(errData.details || `Server Error (${res.status})`);
         }
 
         const data = await res.json();
-        return data as ChatResponse;
+
+        // Return in the format the UI expects
+        return {
+            replyText: data.reply || "معلش، مفهمتش قصدك. ممكن توضح؟",
+            suggestions: [] // AI doesn't return suggestions yet, UI handles local ones
+        };
 
     } catch (err) {
-        console.error("Chat Client Error:", err);
+        console.error("Chat Client Failure:", err);
+        // Fallback for UI to prevent crash
         return {
-            replyText: "⚠️ System Error: Unable to connect to Sobek AI. Please check the server logs.",
+            replyText: "معلش السيرفر واقع دلوقتي 🐊.. جرب كمان شوية!",
             suggestions: []
         };
     }
