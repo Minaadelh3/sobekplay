@@ -1,27 +1,38 @@
-export interface ChatSuggestion {
-  label: string;
-  actionType: string;
-  payload?: any;
+
+/**
+ * Sobek Chat Client
+ * Pure fetch wrapper. No complex logic.
+ */
+
+export interface ChatResponse {
+    reply: string;
+    suggestions: any[];
 }
 
-export async function sendMessageToApi(
-  message: string,
-  guestId?: string | null
-): Promise<{ reply: string; suggestions?: ChatSuggestion[] }> {
-  const res = await fetch("/api/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message, guestId }),
-  });
+export async function sendMessageToApi(message: string): Promise<ChatResponse> {
+    try {
+        const res = await fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            // Add Timestamp to prevent caching
+            body: JSON.stringify({
+                message,
+                ts: Date.now()
+            }),
+        });
 
-  const data = await res.json();
+        const data = await res.json();
 
-  if (!data || typeof data.reply !== "string") {
-    throw new Error("BAD_RESPONSE");
-  }
+        return {
+            reply: data.reply || "...",
+            suggestions: [] // Future proofing
+        };
 
-  return {
-    reply: data.reply,
-    suggestions: data.suggestions || [],
-  };
+    } catch (e) {
+        console.error(e);
+        return {
+            reply: "معلش في مشكلة في الاتصال.. جرب تاني!",
+            suggestions: []
+        };
+    }
 }

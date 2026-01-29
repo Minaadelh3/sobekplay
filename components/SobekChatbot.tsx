@@ -1,247 +1,200 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { findGuest, getRoommates, getFloorLabel, getRoomLabel, GuestResult } from '../services/roomsDirectory';
-import { sendMessageToApi, ChatSuggestion } from '../services/chatClient';
+import { findGuest, getRoommates, getFloorLabel, getRoomLabel } from '../services/roomsDirectory';
+import { sendMessageToApi } from '../services/chatClient';
+
+// --- Assets ---
+const BOT_AVATAR = "🐊";
+const BOT_NAME = "ابن أخو سوبك";
+const SESSION_KEY = "sobek_chat_welcomed";
 
 interface Message {
   id: string;
   text: string;
   sender: 'user' | 'bot';
-  type?: 'text' | 'room_result' | 'candidates_list';
+  isCard?: boolean;
   data?: any;
-  suggestions?: ChatSuggestion[];
 }
 
-interface SobekChatbotProps {
-  isHidden?: boolean;
-}
-
-const SobekChatbot: React.FC<SobekChatbotProps> = ({ isHidden = false }) => {
+const SobekChatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [inputText, setInputText] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [currentGuestId, setCurrentGuestId] = useState<string | null>(null);
+  const [inputValue, setInputValue] = useState("");
+  const [isThinking, setIsThinking] = useState(false);
 
-  const BOT_NAME = "ابن أخو سوبك";
+  const bottomRef = useRef<HTMLDivElement>(null);
 
+  // --- Auto Scroll ---
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isTyping]);
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isThinking, isOpen]);
 
+  // --- Session-Based Welcome ---
   useEffect(() => {
-    if (false) {
-      setIsTyping(true);
-      setTimeout(() => {
-        addBotMessage(
-          "مرحبتين يا غالي! 👋 أنا ابن أخو سوبك. محتاج تظبط أوضتك؟ ولا نشوف برنامج الرحلة؟ ولا نلعب؟",
-          [
-            { label: 'أوضتي فين؟', actionType: 'ROOM_LOOKUP', payload: {} },
-            { label: 'برنامج الرحلة', actionType: 'NAVIGATE', payload: { path: '/program' } },
-            { label: 'نلعب لعبة', actionType: 'NAVIGATE', payload: { path: '/games' } }
-          ]
-        );
-        setIsTyping(false);
-      }, 600);
+    if (isOpen) {
+      const hasWelcomed = sessionStorage.getItem(SESSION_KEY);
+      if (!hasWelcomed) {
+        sessionStorage.setItem(SESSION_KEY, "true");
+        setIsThinking(true);
+        setTimeout(() => {
+          addBotMessage(`أهلاً يا كبير! ${BOT_AVATAR} 
+أنا معاك لو محتاج تعرف أوضتك فين أو تسأل عن البرنامج.`);
+          setIsThinking(false);
+        }, 800);
+      }
     }
   }, [isOpen]);
 
-  const addBotMessage = (
-    text: string,
-    suggestions: ChatSuggestion[] = [],
-    type: Message['type'] = 'text',
-    data: any = null
-  ) => {
-    setMessages(prev => [
-      ...prev,
-      { id: crypto.randomUUID(), text, sender: 'bot', type, data, suggestions }
-    ]);
+  const addBotMessage = (text: string, isCard = false, data: any = null) => {
+    setMessages(prev => [...prev, {
+      id: crypto.randomUUID(),
+      text,
+      sender: 'bot',
+      isCard,
+      data
+    }]);
   };
 
-  const handleUserMessage = async (rawText: string) => {
-    const safeText = typeof rawText === 'string' ? rawText : '';
-    const lower = safeText.toLowerCase();
+  const handleSend = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const text = inputValue.trim();
+    if (!text) return;
 
-    const isRoomIntent =
-      /أوضتي|اوضتي|odty|room|فين|مكان|تسكي|تسكين|fin|fen|mkany/.test(lower);
+    // 1. UI Update
+    setInputValue("");
+    setMessages(prev => [...prev, { id: crypto.randomUUID(), text, sender: 'user' }]);
 
-    if (isRoomIntent) {
-      if (currentGuestId) {
-        const result = findGuest(currentGuestId);
-        if (result.found && result.assignment) {
-          setIsTyping(true);
-          setTimeout(() => {
-            addBotMessage(
-              `أنت منورنا يا ${result.assignment.personName?.split(' ')[0] || 'صديقي'}! دي بياناتك:`,
-              getContextualSuggestions(true),
-              'room_result',
-              { assignment: result.assignment, roommates: getRoommates(result.assignment) }
-            );
-            setIsTyping(false);
-          }, 500);
-          return;
-        }
-      }
-
-      const cleanQuery = lower
-        .replace(/(فين|أوضتي|اوضتي|odty|room|my|is|accommodation|تسكين|مكاني|مكان)/g, '')
-        .trim();
-
-      if (cleanQuery.length > 2) {
-        if (processGuestResult(findGuest(cleanQuery))) return;
-      } else {
-        replyLocal("قولي اسمك وأنا أجيبلك أوضتك فورًا 🔑");
+    // 2. Local Intent Check (Room Lookup)
+    if (text.split(' ').length < 4) {
+      const guest = findGuest(text);
+      if (guest.found && guest.assignment) {
+        setIsThinking(true);
+        setTimeout(() => {
+          addBotMessage(
+            `لقيتك يا ${guest.assignment.personName.split(' ')[0]}!`,
+            true,
+            { ...guest.assignment, roommates: getRoommates(guest.assignment) }
+          );
+          setIsThinking(false);
+        }, 600);
         return;
       }
     }
 
-    if (safeText.split(' ').length <= 4) {
-      if (processGuestResult(findGuest(safeText))) return;
-    }
-
-    await callServerlessAI(safeText);
-  };
-
-  const processGuestResult = (result: GuestResult): boolean => {
-    if (result.found && result.assignment) {
-      setCurrentGuestId(result.assignment.personName);
-      setIsTyping(true);
-      setTimeout(() => {
-        addBotMessage(
-          `لقيت مكانك يا ${result.assignment.personName.split(' ')[0]} 👌`,
-          getContextualSuggestions(true),
-          'room_result',
-          { assignment: result.assignment, roommates: getRoommates(result.assignment) }
-        );
-        setIsTyping(false);
-      }, 500);
-      return true;
-    }
-
-    if (result.candidates?.length) {
-      addBotMessage("اختار اسمك من دول 👇", [], 'candidates_list', {
-        options: result.candidates
-      });
-      return true;
-    }
-
-    return false;
-  };
-
-  const replyLocal = (text: string, suggestions: ChatSuggestion[] = []) => {
-    setIsTyping(true);
-    setTimeout(() => {
-      addBotMessage(text, suggestions);
-      setIsTyping(false);
-    }, 400);
-  };
-
-  const getContextualSuggestions = (hasRoom: boolean): ChatSuggestion[] =>
-    hasRoom
-      ? [
-          { label: 'نلعب إيه؟', actionType: 'OPEN_GAME', payload: {} },
-          { label: 'برنامج الرحلة', actionType: 'NAVIGATE', payload: { path: '/program' } },
-          { label: 'تغيير الاسم', actionType: 'CHANGE_NAME', payload: {} }
-        ]
-      : [
-          { label: 'أوضتي فين؟', actionType: 'ROOM_LOOKUP', payload: {} },
-          { label: 'برنامج الرحلة', actionType: 'NAVIGATE', payload: { path: '/program' } }
-        ];
-
-  const callServerlessAI = async (userText: string) => {
-    setIsTyping(true);
-    try {
-      const response = await sendMessageToApi(userText, currentGuestId);
-      addBotMessage(response.reply, response.suggestions || []);
-    } catch {
-      addBotMessage("حصلت لخبطة بسيطة 😅 جرّب تاني.");
-    } finally {
-      setIsTyping(false);
-    }
-  };
-
-  const handleSendMessage = (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!inputText.trim() || isTyping) return;
-    const text = inputText;
-    setInputText('');
-    setMessages(prev => [...prev, { id: crypto.randomUUID(), text, sender: 'user' }]);
-    handleUserMessage(text);
-  };
-
-  const handleSuggestionClick = (sug: ChatSuggestion) => {
-    setMessages(prev => [...prev, { id: crypto.randomUUID(), text: sug.label, sender: 'user' }]);
-    switch (sug.actionType) {
-      case 'NAVIGATE':
-        window.location.hash = sug.payload.path;
-        break;
-      case 'ROOM_LOOKUP':
-        handleUserMessage("أوضتي فين؟");
-        break;
-      case 'OPEN_GAME':
-        window.location.hash = '/games';
-        break;
-      case 'OPEN_PROGRAM_DAY':
-        window.location.hash = '/program';
-        break;
-      case 'CHANGE_NAME':
-        setCurrentGuestId(null);
-        replyLocal("تمام، قول اسمك الجديد إيه؟");
-        break;
-      default:
-        callServerlessAI(sug.label);
-    }
-  };
-
-  const handleCandidateClick = (name: string) => {
-    setMessages(prev => [...prev, { id: crypto.randomUUID(), text: name, sender: 'user' }]);
-    processGuestResult(findGuest(name));
+    // 3. AI Call
+    setIsThinking(true);
+    const response = await sendMessageToApi(text);
+    setIsThinking(false);
+    addBotMessage(response.reply);
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-[9999]">
+    <div className="fixed bottom-6 right-6 z-[9999] font-sans">
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="mb-4 w-[calc(100vw-48px)] max-w-[360px] h-[600px] bg-[#0d0d0d] border border-amber-500/30 rounded-3xl shadow-2xl overflow-hidden flex flex-col pointer-events-auto"
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="w-[calc(100vw-32px)] md:w-[380px] h-[600px] max-h-[80vh] bg-[#0A0A0A] border border-white/10 rounded-3xl shadow-2xl flex flex-col overflow-hidden ring-1 ring-white/5"
           >
-            <div className="bg-[#151515] p-4 flex items-center justify-between border-b border-white/5 shrink-0">
-              <h3 className="text-white font-bold">{BOT_NAME}</h3>
-              <button onClick={() => setIsOpen(false)} className="text-white/50">✕</button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.map(msg => (
-                <div key={msg.id} className={msg.sender === 'user' ? 'text-right' : 'text-left'}>
-                  <div className={msg.sender === 'user' ? 'bg-amber-600 text-white inline-block px-4 py-2 rounded-xl' : 'bg-[#1e1e1e] text-white inline-block px-4 py-2 rounded-xl'}>
-                    {msg.text}
+            {/* Header */}
+            <div className="bg-[#111] p-4 flex items-center justify-between border-b border-white/5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-amber-500/10 rounded-full flex items-center justify-center text-xl border border-amber-500/20">
+                  {BOT_AVATAR}
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-sm">{BOT_NAME}</h3>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                    <span className="text-[10px] text-white/50 uppercase tracking-widest">Online</span>
                   </div>
                 </div>
-              ))}
-              {isTyping && <div className="text-white/50">...</div>}
-              <div ref={messagesEndRef} />
+              </div>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors"
+              >
+                ✕
+              </button>
             </div>
 
-            <form onSubmit={handleSendMessage} className="p-3 flex gap-2 border-t border-white/5">
+            {/* Chat Area */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-black/50 to-transparent">
+              {messages.map((msg) => (
+                <div key={msg.id} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
+
+                  {msg.isCard ? (
+                    /* Room Result Card */
+                    <div className="bg-[#151515] border border-amber-500/20 rounded-2xl p-4 w-[90%] mt-1">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <div className="text-[10px] text-amber-500 uppercase font-bold tracking-widest mb-1">Room Assignment</div>
+                          <div className="text-2xl font-bold text-white">{getRoomLabel(msg.data.room)}</div>
+                        </div>
+                        <div className="text-3xl opacity-50">🔑</div>
+                      </div>
+                      <div className="text-sm text-white/60 mb-4">{getFloorLabel(msg.data.floor)}</div>
+
+                      <div className="space-y-2">
+                        <div className="text-[10px] text-white/30 uppercase font-bold">Roommates</div>
+                        <div className="flex flex-wrap gap-2">
+                          {msg.data.roommates.map((m: string) => (
+                            <span key={m} className="px-2 py-1 bg-white/5 rounded text-xs text-white/80 border border-white/5">{m}</span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Text Bubble */
+                    <div className={`px-4 py-2.5 max-w-[85%] text-[14px] leading-6 rounded-2xl shadow-sm ${msg.sender === 'user'
+                        ? 'bg-[#EAB308] text-black font-medium rounded-br-none'
+                        : 'bg-[#1A1A1A] text-gray-200 rounded-bl-none border border-white/5'
+                      }`}>
+                      {msg.text}
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {isThinking && (
+                <div className="flex items-start">
+                  <div className="bg-[#1A1A1A] px-4 py-3 rounded-2xl rounded-bl-none border border-white/5 flex gap-1.5">
+                    <span className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                    <span className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                    <span className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce" />
+                  </div>
+                </div>
+              )}
+              <div ref={bottomRef} />
+            </div>
+
+            {/* Input - ALWAYS ENABLED */}
+            <form onSubmit={handleSend} className="p-3 bg-[#111] border-t border-white/5 flex gap-2">
               <input
-                value={inputText}
-                onChange={e => setInputText(e.target.value)}
-                className="flex-1 bg-black text-white px-4 py-2 rounded-xl outline-none"
-                placeholder="اكتب هنا..."
+                className="flex-1 bg-black border border-white/10 rounded-xl px-4 text-sm text-white focus:outline-none focus:border-amber-500/50 transition-colors placeholder:text-white/20"
+                placeholder="Ask Sobek..."
+                value={inputValue}
+                onChange={e => setInputValue(e.target.value)}
+                autoFocus
               />
-              <button type="submit" className="bg-amber-500 px-4 rounded-xl">➤</button>
+              <button
+                type="submit"
+                className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-black hover:bg-amber-400 active:scale-95 transition-all text-lg"
+                disabled={!inputValue.trim()}
+              >
+                ➤
+              </button>
             </form>
           </motion.div>
         )}
       </AnimatePresence>
 
       <button
-        onClick={() => setIsOpen(o => !o)}
-        className="w-16 h-16 bg-black border-2 border-amber-500 rounded-full text-3xl"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-14 h-14 bg-black border border-white/10 rounded-full flex items-center justify-center text-2xl shadow-xl hover:scale-105 active:scale-95 transition-all text-amber-500 z-50 ring-2 ring-amber-500/20"
       >
         {isOpen ? '🐊' : '💬'}
       </button>
