@@ -13,7 +13,8 @@ import TitleDetails from './pages/TitleDetails';
 import WatchPlayer from './pages/WatchPlayer';
 import TripAnthem from './pages/TripAnthem';
 import ProgramPage from './pages/ProgramPage';
-import RoomsPage from './pages/RoomsPage';
+import RoomsPage from './pages/Rooms';
+
 import PrayersPage from './pages/PrayersPage';
 import NewsPage from './pages/NewsPage';
 import ShopPage from './pages/ShopPage';

@@ -32,6 +32,11 @@ const MobileBottomNav: React.FC = () => {
       path: '/she3ar-al-re7la',
       icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg>
     },
+    {
+      label: 'Rooms',
+      path: '/rooms',
+      icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
+    },
   ];
 
   return (
@@ -44,6 +49,9 @@ const MobileBottomNav: React.FC = () => {
             onClick={(e) => {
               if (location.pathname.startsWith(tab.path)) {
                 e.preventDefault();
+                // Dispatch Custom Event for Reset
+                window.dispatchEvent(new CustomEvent('tab-reset', { detail: { path: tab.path } }));
+                // Keep legacy state just in case, or replace purely. Let's keep both for robustness.
                 navigate(tab.path, { state: { resetTab: Date.now() }, replace: true });
               }
             }}

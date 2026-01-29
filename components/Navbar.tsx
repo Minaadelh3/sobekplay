@@ -108,7 +108,13 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
                 <Link
                   key={link.path}
                   to={link.path}
-                  onClick={() => setActiveDropdown(null)}
+                  onClick={(e) => {
+                    setActiveDropdown(null);
+                    if (isLinkActive(link.path)) {
+                      e.preventDefault(); // Prevent double nav
+                      window.dispatchEvent(new CustomEvent('tab-reset', { detail: { path: link.path } }));
+                    }
+                  }}
                   className={`text-base font-medium whitespace-nowrap transition-all duration-200 select-none ${isLinkActive(link.path)
                     ? 'text-white font-bold border-b-2 border-accent-green pb-1'
                     : 'text-white/60 hover:text-white'

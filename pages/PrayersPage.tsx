@@ -1,9 +1,14 @@
 
 import React, { useState } from 'react';
+import { useTabReset } from '../hooks/useTabReset';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const PrayersPage: React.FC = () => {
   const [openSection, setOpenSection] = useState<string | null>(null);
+
+  useTabReset('/prayers', () => {
+    setOpenSection(null);
+  });
 
   const toggleSection = (id: string) => {
     setOpenSection(openSection === id ? null : id);

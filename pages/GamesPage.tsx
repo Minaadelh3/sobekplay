@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTabReset } from '../hooks/useTabReset';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { BackButton } from '../components/BackButton';
@@ -45,7 +46,7 @@ interface GameDef {
     isHeavy: boolean;
 }
 
-const GAMES_CATALOG: GameDef[] = [
+export const GAMES_CATALOG: GameDef[] = [
     {
         id: 'charades',
         title: "مثّلها لو قدّك",
@@ -215,7 +216,7 @@ const cardVar = {
         opacity: 1,
         y: 0,
         scale: 1,
-        transition: { type: "spring", bounce: 0.4 }
+        transition: { type: "spring" as const, bounce: 0.4 }
     }
 };
 
@@ -229,13 +230,10 @@ export const GamesPage: React.FC = () => {
     const [gameKey, setGameKey] = useState(0);
 
     // Reset Logic
-    useEffect(() => {
-        if (location.state && (location.state as any).resetTab) {
-            setSelectedGame(null);
-            setIsPlaying(false);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    }, [location.state]);
+    useTabReset('/games', () => {
+        setSelectedGame(null);
+        setIsPlaying(false);
+    });
 
     // Handlers
     const openDetails = (game: GameDef) => {
@@ -311,7 +309,7 @@ export const GamesPage: React.FC = () => {
                 <motion.div
                     initial={{ y: -30, opacity: 0, scale: 0.9 }}
                     animate={{ y: 0, opacity: 1, scale: 1 }}
-                    transition={{ type: "spring", bounce: 0.5 }}
+                    transition={{ type: "spring" as const, bounce: 0.5 }}
                 >
                     <h1 className="text-5xl md:text-7xl font-black mb-4 tracking-tighter drop-shadow-2xl">
                         <span className="text-white">ملاهي</span>
@@ -388,7 +386,7 @@ export const GamesPage: React.FC = () => {
                         initial={{ opacity: 0, scale: 0.95, y: 50 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 50 }}
-                        transition={{ type: "spring", bounce: 0.3 }}
+                        transition={{ type: "spring" as const, bounce: 0.3 }}
                         className="fixed inset-0 z-[200] bg-[#080808] flex flex-col"
                     >
                         {/* Immersive Background */}
@@ -411,7 +409,7 @@ export const GamesPage: React.FC = () => {
                                 <motion.div
                                     initial={{ scale: 0, rotate: -180 }}
                                     animate={{ scale: 1, rotate: 0 }}
-                                    transition={{ type: "spring", bounce: 0.5 }}
+                                    transition={{ type: "spring" as const, bounce: 0.5 }}
                                     className="text-8xl mb-6 inline-block filter drop-shadow-2xl"
                                 >
                                     {selectedGame.icon}

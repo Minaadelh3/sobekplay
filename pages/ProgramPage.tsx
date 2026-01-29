@@ -33,7 +33,7 @@ interface Episode {
     details: { time: string; event: string }[];
 }
 
-const EPISODES: Episode[] = [
+export const EPISODES: Episode[] = [
     {
         id: 1,
         title: "ليلة الخروج",
@@ -171,8 +171,14 @@ const TopNav: React.FC<{ title: string; onBack: () => void }> = ({ title, onBack
 
 // --- MAIN PAGE ---
 
+import { useTabReset } from '../hooks/useTabReset';
+
 export const ProgramPage: React.FC = () => {
     const [selectedEpisode, setSelectedEpisode] = useState<Episode | null>(null);
+
+    useTabReset('/program', () => {
+        setSelectedEpisode(null);
+    });
 
     const closeModal = () => setSelectedEpisode(null);
 

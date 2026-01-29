@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTabReset } from '../hooks/useTabReset';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BackButton } from '../components/BackButton';
 
@@ -215,6 +216,12 @@ export const RemindersPage: React.FC = () => {
     // Navigation State
     const [level2, setLevel2] = useState<string | null>(null); // 'bag' | 'general' | 'movement' | 'days'
     const [level3, setLevel3] = useState<number | null>(null); // Day ID (1-4)
+
+    // Reset Logic
+    useTabReset('/reminders', () => {
+        setLevel2(null);
+        setLevel3(null);
+    });
 
     // Handlers
     const goBack = () => {

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTabReset } from '../hooks/useTabReset';
 import { motion } from 'framer-motion';
 import { BackButton } from '../components/BackButton';
 
@@ -20,12 +21,18 @@ const TripAnthem: React.FC = () => {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 1, ease: "easeOut" }
+      transition: { duration: 1, ease: "easeOut" as const }
     }
   };
 
+  // Reset Logic for Replaying Animations
+  const [resetKey, setResetKey] = React.useState(0);
+  useTabReset('/she3ar-al-re7la', () => {
+    setResetKey(prev => prev + 1);
+  });
+
   return (
-    <div className="min-h-screen bg-[#050505] text-white font-arabic safe-area-pb selection:bg-amber-500/30 overflow-hidden flex flex-col relative" dir="rtl">
+    <div key={resetKey} className="min-h-screen bg-[#050505] text-white font-arabic safe-area-pb selection:bg-amber-500/30 overflow-hidden flex flex-col relative" dir="rtl">
 
       {/* Ambient Background - Sunset on the Nile */}
       <div className="absolute inset-0 pointer-events-none">
