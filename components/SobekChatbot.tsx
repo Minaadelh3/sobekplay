@@ -21,6 +21,8 @@ const SobekChatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
+
+  // "Thinking" is purely visual. It does NOT block input.
   const [isThinking, setIsThinking] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -34,7 +36,7 @@ const SobekChatbot: React.FC = () => {
     scrollToBottom();
   }, [messages, isThinking, isOpen]);
 
-  // --- Session-Based Welcome ---
+  // --- Session-Based Welcome (Once per Tab Session) ---
   useEffect(() => {
     if (isOpen) {
       const hasWelcomed = sessionStorage.getItem(SESSION_KEY);
@@ -51,6 +53,7 @@ const SobekChatbot: React.FC = () => {
   }, [isOpen]);
 
   const addBotMessage = (text: string, isCard = false, data: any = null) => {
+    // Prevent duplicate adjacent messages if needed, or allow for now
     setMessages(prev => [...prev, {
       id: crypto.randomUUID(),
       text,
@@ -69,11 +72,12 @@ const SobekChatbot: React.FC = () => {
     setInputValue("");
     setMessages(prev => [...prev, { id: crypto.randomUUID(), text, sender: 'user' }]);
 
-    // 2. Local Intent Check (Fast Path)
+    // 2. Local Intent Check (Fast Path for Room Lookup)
+    // If strict keywords match, we skip API to save tokens/time
+    // (Optional: You can remove this to route EVERYTHING to API)
     if (text.split(' ').length < 4) {
       const guest = findGuest(text);
       if (guest.found && guest.assignment) {
-        // Mock thinking for local logic to feel "processed"
         setIsThinking(true);
         setTimeout(() => {
           addBotMessage(
@@ -82,22 +86,27 @@ const SobekChatbot: React.FC = () => {
             { ...guest.assignment, roommates: getRoommates(guest.assignment) }
           );
           setIsThinking(false);
-        }, 600);
+        }, 500);
         return;
       }
     }
 
-    // 3. AI Call (Network Path)
-    // CRITICAL: We DO NOT block input here. Users can type next msg while waiting.
+    // 3. API Call (Network Path)
     setIsThinking(true);
 
     try {
       const response = await sendMessageToApi(text);
+
+      // CRITICAL: We use response.reply directly.
+      // The chatClient handles fallbacks, so response.reply is always safe string.
       addBotMessage(response.reply);
+
+      // If suggestions exist in future
+      // if (response.suggestions?.length) { ... }
+
     } catch (err) {
-      // Fallback should already be handled by client, but just in case
-      console.error("UI Error Catch:", err);
-      addBotMessage("حصلت لخبطة بسيطة.. جرب تاني! 🐊");
+      console.error("Critical UI Fail:", err);
+      addBotMessage("حصلت خطأ غير متوقع.. جرب تاني!");
     } finally {
       setIsThinking(false);
     }
