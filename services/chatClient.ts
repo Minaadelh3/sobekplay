@@ -1,55 +1,51 @@
 
-// Types defined locally to prevent circular dependencies
-export interface ChatSuggestion {
-    label: string;
-    actionType: string;
-    payload: any;
-}
-
+// Local Types
 export interface ChatResponse {
     replyText: string;
-    suggestions: ChatSuggestion[];
+    suggestions: any[];
 }
 
-const API_URL = '/api/chat';
+const API_Endpoint = '/api/chat';
 
-/**
- * Secure Chat Client
- * - Only sends POST
- * - Never throws fatal UI errors
- * - Provides Arabic fallback on failure
- */
 export const sendMessageToApi = async (messages: any[], currentGuestId: string | null): Promise<ChatResponse> => {
-    try {
-        const lastMessage = messages[messages.length - 1];
-        if (!lastMessage?.content) return { replyText: "...", suggestions: [] };
+    // 1. Client-side Validation
+    const lastMsg = messages[messages.length - 1];
+    if (!lastMsg?.content) {
+        return { replyText: "...", suggestions: [] };
+    }
 
-        const response = await fetch(API_URL, {
+    try {
+        // 2. Fetch with Network Timeout (Front-end limit)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 12000); // 12s timeout
+
+        const response = await fetch(API_Endpoint, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({ message: lastMessage.content })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: lastMsg.content }),
+            signal: controller.signal
         });
 
-        const data = await response.json();
+        clearTimeout(timeoutId);
 
+        // 3. Handle HTTP Errors
+        const data = await response.json();
         if (!response.ok) {
-            throw new Error(data.error || `Error ${response.status}`);
+            throw new Error(data.error || `HTTP ${response.status}`);
         }
 
         return {
-            replyText: data.reply || "تمام يا غالي!",
+            replyText: data.reply || "تمام!",
             suggestions: []
         };
 
-    } catch (error) {
-        console.error("Chat Client Error:", error);
+    } catch (error: any) {
+        console.warn("Chat Fail (Handled):", error.message);
 
-        // GRACEFUL FALLBACK - NO CRASH
+        // 4. Stable Fallback (User Friendly)
+        // Never crash the UI. Always return a message.
         return {
-            replyText: "معلش الشبكة مش تمام دلوقتي.. جرب تاني كمان شوية! �",
+            replyText: "معلش، السيرفر عليه ضغط أو النت بطيء. جرب تاني! 🐊",
             suggestions: []
         };
     }
