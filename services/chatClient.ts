@@ -66,7 +66,7 @@ export const sendMessageToApi = async (messages: ChatMessage[], currentGuestId: 
     } catch (err) {
         console.error("Chat Client Error:", err);
         return {
-            replyText: "معلش الشبكة قطعت.. جرب تاني كمان شوية.",
+            replyText: "معلش، الشبكة فصلت شوية… جرب تاني كمان دقيقة 👀",
             suggestions: []
         };
     }
