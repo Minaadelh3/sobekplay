@@ -57,7 +57,9 @@ export const sendMessageToApi = async (messages: ChatMessage[], currentGuestId: 
         });
 
         if (!res.ok) {
-            throw new Error(`API Error: ${res.status}`);
+            const errData = await res.json().catch(() => ({}));
+            console.error("Server API Error:", errData);
+            throw new Error(errData.details || `API Error: ${res.status}`);
         }
 
         const data = await res.json();
@@ -66,7 +68,7 @@ export const sendMessageToApi = async (messages: ChatMessage[], currentGuestId: 
     } catch (err) {
         console.error("Chat Client Error:", err);
         return {
-            replyText: "معلش، الشبكة فصلت شوية… جرب تاني كمان دقيقة 👀",
+            replyText: "⚠️ System Error: Unable to connect to Sobek AI. Please check the server logs.",
             suggestions: []
         };
     }

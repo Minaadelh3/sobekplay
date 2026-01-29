@@ -80,8 +80,8 @@ ${lastMessage}
     } catch (error) {
         console.error("API Error:", error);
         return new Response(JSON.stringify({
-            replyText: "معلش، السيرفر فيه مشكلة صغيرة 🐊.. جرب تاني؟",
-            suggestions: [{ label: "جرب تاني", actionType: "RESET_TAB", payload: {} }]
+            error: "Internal Server Error",
+            details: error instanceof Error ? error.message : "Unknown error"
         }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' }
