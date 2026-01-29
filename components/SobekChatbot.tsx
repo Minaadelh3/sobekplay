@@ -31,7 +31,7 @@ const SobekChatbot: React.FC<SobekChatbotProps> = ({ isHidden = false }) => {
   }, [messages, isTyping]);
 
   useEffect(() => {
-    if (isOpen && messages.length === 0) {
+    if (false) {
       setIsTyping(true);
       setTimeout(() => {
         addBotMessage(
