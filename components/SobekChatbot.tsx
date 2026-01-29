@@ -26,8 +26,12 @@ const SobekChatbot: React.FC = () => {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // --- Auto Scroll ---
-  useEffect(() => {
+  const scrollToBottom = () => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
   }, [messages, isThinking, isOpen]);
 
   // --- Session-Based Welcome ---
@@ -61,14 +65,15 @@ const SobekChatbot: React.FC = () => {
     const text = inputValue.trim();
     if (!text) return;
 
-    // 1. UI Update
+    // 1. UI Update (Optimistic)
     setInputValue("");
     setMessages(prev => [...prev, { id: crypto.randomUUID(), text, sender: 'user' }]);
 
-    // 2. Local Intent Check (Room Lookup)
+    // 2. Local Intent Check (Fast Path)
     if (text.split(' ').length < 4) {
       const guest = findGuest(text);
       if (guest.found && guest.assignment) {
+        // Mock thinking for local logic to feel "processed"
         setIsThinking(true);
         setTimeout(() => {
           addBotMessage(
@@ -82,11 +87,20 @@ const SobekChatbot: React.FC = () => {
       }
     }
 
-    // 3. AI Call
+    // 3. AI Call (Network Path)
+    // CRITICAL: We DO NOT block input here. Users can type next msg while waiting.
     setIsThinking(true);
-    const response = await sendMessageToApi(text);
-    setIsThinking(false);
-    addBotMessage(response.reply);
+
+    try {
+      const response = await sendMessageToApi(text);
+      addBotMessage(response.reply);
+    } catch (err) {
+      // Fallback should already be handled by client, but just in case
+      console.error("UI Error Catch:", err);
+      addBotMessage("حصلت لخبطة بسيطة.. جرب تاني! 🐊");
+    } finally {
+      setIsThinking(false);
+    }
   };
 
   return (
@@ -100,7 +114,7 @@ const SobekChatbot: React.FC = () => {
             className="w-[calc(100vw-32px)] md:w-[380px] h-[600px] max-h-[80vh] bg-[#0A0A0A] border border-white/10 rounded-3xl shadow-2xl flex flex-col overflow-hidden ring-1 ring-white/5"
           >
             {/* Header */}
-            <div className="bg-[#111] p-4 flex items-center justify-between border-b border-white/5">
+            <div className="bg-[#111] p-4 flex items-center justify-between border-b border-white/5 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-amber-500/10 rounded-full flex items-center justify-center text-xl border border-amber-500/20">
                   {BOT_AVATAR}
@@ -108,21 +122,24 @@ const SobekChatbot: React.FC = () => {
                 <div>
                   <h3 className="font-bold text-white text-sm">{BOT_NAME}</h3>
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                    <span className="text-[10px] text-white/50 uppercase tracking-widest">Online</span>
+                    <span className={`w-1.5 h-1.5 rounded-full ${isThinking ? 'bg-amber-500 animate-pulse' : 'bg-green-500'}`} />
+                    <span className="text-[10px] text-white/50 uppercase tracking-widest">
+                      {isThinking ? 'Thinking...' : 'Online'}
+                    </span>
                   </div>
                 </div>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
                 className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors"
+                type="button"
               >
                 ✕
               </button>
             </div>
 
             {/* Chat Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-black/50 to-transparent">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-black/50 to-transparent scroll-smooth">
               {messages.map((msg) => (
                 <div key={msg.id} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
 
@@ -160,7 +177,7 @@ const SobekChatbot: React.FC = () => {
               ))}
 
               {isThinking && (
-                <div className="flex items-start">
+                <div className="flex items-start opacity-70">
                   <div className="bg-[#1A1A1A] px-4 py-3 rounded-2xl rounded-bl-none border border-white/5 flex gap-1.5">
                     <span className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce [animation-delay:-0.3s]" />
                     <span className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce [animation-delay:-0.15s]" />
@@ -171,7 +188,7 @@ const SobekChatbot: React.FC = () => {
               <div ref={bottomRef} />
             </div>
 
-            {/* Input - ALWAYS ENABLED */}
+            {/* Input - ALWAYS ENABLED & INTERACTIVE */}
             <form onSubmit={handleSend} className="p-3 bg-[#111] border-t border-white/5 flex gap-2">
               <input
                 className="flex-1 bg-black border border-white/10 rounded-xl px-4 text-sm text-white focus:outline-none focus:border-amber-500/50 transition-colors placeholder:text-white/20"
@@ -179,11 +196,12 @@ const SobekChatbot: React.FC = () => {
                 value={inputValue}
                 onChange={e => setInputValue(e.target.value)}
                 autoFocus
+                disabled={false}  // NEVER DISABLE
               />
               <button
                 type="submit"
-                className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-black hover:bg-amber-400 active:scale-95 transition-all text-lg"
-                disabled={!inputValue.trim()}
+                className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-black hover:bg-amber-400 active:scale-95 transition-all text-lg disabled:opacity-50 disabled:grayscale"
+                disabled={!inputValue.trim()} // Only disable submit if empty, not if thinking
               >
                 ➤
               </button>
