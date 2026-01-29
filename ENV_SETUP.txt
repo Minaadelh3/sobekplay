@@ -1,0 +1,10 @@
+
+# 🔐 Environment Variables (DO NOT COMMIT)
+
+# 1. Create a file named ".env.local" in the root directory
+# 2. Add your Gemini API Key below:
+
+GEMINI_API_KEY=AIzaSy...YourKeyHere...
+
+# 3. Warning: NEVER paste this key in any frontend file!
+# 4. On Vercel Dashboard, go to Settings -> Environment Variables and add "GEMINI_API_KEY".

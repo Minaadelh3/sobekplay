@@ -1,65 +1,77 @@
+
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-/**
- * Sobek Play Chat API
- * Handles connection to Google Gemini AI
- */
+// Environment Check
+const API_KEY = process.env.GEMINI_API_KEY;
+
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
-  // GET: Health Check
-  if (req.method === "GET") {
-    return res.status(200).json({ status: "Sobek AI online" });
+  // CORS Handling (Optional for Vercel, but good for local/cross-origin safety)
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
   }
 
-  // POST: Chat Interaction
+  // GET: Health Check
+  if (req.method === "GET") {
+    return res.status(200).json({ status: "Sobek AI online", model: "gemini-1.5-pro" });
+  }
+
+  // POST: Chat Logic
   if (req.method === "POST") {
     try {
-      const { message } = req.body;
-
-      // Validate input - must be a string and exist
-      if (!message || typeof message !== "string") {
-        return res.status(400).json({ error: "Invalid request. Body must include { message: string }" });
-      }
-
-      // Security Check: API Key
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) {
-        console.error("CRITICAL: GEMINI_API_KEY is missing in environment variables.");
+      if (!API_KEY) {
+        console.error("SERVER_ERROR: GEMINI_API_KEY is missing");
         return res.status(500).json({ error: "Server Configuration Error" });
       }
 
+      const { message } = req.body;
+
+      if (!message || typeof message !== 'string') {
+        return res.status(400).json({ error: "Validation Error: 'message' must be a string." });
+      }
+
       // Initialize Gemini
-      const genAI = new GoogleGenerativeAI(apiKey);
+      const genAI = new GoogleGenerativeAI(API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
-      // System Persona
-      const systemInstruction = `You are Sobek AI, the friendly and witty concierge for Sobek Play (a cinematic streaming & gaming platform).
-      - Tone: Egyptian Arabic, friendly, slightly witty (like a helpful friend).
-      - Role: Help users find games, check trip program, or find their room assignment.
-      - If you don't know the answer, politely say you are still learning.
-      - Keep responses concise (under 200 chars if possible).
-      - Always respond in Arabic unless spoken to in English.`;
-
-      // Construct Prompt
-      const fullPrompt = `${systemInstruction}\n\nUser: ${message}\nSobek AI:`;
+      // System Prompts & Context
+      const systemPrompt = `
+        You are Sobek AI, the friendly, witty Egyptian assistant for "Sobek Play".
+        Your role is to help users navigate the app (games, trips, room allocation).
+        Tone: Egyptian slang (Franco-Arab or Arabic), funny, helpful, polite.
+        Instructions:
+        - Keep answers short (max 2-3 sentences).
+        - If asked about user status/room, ask for their name.
+        - If something is broken, joke about "the system being down".
+      `;
 
       // Generate Content
-      const result = await model.generateContent(fullPrompt);
+      const result = await model.generateContent(`${systemPrompt}\n\nUser: ${message}\nAssistant:`);
       const response = await result.response;
       const text = response.text();
 
-      // Return Valid JSON
+      if (!text) throw new Error("Empty response from AI");
+
       return res.status(200).json({ reply: text });
 
-    } catch (err: any) {
-      console.error("🔥 Chat API Error:", err);
-      return res.status(500).json({ error: "Internal Server Error", details: err.message });
+    } catch (error: any) {
+      console.error("GEMINI_API_ERROR:", error);
+
+      // Handle Google specific errors safely
+      const errorMessage = error.message?.includes("API_KEY")
+        ? "Invalid API Key Config"
+        : "AI Service Unavailable";
+
+      return res.status(500).json({ error: errorMessage });
     }
   }
 
-  // Method not allowed
-  return res.status(405).json({ error: "Method not allowed" });
+  return res.status(405).json({ error: "Method Not Allowed" });
 }

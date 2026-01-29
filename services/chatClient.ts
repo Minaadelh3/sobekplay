@@ -1,59 +1,48 @@
-// Types are defined locally to avoid circular dependencies
 
-// Redefine types to match Component usage
-export interface ChatSuggestion {
-    label: string;
-    actionType: 'NAVIGATE' | 'ROOM_LOOKUP' | 'OPEN_GAME' | 'OPEN_PROGRAM_DAY' | 'RESET_TAB' | 'CHANGE_NAME';
-    payload: any;
-}
+import { ChatSuggestion } from './roomsDirectory'; // Ensure simple import or define locally
 
+// Interfaces
 export interface ChatResponse {
     replyText: string;
-    suggestions: ChatSuggestion[];
+    suggestions: any[]; // Kept generic to avoid type conflicts
 }
 
+const API_ENDPOINT = "/api/chat";
+
 /**
- * Sends a message to the Sobek AI API.
- * Now simplified to send only the latest message string.
+ * Safe client to communicate with Serverless API.
+ * NEVER exposes API keys.
  */
 export const sendMessageToApi = async (messages: any[], currentGuestId: string | null): Promise<ChatResponse> => {
     try {
-        // Extract the last user message text
-        const lastUserMessage = messages[messages.length - 1];
-        if (!lastUserMessage || !lastUserMessage.content) {
-            throw new Error("No message content found to send.");
-        }
+        const lastMsg = messages[messages.length - 1];
+        if (!lastMsg?.content) throw new Error("Empty message");
 
-        const messageText = lastUserMessage.content;
-
-        const res = await fetch('/api/chat', {
-            method: 'POST',
+        const response = await fetch(API_ENDPOINT, {
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                "Content-Type": "application/json",
             },
-            body: JSON.stringify({ message: messageText })
+            body: JSON.stringify({ message: lastMsg.content }),
         });
 
-        if (!res.ok) {
-            const errData = await res.json().catch(() => ({}));
-            console.error("Global API Error:", res.status, errData);
-            throw new Error(errData.details || `Server Error (${res.status})`);
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || `Server Error ${response.status}`);
         }
 
-        const data = await res.json();
-
-        // Return in the format the UI expects
         return {
-            replyText: data.reply || "معلش، مفهمتش قصدك. ممكن توضح؟",
-            suggestions: [] // AI doesn't return suggestions yet, UI handles local ones
+            replyText: data.reply || "معلش، مفهمتش. ممكن تقول تاني؟",
+            suggestions: []
         };
 
-    } catch (err) {
-        console.error("Chat Client Failure:", err);
-        // Fallback for UI to prevent crash
+    } catch (error) {
+        console.error("CHAT_CLIENT_ERROR:", error);
+
+        // Friendly Arabic Fallback
         return {
-            replyText: "معلش السيرفر واقع دلوقتي 🐊.. جرب كمان شوية!",
+            replyText: "معلش يا كبير، الشبكة تعبانة شوية… جرّب تاني كمان شوية 👋",
             suggestions: []
         };
     }
