@@ -1,48 +1,55 @@
 
-import { ChatSuggestion } from './roomsDirectory'; // Ensure simple import or define locally
-
-// Interfaces
-export interface ChatResponse {
-    replyText: string;
-    suggestions: any[]; // Kept generic to avoid type conflicts
+// Types defined locally to prevent circular dependencies
+export interface ChatSuggestion {
+    label: string;
+    actionType: string;
+    payload: any;
 }
 
-const API_ENDPOINT = "/api/chat";
+export interface ChatResponse {
+    replyText: string;
+    suggestions: ChatSuggestion[];
+}
+
+const API_URL = '/api/chat';
 
 /**
- * Safe client to communicate with Serverless API.
- * NEVER exposes API keys.
+ * Secure Chat Client
+ * - Only sends POST
+ * - Never throws fatal UI errors
+ * - Provides Arabic fallback on failure
  */
 export const sendMessageToApi = async (messages: any[], currentGuestId: string | null): Promise<ChatResponse> => {
     try {
-        const lastMsg = messages[messages.length - 1];
-        if (!lastMsg?.content) throw new Error("Empty message");
+        const lastMessage = messages[messages.length - 1];
+        if (!lastMessage?.content) return { replyText: "...", suggestions: [] };
 
-        const response = await fetch(API_ENDPOINT, {
-            method: "POST",
+        const response = await fetch(API_URL, {
+            method: 'POST',
             headers: {
-                "Content-Type": "application/json",
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
-            body: JSON.stringify({ message: lastMsg.content }),
+            body: JSON.stringify({ message: lastMessage.content })
         });
 
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.error || `Server Error ${response.status}`);
+            throw new Error(data.error || `Error ${response.status}`);
         }
 
         return {
-            replyText: data.reply || "معلش، مفهمتش. ممكن تقول تاني؟",
+            replyText: data.reply || "تمام يا غالي!",
             suggestions: []
         };
 
     } catch (error) {
-        console.error("CHAT_CLIENT_ERROR:", error);
+        console.error("Chat Client Error:", error);
 
-        // Friendly Arabic Fallback
+        // GRACEFUL FALLBACK - NO CRASH
         return {
-            replyText: "معلش يا كبير، الشبكة تعبانة شوية… جرّب تاني كمان شوية 👋",
+            replyText: "معلش الشبكة مش تمام دلوقتي.. جرب تاني كمان شوية! �",
             suggestions: []
         };
     }

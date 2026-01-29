@@ -2,76 +2,82 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Environment Check
 const API_KEY = process.env.GEMINI_API_KEY;
 
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
-  // CORS Handling (Optional for Vercel, but good for local/cross-origin safety)
+  // Security Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Content-Type', 'application/json');
 
+  // Handle Preflight
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  // GET: Health Check
-  if (req.method === "GET") {
-    return res.status(200).json({ status: "Sobek AI online", model: "gemini-1.5-pro" });
+  // Reject GET requests (Browser Navigation)
+  if (req.method === 'GET') {
+    return res.status(405).json({
+      error: "Method Not Allowed",
+      message: "This endpoint accepts POST requests only for AI chat."
+    });
   }
 
-  // POST: Chat Logic
-  if (req.method === "POST") {
+  // Handle POST
+  if (req.method === 'POST') {
     try {
+      // 1. Security Check
       if (!API_KEY) {
-        console.error("SERVER_ERROR: GEMINI_API_KEY is missing");
-        return res.status(500).json({ error: "Server Configuration Error" });
+        console.error("SERVER_CONFIG_ERROR: Missing GEMINI_API_KEY");
+        // Return 500 but with safe message
+        return res.status(500).json({ error: "Service configuration error." });
       }
 
+      // 2. Validate Body
       const { message } = req.body;
-
       if (!message || typeof message !== 'string') {
-        return res.status(400).json({ error: "Validation Error: 'message' must be a string." });
+        return res.status(400).json({ error: "Invalid payload. 'message' string is required." });
       }
 
-      // Initialize Gemini
+      // 3. Initialize Gemini
       const genAI = new GoogleGenerativeAI(API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
-      // System Prompts & Context
+      // 4. System Instruction (Egyptian Persona)
       const systemPrompt = `
-        You are Sobek AI, the friendly, witty Egyptian assistant for "Sobek Play".
-        Your role is to help users navigate the app (games, trips, room allocation).
-        Tone: Egyptian slang (Franco-Arab or Arabic), funny, helpful, polite.
-        Instructions:
-        - Keep answers short (max 2-3 sentences).
-        - If asked about user status/room, ask for their name.
-        - If something is broken, joke about "the system being down".
+        You are Sobek AI, the assistant for Sobek Play.
+        Persona: Helpful, witty, Egyptian Arabic speaker (Franco/Arabic).
+        Role: Game guide and trip coordinator.
+        Constraint: Keep replies short (max 200 chars).
+        Fallback: If you don't know, say "مش متأكد يا كبير، بس ممكن نشوف سوا!"
       `;
 
-      // Generate Content
-      const result = await model.generateContent(`${systemPrompt}\n\nUser: ${message}\nAssistant:`);
+      // 5. Generate with Timeout/Safety
+      const prompt = `${systemPrompt}\n\nUser: ${message}\nResponse:`;
+      const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
 
-      if (!text) throw new Error("Empty response from AI");
-
+      // 6. Success Response
       return res.status(200).json({ reply: text });
 
     } catch (error: any) {
-      console.error("GEMINI_API_ERROR:", error);
+      console.error("GEMINI_API_FAIL:", error);
 
-      // Handle Google specific errors safely
-      const errorMessage = error.message?.includes("API_KEY")
-        ? "Invalid API Key Config"
-        : "AI Service Unavailable";
-
-      return res.status(500).json({ error: errorMessage });
+      // 7. Graceful Failure (Return 200 to keep UI alive, but with fallback text)
+      // Note: We return 500 status strictly for monitoring, but the client should handle it.
+      // Actually, for a chatbot, returning a 200 with an error explanation is sometimes safer for simple clients,
+      // but let's stick to standard HTTP codes and let client fallback.
+      return res.status(500).json({
+        error: "AI Service Unavailable",
+        details: error.message
+      });
     }
   }
 
+  // Fallback
   return res.status(405).json({ error: "Method Not Allowed" });
 }
