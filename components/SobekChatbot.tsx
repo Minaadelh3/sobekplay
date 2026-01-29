@@ -84,7 +84,7 @@ const SobekChatbot: React.FC<SobekChatbotProps> = ({ isHidden = false }) => {
           setIsTyping(true);
           setTimeout(() => {
             addBotMessage(
-              `أنت منورنا يا ${result.assignment!.personName.split(' ')[0]}! دي بياناتك:`,
+              `أنت منورنا يا ${result.assignment!.personName?.split(' ')[0] || 'صديقي'}! دي بياناتك:`,
               getContextualSuggestions(true),
               'room_result',
               { assignment: result.assignment, roommates: getRoommates(result.assignment!) }
@@ -127,7 +127,7 @@ const SobekChatbot: React.FC<SobekChatbotProps> = ({ isHidden = false }) => {
       setIsTyping(true);
       setTimeout(() => {
         addBotMessage(
-          `أهلاً يا ${result.assignment!.personName.split(' ')[0]}! لقيت مكانك:`,
+          `أهلاً يا ${result.assignment!.personName?.split(' ')[0] || 'يا جميل'}! لقيت مكانك:`,
           getContextualSuggestions(true),
           'room_result',
           { assignment: result.assignment, roommates: getRoommates(result.assignment!) }
