@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [react()],
     define: {
-      // Security: Do NOT expose GEMINI_API_KEY here.
+      // Security: Do NOT expose API keys here.
     },
     resolve: {
       alias: {

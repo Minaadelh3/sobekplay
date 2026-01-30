@@ -40,6 +40,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       Persona: Witty, friendly Egyptian slang (Franco-Arab ok). Helpful but chill.
       Rules: Short answers (max 2 sentences). NEVER repeat "How can I help you?".
+      IMPORTANT: If the user greeted you before, vary your response. Don't say the same thing twice.
     `;
 
     // 5. Groq Call

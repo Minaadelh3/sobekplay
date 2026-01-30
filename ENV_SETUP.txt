@@ -2,9 +2,7 @@
 # 🔐 Environment Variables (DO NOT COMMIT)
 
 # 1. Create a file named ".env.local" in the root directory
-# 2. Add your Gemini API Key below:
+# 2. Add your AI API Key below:
+GROQ_API_KEY=gsk_...
 
-GEMINI_API_KEY=AIzaSy...YourKeyHere...
-
-# 3. Warning: NEVER paste this key in any frontend file!
-# 4. On Vercel Dashboard, go to Settings -> Environment Variables and add "GEMINI_API_KEY".
+# 4. On Vercel Dashboard, go to Settings -> Environment Variables and add "GROQ_API_KEY".

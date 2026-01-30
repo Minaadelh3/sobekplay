@@ -618,28 +618,33 @@ const PrayersPage: React.FC = () => {
 
             const trimLine = line.trim();
 
-            // Define headers clearly
+            // Define headers with icons
             if (trimLine.includes('مقدمة') || trimLine.includes('بدء الصلاة')) {
               elementId = `${prayerId}-intro`;
               isHeader = true;
-              extraClasses = 'text-accent-gold text-xl md:text-2xl mt-8 mb-4 border-b border-white/10 pb-2';
+              extraClasses = 'text-accent-gold text-xl md:text-2xl mt-8 mb-4 border-b border-white/10 pb-2 flex items-center gap-2';
+              line = `✝️ ${line}`;
             } else if (trimLine.includes('المزمور')) {
               psalmCount++;
               elementId = `${prayerId}-psalm-${psalmCount}`;
               isHeader = true;
-              extraClasses = 'text-accent-blue text-lg md:text-xl mt-6 mb-2 font-bold';
+              extraClasses = 'text-accent-blue text-lg md:text-xl mt-6 mb-2 font-bold flex items-center gap-2';
+              line = `📜 ${line}`;
             } else if (trimLine.includes('الإنجيل') || trimLine.includes('إنجيل')) {
               elementId = `${prayerId}-gospel`;
               isHeader = true;
-              extraClasses = 'text-accent-green text-xl md:text-2xl mt-8 mb-4 border-b border-white/10 pb-2';
+              extraClasses = 'text-accent-green text-xl md:text-2xl mt-8 mb-4 border-b border-white/10 pb-2 flex items-center gap-2';
+              line = `📖 ${line}`;
             } else if (trimLine.includes('القطع')) {
               elementId = `${prayerId}-litanies`;
               isHeader = true;
-              extraClasses = 'text-accent-gold text-xl md:text-2xl mt-8 mb-4';
+              extraClasses = 'text-accent-gold text-xl md:text-2xl mt-8 mb-4 flex items-center gap-2';
+              line = `🕯️ ${line}`;
             } else if (trimLine.includes('التحليل')) {
               elementId = `${prayerId}-absolution`;
               isHeader = true;
-              extraClasses = 'text-accent-gold text-xl md:text-2xl mt-8 mb-4';
+              extraClasses = 'text-accent-gold text-xl md:text-2xl mt-8 mb-4 flex items-center gap-2';
+              line = `🙏 ${line}`;
             } else if (trimLine.includes('طلبة')) {
               elementId = `${prayerId}-request`;
               isHeader = true;

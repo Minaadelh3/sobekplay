@@ -73,7 +73,7 @@ const TitleDetails: React.FC<TitleDetailsProps> = ({ posters }) => {
 
       <BackButton />
 
-      <div className="absolute inset-0 h-[70vh]">
+      <div className="absolute inset-0 h-[70vh] pointer-events-none select-none">
 
 
         <ImageWithFallback src={poster.src} alt="" className="w-full h-full object-cover blur-sm opacity-30" />
