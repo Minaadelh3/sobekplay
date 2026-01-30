@@ -33,6 +33,8 @@ import MenuPage from './pages/MenuPage';
 import MyListPage from './pages/MyListPage';
 import GamesPage from './pages/GamesPage';
 import RemindersPage from './pages/RemindersPage';
+import SmartGamesPage from './pages/SmartGamesPage';
+import SmartGameLevel from './pages/SmartGameLevel';
 import { motion } from 'framer-motion';
 import SobekChatbot from './components/SobekChatbot';
 import ScrollToTop from './components/ScrollToTop';
@@ -198,6 +200,10 @@ const MainLayout: React.FC = () => {
           <Route path="/art" element={<ImageGenPage />} />
           <Route path="/veo" element={<VeoPage />} />
           <Route path="/menu" element={<MenuPage />} />
+
+          {/* Smart Games Expansion */}
+          <Route path="/smart-games" element={<SmartGamesPage />} />
+          <Route path="/smart-games/:id" element={<SmartGameLevel />} />
         </Routes>
       </main>
 

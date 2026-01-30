@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTabReset } from '../hooks/useTabReset';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { BackButton } from '../components/BackButton';
+import BackButton from '../components/BackButton';
 
 // Game Components
 import { StoryGame } from '../components/StoryGame';
@@ -320,6 +320,44 @@ export const GamesPage: React.FC = () => {
                         إيه ده؟ نلعب إيه الأول؟!
                     </p>
                 </motion.div>
+            </div>
+
+            {/* --- SMART GAMES PROMO --- */}
+            <div className="max-w-7xl mx-auto px-6 mb-12">
+                <motion.button
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => navigate('/smart-games')}
+                    className="w-full relative overflow-hidden rounded-[2rem] bg-gradient-to-r from-indigo-900 to-purple-900 border border-indigo-500/30 p-8 md:p-12 text-right group shadow-2xl"
+                >
+                    {/* Background Pattern */}
+                    <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
+                    <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-indigo-500 rounded-full blur-[100px] opacity-30 group-hover:opacity-50 transition-opacity" />
+
+                    <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div className="flex-1 order-2 md:order-1">
+                            <div className="inline-flex items-center gap-2 bg-indigo-500/20 text-indigo-300 px-4 py-1.5 rounded-full text-sm font-bold mb-4 border border-indigo-500/30">
+                                <span className="animate-pulse">✨</span>
+                                <span>جديد</span>
+                            </div>
+                            <h2 className="text-3xl md:text-5xl font-black text-white mb-2 leading-tight">
+                                ذكاء سوبِك
+                            </h2>
+                            <p className="text-indigo-200 text-lg md:text-xl font-bold mb-6 max-w-lg">
+                                ١٥ لغز وتحدي للعباقرة بس. قصص بوليسية، أسئلة ذكاء، وألغاز هتشغل دماغك.
+                            </p>
+                            <div className="inline-flex items-center gap-2 text-white font-black bg-indigo-600 hover:bg-indigo-500 px-8 py-4 rounded-xl transition-colors shadow-lg shadow-indigo-600/30">
+                                العب دلوقتي
+                                <svg className="w-6 h-6 rotate-180" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                            </div>
+                        </div>
+                        <div className="order-1 md:order-2 text-8xl md:text-9xl filter drop-shadow-[0_0_30px_rgba(99,102,241,0.5)] animate-float">
+                            🧠
+                        </div>
+                    </div>
+                </motion.button>
             </div>
 
             {/* Games Grid */}

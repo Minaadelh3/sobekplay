@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTabReset } from '../hooks/useTabReset';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BackButton } from '../components/BackButton';
+import BackButton from '../components/BackButton';
 
 // --- ICONS ---
 const BackIcon = () => (

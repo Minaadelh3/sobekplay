@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BackButton } from '../components/BackButton';
+import BackButton from '../components/BackButton';
 
 // --- ICONS ---
 const PlayIcon = () => (

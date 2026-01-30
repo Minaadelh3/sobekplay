@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTabReset } from '../hooks/useTabReset';
 import { motion } from 'framer-motion';
-import { BackButton } from '../components/BackButton';
+import BackButton from '../components/BackButton';
 
 const TripAnthem: React.FC = () => {
   // Animation for verses

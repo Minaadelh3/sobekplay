@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { PosterItem } from '../types';
 import ImageWithFallback from '../components/ImageWithFallback';
 import FeedbackSection from '../components/FeedbackSection';
+import BackButton from '../components/BackButton';
 import { supabase } from '../supabaseClient';
 
 interface TitleDetailsProps {
@@ -67,8 +68,14 @@ const TitleDetails: React.FC<TitleDetailsProps> = ({ posters }) => {
   }
 
   return (
+
     <div className="relative min-h-screen bg-nearblack selection:bg-accent-green">
+
+      <BackButton />
+
       <div className="absolute inset-0 h-[70vh]">
+
+
         <ImageWithFallback src={poster.src} alt="" className="w-full h-full object-cover blur-sm opacity-30" />
         <div className="absolute inset-0 bg-gradient-to-t from-nearblack via-nearblack/80 to-transparent" />
       </div>

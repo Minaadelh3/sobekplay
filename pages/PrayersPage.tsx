@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useTabReset } from '../hooks/useTabReset';
 import { motion, AnimatePresence } from 'framer-motion';
+import AgpeyaQuickNav from '../components/AgpeyaQuickNav';
 
 const PrayersPage: React.FC = () => {
   const [openSection, setOpenSection] = useState<string | null>(null);
@@ -585,7 +586,10 @@ const PrayersPage: React.FC = () => {
     }
   };
 
-  // Content Renderer with Auto-Anchors
+
+
+
+  // Helper inside PrayersPage
   const renderPrayerContent = (content: string, prayerId: string) => {
     if (!content) return (
       <div className="w-full flex flex-col items-center justify-center py-12 text-white/20">
@@ -599,59 +603,66 @@ const PrayersPage: React.FC = () => {
     let psalmCount = 0;
 
     return (
-      <div className="space-y-6 text-white/90 font-medium dir-rtl">
-        {lines.map((line, index) => {
-          // Identify headers for navigation targets
-          let elementId = '';
-          let isHeader = false;
-          let extraClasses = '';
+      <div className="relative">
+        {/* Sticky Quick Nav */}
+        <AgpeyaQuickNav prayerId={prayerId} />
 
-          const trimLine = line.trim();
+        {/* Content Wrapper */}
+        <div className="space-y-6 text-white/90 font-medium dir-rtl">
 
-          // Define headers clearly
-          if (trimLine.includes('مقدمة') || trimLine.includes('بدء الصلاة')) {
-            elementId = `${prayerId}-intro`;
-            isHeader = true;
-            extraClasses = 'text-accent-gold text-xl md:text-2xl mt-8 mb-4 border-b border-white/10 pb-2';
-          } else if (trimLine.includes('المزمور')) {
-            psalmCount++;
-            elementId = `${prayerId}-psalm-${psalmCount}`;
-            isHeader = true;
-            extraClasses = 'text-accent-blue text-lg md:text-xl mt-6 mb-2 font-bold';
-          } else if (trimLine.includes('الإنجيل') || trimLine.includes('إنجيل')) {
-            elementId = `${prayerId}-gospel`;
-            isHeader = true;
-            extraClasses = 'text-accent-green text-xl md:text-2xl mt-8 mb-4 border-b border-white/10 pb-2';
-          } else if (trimLine.includes('القطع')) {
-            elementId = `${prayerId}-litanies`;
-            isHeader = true;
-            extraClasses = 'text-accent-gold text-xl md:text-2xl mt-8 mb-4';
-          } else if (trimLine.includes('التحليل')) {
-            elementId = `${prayerId}-absolution`;
-            isHeader = true;
-            extraClasses = 'text-accent-gold text-xl md:text-2xl mt-8 mb-4';
-          } else if (trimLine.includes('طلبة')) {
-            elementId = `${prayerId}-request`;
-            isHeader = true;
-            extraClasses = 'text-accent-gold text-xl md:text-2xl mt-8 mb-4';
-          } else if (trimLine.includes('كيريى ليسون')) {
-            extraClasses = 'text-accent-gold/70 text-center font-bold my-4';
-          }
+          {lines.map((line, index) => {
+            // Identify headers for navigation targets
+            let elementId = '';
+            let isHeader = false;
+            let extraClasses = '';
 
-          if (isHeader) {
+            const trimLine = line.trim();
+
+            // Define headers clearly
+            if (trimLine.includes('مقدمة') || trimLine.includes('بدء الصلاة')) {
+              elementId = `${prayerId}-intro`;
+              isHeader = true;
+              extraClasses = 'text-accent-gold text-xl md:text-2xl mt-8 mb-4 border-b border-white/10 pb-2';
+            } else if (trimLine.includes('المزمور')) {
+              psalmCount++;
+              elementId = `${prayerId}-psalm-${psalmCount}`;
+              isHeader = true;
+              extraClasses = 'text-accent-blue text-lg md:text-xl mt-6 mb-2 font-bold';
+            } else if (trimLine.includes('الإنجيل') || trimLine.includes('إنجيل')) {
+              elementId = `${prayerId}-gospel`;
+              isHeader = true;
+              extraClasses = 'text-accent-green text-xl md:text-2xl mt-8 mb-4 border-b border-white/10 pb-2';
+            } else if (trimLine.includes('القطع')) {
+              elementId = `${prayerId}-litanies`;
+              isHeader = true;
+              extraClasses = 'text-accent-gold text-xl md:text-2xl mt-8 mb-4';
+            } else if (trimLine.includes('التحليل')) {
+              elementId = `${prayerId}-absolution`;
+              isHeader = true;
+              extraClasses = 'text-accent-gold text-xl md:text-2xl mt-8 mb-4';
+            } else if (trimLine.includes('طلبة')) {
+              elementId = `${prayerId}-request`;
+              isHeader = true;
+              extraClasses = 'text-accent-gold text-xl md:text-2xl mt-8 mb-4';
+            } else if (trimLine.includes('كيريى ليسون')) {
+              extraClasses = 'text-accent-gold/70 text-center font-bold my-4';
+            }
+
+            if (isHeader) {
+              return (
+                <h3 key={index} id={elementId} className={`font-serif ${extraClasses}`}>
+                  {line}
+                </h3>
+              );
+            }
+
             return (
-              <h3 key={index} id={elementId} className={`font-serif ${extraClasses}`}>
+              <p key={index} className={`whitespace-pre-line leading-loose text-lg md:text-xl ${extraClasses}`}>
                 {line}
-              </h3>
+              </p>
             );
-          }
-
-          return (
-            <p key={index} className={`whitespace-pre-line leading-loose text-lg md:text-xl ${extraClasses}`}>
-              {line}
-            </p>
-          );
-        })}
+          })}
+        </div>
       </div>
     );
   };
