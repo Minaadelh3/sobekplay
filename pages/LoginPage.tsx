@@ -167,6 +167,14 @@ export default function LoginPage() {
                     Powered by Sobek Play
                 </p>
             </div>
+
+            {/* DEBUG OVERLAY (Temporary) */}
+            <div className="absolute top-0 left-0 p-2 text-[10px] text-green-400 bg-black/80 max-w-[200px] z-[100] pointer-events-none font-mono">
+                <p>Debug Status v3:</p>
+                <p>UA: {navigator.userAgent.slice(0, 30)}...</p>
+                <p>Localhost: {window.location.hostname.includes('192') || window.location.hostname.includes('local') ? 'Yes' : 'No'}</p>
+                <p>Protocol: {window.location.protocol}</p>
+            </div>
         </div>
     );
 }
