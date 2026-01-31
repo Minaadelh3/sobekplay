@@ -77,19 +77,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         handleGoogleRedirectResult().catch((err) => console.error("Google Redirect Error", err));
     }, []);
 
-    // 1. Global Auth Listener
+    // --- 1. INITIAL LOAD ---
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            if (currentUser) {
-                setFirebaseUser(currentUser);
+        if (!auth) {
+            console.error("⛔ CRITICAL: Firebase Auth ID not initialized. Check Env Vars.");
+            setLoading(false);
+            return;
+        }
+
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            if (firebaseUser) {
+                setFirebaseUser(firebaseUser);
 
                 // Basic User Mapping
+                // Basic User Mapping
                 setUser({
-                    id: currentUser.uid,
-                    name: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
-                    email: currentUser.email || "",
+                    id: firebaseUser.uid,
+                    name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+                    email: firebaseUser.email || "",
                     role: 'USER', // Role now determined by Active Team (Uncle Joy)
-                    avatar: currentUser.photoURL || 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png'
+                    avatar: firebaseUser.photoURL || 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png'
                 });
 
             } else {
