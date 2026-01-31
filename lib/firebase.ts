@@ -30,14 +30,14 @@ export const missingKeys = Object.entries(firebaseConfig)
     .filter(([key, value]) => !value && key !== 'measurementId') // measurementId is optional
     .map(([key]) => key);
 
-const isConfigValid = missingKeys.length === 0;
+export const isFirebaseConfigValid = missingKeys.length === 0;
 
 // --- 2. SINGLETON INITIALIZATION ---
 let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 
-if (isConfigValid) {
+if (isFirebaseConfigValid) {
     try {
         // Idempotent check: strictly prevent double-initialization
         // This is crucial in strict mode / hot-reload environments
