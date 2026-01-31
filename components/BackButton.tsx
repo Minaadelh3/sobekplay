@@ -7,7 +7,7 @@ interface BackButtonProps {
 }
 
 const BackButton: React.FC<BackButtonProps> = ({
-    fallbackPath = '/movies',
+    fallbackPath = '/app/movies',
     className = ''
 }) => {
     const navigate = useNavigate();

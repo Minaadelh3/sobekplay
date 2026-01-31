@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../config/firebase';
-import { 
-  collection, 
-  addDoc, 
-  query, 
-  where, 
-  orderBy, 
-  onSnapshot, 
+import { db } from '../lib/firebase';
+import {
+  collection,
+  addDoc,
+  query,
+  where,
+  orderBy,
+  onSnapshot,
   serverTimestamp,
   updateDoc,
   doc,
@@ -70,7 +70,7 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
+
     if (!userName.trim() || !commentText.trim()) {
       setError('Please fill in both name and comment.');
       return;
@@ -159,17 +159,16 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
             />
           </div>
         </div>
-        
+
         <div className="flex justify-between items-center">
           <p className="text-red-400 text-sm h-5">{error}</p>
           <button
             type="submit"
             disabled={isSubmitting}
-            className={`px-8 py-2 rounded-lg font-bold transition-all flex items-center gap-2 ${
-              isSubmitting 
-                ? 'bg-white/10 text-white/50 cursor-not-allowed' 
+            className={`px-8 py-2 rounded-lg font-bold transition-all flex items-center gap-2 ${isSubmitting
+                ? 'bg-white/10 text-white/50 cursor-not-allowed'
                 : 'bg-accent-green text-white hover:bg-opacity-90'
-            }`}
+              }`}
           >
             {isSubmitting ? 'Posting...' : 'Post Comment'}
           </button>
@@ -206,28 +205,28 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
 
               {/* Reactions */}
               <div className="flex gap-4 pl-11">
-                <button 
+                <button
                   onClick={() => handleReaction(comment.id, 'like')}
                   className="flex items-center gap-1.5 text-xs font-medium text-muted hover:text-white transition-colors bg-white/5 px-2 py-1 rounded-md hover:bg-white/10"
                 >
                   <span>👍</span>
                   <span>{comment.reactions?.like || 0}</span>
                 </button>
-                <button 
+                <button
                   onClick={() => handleReaction(comment.id, 'love')}
                   className="flex items-center gap-1.5 text-xs font-medium text-muted hover:text-pink-400 transition-colors bg-white/5 px-2 py-1 rounded-md hover:bg-white/10"
                 >
                   <span>❤️</span>
                   <span>{comment.reactions?.love || 0}</span>
                 </button>
-                <button 
+                <button
                   onClick={() => handleReaction(comment.id, 'funny')}
                   className="flex items-center gap-1.5 text-xs font-medium text-muted hover:text-yellow-400 transition-colors bg-white/5 px-2 py-1 rounded-md hover:bg-white/10"
                 >
                   <span>😂</span>
                   <span>{comment.reactions?.funny || 0}</span>
                 </button>
-                <button 
+                <button
                   onClick={() => handleReaction(comment.id, 'crocodile')}
                   className="flex items-center gap-1.5 text-xs font-medium text-muted hover:text-green-400 transition-colors bg-white/5 px-2 py-1 rounded-md hover:bg-white/10"
                 >
@@ -238,7 +237,7 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
             </motion.div>
           ))}
         </AnimatePresence>
-        
+
         {comments.length === 0 && (
           <div className="text-center py-12 text-muted/40">
             <p>No comments yet. Be the first to share your thoughts!</p>

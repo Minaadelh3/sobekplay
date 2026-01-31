@@ -7,9 +7,11 @@ import AgpeyaQuickNav from '../components/AgpeyaQuickNav';
 const PrayersPage: React.FC = () => {
   const [openSection, setOpenSection] = useState<string | null>(null);
 
-  useTabReset('/prayers', () => {
+  const handleTabReset = React.useCallback(() => {
     setOpenSection(null);
-  });
+  }, []);
+
+  useTabReset('/prayers', handleTabReset);
 
   const toggleSection = (id: string) => {
     setOpenSection(openSection === id ? null : id);

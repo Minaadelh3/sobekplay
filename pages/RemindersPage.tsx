@@ -218,10 +218,12 @@ export const RemindersPage: React.FC = () => {
     const [level3, setLevel3] = useState<number | null>(null); // Day ID (1-4)
 
     // Reset Logic
-    useTabReset('/reminders', () => {
+    const handleTabReset = React.useCallback(() => {
         setLevel2(null);
         setLevel3(null);
-    });
+    }, []);
+
+    useTabReset('/reminders', handleTabReset);
 
     // Handlers
     const goBack = () => {

@@ -6,7 +6,7 @@ import { PosterItem } from '../types';
 import ImageWithFallback from '../components/ImageWithFallback';
 import FeedbackSection from '../components/FeedbackSection';
 import BackButton from '../components/BackButton';
-import { supabase } from '../supabaseClient';
+import { useAuth } from '../context/AuthContext';
 
 interface TitleDetailsProps {
   posters: PosterItem[];
@@ -16,49 +16,50 @@ const TitleDetails: React.FC<TitleDetailsProps> = ({ posters }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [inList, setInList] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const { user } = useAuth(); // Use Firebase Auth
 
   const poster = posters.find(p => p.id === id);
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
-  }, []);
-
+  // Load Watchlist State (Local Storage for Stability)
   useEffect(() => {
     if (!poster) return;
-    const checkList = async () => {
-      if (!user) {
-        const local = JSON.parse(localStorage.getItem('sobek_guest_list') || '[]');
-        setInList(local.includes(poster.id));
-        return;
-      }
-      const { data } = await supabase.from('watchlist').select('id').eq('user_id', user.id).eq('content_id', poster.id);
-      setInList(!!data && data.length > 0);
-    };
-    checkList();
-  }, [user, poster]);
+    const local = JSON.parse(localStorage.getItem('sobek_watchlist') || '[]');
+    setInList(local.includes(poster.id));
+  }, [poster, user]); // Re-run on user change, though basic logic relies on local for now
 
-  const toggleWatchlist = async () => {
+  const toggleWatchlist = () => {
     if (!poster) return;
-    if (!user) {
-      const local = JSON.parse(localStorage.getItem('sobek_guest_list') || '[]');
-      const newList = inList ? local.filter((lid: string) => lid !== poster.id) : [...local, poster.id];
-      localStorage.setItem('sobek_guest_list', JSON.stringify(newList));
-      setInList(!inList);
-      return;
-    }
-
+    const local = JSON.parse(localStorage.getItem('sobek_watchlist') || '[]');
+    let newList;
     if (inList) {
-      await supabase.from('watchlist').delete().eq('user_id', user.id).eq('content_id', poster.id);
+      newList = local.filter((lid: string) => lid !== poster.id);
     } else {
-      await supabase.from('watchlist').insert({ user_id: user.id, content_id: poster.id });
+      newList = [...local, poster.id];
     }
+    localStorage.setItem('sobek_watchlist', JSON.stringify(newList));
     setInList(!inList);
   };
 
-  if (!poster) return <div className="min-h-screen bg-nearblack pt-32 text-center text-white font-bold">Title not found</div>;
+  // 1. Guard against undefined poster
+  if (!poster) {
+    // If not found, maybe loading? Or actually not found.
+    // Show a graceful fallback.
+    return (
+      <div className="min-h-screen bg-nearblack flex flex-col items-center justify-center text-white">
+        <h1 className="text-3xl font-bold mb-4">Title Not Found</h1>
+        <p className="text-muted mb-8">We couldn't find the movie or show you're looking for.</p>
+        <button
+          onClick={() => navigate('/app/home')}
+          className="bg-accent-green px-6 py-3 rounded-full font-bold hover:brightness-110 transition"
+        >
+          Back to Home
+        </button>
+      </div>
+    );
+  }
 
-  const tags = [];
+  // 2. Safe Tag Generation
+  const tags: string[] = [];
   if (poster.metrics) {
     if (poster.metrics.brightness > 0.6) tags.push("Vivid");
     if (poster.metrics.brightness < 0.4) tags.push("Gritty");
@@ -68,14 +69,11 @@ const TitleDetails: React.FC<TitleDetailsProps> = ({ posters }) => {
   }
 
   return (
-
     <div className="relative min-h-screen bg-nearblack selection:bg-accent-green">
 
       <BackButton />
 
       <div className="absolute inset-0 h-[70vh] pointer-events-none select-none">
-
-
         <ImageWithFallback src={poster.src} alt="" className="w-full h-full object-cover blur-sm opacity-30" />
         <div className="absolute inset-0 bg-gradient-to-t from-nearblack via-nearblack/80 to-transparent" />
       </div>
@@ -114,7 +112,7 @@ const TitleDetails: React.FC<TitleDetailsProps> = ({ posters }) => {
 
             <div className="flex flex-wrap gap-4 pt-4">
               <button
-                onClick={() => navigate(`/watch/${poster.id}`)}
+                onClick={() => navigate(`/app/watch/${poster.id}`)}
                 className="bg-white text-black px-12 py-5 rounded-xl font-black text-xl hover:brightness-90 transition-all shadow-2xl flex items-center space-x-3 active:scale-95"
               >
                 <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
@@ -127,12 +125,6 @@ const TitleDetails: React.FC<TitleDetailsProps> = ({ posters }) => {
               >
                 {inList ? <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" /></svg> : <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>}
                 <span>My List</span>
-              </button>
-
-              <button className="p-5 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all text-white active:scale-95">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                </svg>
               </button>
             </div>
           </motion.div>

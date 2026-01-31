@@ -1,8 +1,10 @@
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
+import GlobalErrorBoundary from './components/GlobalErrorBoundary';
+import { EnvValidator } from './components/EnvValidator';
+
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -12,6 +14,10 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <App />
+    <GlobalErrorBoundary>
+      <EnvValidator>
+        <App />
+      </EnvValidator>
+    </GlobalErrorBoundary>
   </React.StrictMode>
 );

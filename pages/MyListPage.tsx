@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { PosterItem } from '../types';
 import PosterCard from '../components/PosterCard';
-import { supabase } from '../supabaseClient';
 import { Link } from 'react-router-dom';
 
 interface MyListPageProps {
@@ -15,28 +14,10 @@ const MyListPage: React.FC<MyListPageProps> = ({ posters }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchWatchlist = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        // Fallback to local storage for guest users to remain "functional"
-        const local = JSON.parse(localStorage.getItem('sobek_guest_list') || '[]');
-        setWatchlistIds(local);
-        setLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('watchlist')
-        .select('content_id')
-        .eq('user_id', user.id);
-
-      if (!error && data) {
-        setWatchlistIds(data.map(item => item.content_id));
-      }
-      setLoading(false);
-    };
-
-    fetchWatchlist();
+    // Read directly from Local Storage (Stability fallback)
+    const local = JSON.parse(localStorage.getItem('sobek_watchlist') || '[]');
+    setWatchlistIds(local);
+    setLoading(false);
   }, []);
 
   const savedPosters = posters.filter(p => watchlistIds.includes(p.id));
@@ -67,7 +48,7 @@ const MyListPage: React.FC<MyListPageProps> = ({ posters }) => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-32 bg-charcoal/30 rounded-[40px] border border-white/5">
+          <div className="text-center py-32 bg-[#121212]/30 rounded-[40px] border border-white/5">
             <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
               <svg className="w-10 h-10 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -75,7 +56,7 @@ const MyListPage: React.FC<MyListPageProps> = ({ posters }) => {
             </div>
             <h2 className="text-2xl font-bold text-muted mb-4">Your list is empty</h2>
             <p className="text-muted/60 mb-8 max-w-sm mx-auto">Start adding movies and series to your list to keep track of what you want to watch.</p>
-            <Link to="/movies" className="inline-block bg-accent-green text-white px-8 py-3 rounded-xl font-bold hover:brightness-110 transition-all">
+            <Link to="/app/movies" className="inline-block bg-accent-green text-white px-8 py-3 rounded-xl font-bold hover:brightness-110 transition-all">
               Browse Movies
             </Link>
           </div>

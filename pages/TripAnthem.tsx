@@ -27,9 +27,11 @@ const TripAnthem: React.FC = () => {
 
   // Reset Logic for Replaying Animations
   const [resetKey, setResetKey] = React.useState(0);
-  useTabReset('/she3ar-al-re7la', () => {
+  const handleTabReset = React.useCallback(() => {
     setResetKey(prev => prev + 1);
-  });
+  }, []);
+
+  useTabReset('/she3ar-al-re7la', handleTabReset);
 
   return (
     <div key={resetKey} className="min-h-screen bg-[#050505] text-white font-arabic safe-area-pb selection:bg-amber-500/30 overflow-hidden flex flex-col relative" dir="rtl">

@@ -44,6 +44,7 @@ interface GameDef {
         howTo: string[];
     };
     isHeavy: boolean;
+    requiredPoints: number;
 }
 
 export const GAMES_CATALOG: GameDef[] = [
@@ -55,6 +56,7 @@ export const GAMES_CATALOG: GameDef[] = [
         gradient: "from-yellow-400 via-yellow-500 to-orange-500",
         shadow: "shadow-yellow-500/40",
         isHeavy: false,
+        requiredPoints: 0,
         details: {
             intro: "لعبة كلاسيكية بس بلمسة مصرية. هتقدر توصل المعنى من غير ولا كلمة؟",
             players: "كتييير",
@@ -70,6 +72,7 @@ export const GAMES_CATALOG: GameDef[] = [
         gradient: "from-rose-500 via-red-500 to-red-600",
         shadow: "shadow-rose-500/40",
         isHeavy: false,
+        requiredPoints: 50,
         details: {
             intro: "مفيش وقت للتفكير! لسانك هيسبق عقلك، والضحك هيشتغل.",
             players: "فريقين نار",
@@ -85,6 +88,7 @@ export const GAMES_CATALOG: GameDef[] = [
         gradient: "from-emerald-400 via-green-500 to-green-600",
         shadow: "shadow-emerald-500/40",
         isHeavy: false,
+        requiredPoints: 100,
         details: {
             intro: "أمثالنا الشعبية كنز. اختبر ذاكرتك وشوف مين 'ابن بلد' بجد.",
             players: "أي عدد",
@@ -100,6 +104,7 @@ export const GAMES_CATALOG: GameDef[] = [
         gradient: "from-blue-400 via-blue-500 to-indigo-600",
         shadow: "shadow-blue-500/40",
         isHeavy: false,
+        requiredPoints: 150,
         details: {
             intro: "نفس الجملة ممكن تتقال بـ ١٠٠ طريقة. وريهم شاطرتك في التمثيل.",
             players: "٣+",
@@ -115,6 +120,7 @@ export const GAMES_CATALOG: GameDef[] = [
         gradient: "from-cyan-400 via-sky-500 to-blue-600",
         shadow: "shadow-cyan-500/40",
         isHeavy: false,
+        requiredPoints: 200,
         details: {
             intro: "مين اللي مذاكر؟ راجع آياتك ونافس صحابك في مسابقة سريعة.",
             players: "مجموعات",
@@ -130,6 +136,7 @@ export const GAMES_CATALOG: GameDef[] = [
         gradient: "from-violet-400 via-purple-500 to-fuchsia-600",
         shadow: "shadow-purple-500/40",
         isHeavy: false,
+        requiredPoints: 300,
         details: {
             intro: "لعبة الصراحة والمواجهة. بنعرف مين فينا بيعمل إيه.. والكل بيشاور.",
             players: "الشلة كلها",
@@ -145,6 +152,7 @@ export const GAMES_CATALOG: GameDef[] = [
         gradient: "from-amber-300 via-yellow-400 to-orange-500",
         shadow: "shadow-amber-500/40",
         isHeavy: false,
+        requiredPoints: 400,
         details: {
             intro: "تخمين وذكاء. كل معلومة بتقربك للحل، بس يا ترى هتعرف من بدري؟",
             players: "أي عدد",
@@ -160,6 +168,7 @@ export const GAMES_CATALOG: GameDef[] = [
         gradient: "from-pink-400 via-pink-500 to-rose-500",
         shadow: "shadow-pink-500/40",
         isHeavy: false,
+        requiredPoints: 500,
         details: {
             intro: "الخيال ملوش حدود لما نتجمع. قصة غريبة هتطلع منكم كلمة بكلمة.",
             players: "٤+",
@@ -175,6 +184,7 @@ export const GAMES_CATALOG: GameDef[] = [
         gradient: "from-slate-600 via-slate-700 to-gray-800",
         shadow: "shadow-white/10",
         isHeavy: true,
+        requiredPoints: 1000,
         details: {
             intro: "مش وقت ضحك.. ده وقت نعرف بعض بجد. مساحة للكلام الحقيقي.",
             players: "٢+",
@@ -190,6 +200,7 @@ export const GAMES_CATALOG: GameDef[] = [
         gradient: "from-red-600 via-red-700 to-black",
         shadow: "shadow-red-900/50",
         isHeavy: true,
+        requiredPoints: 2000,
         details: {
             intro: "منطقة خطر. أسئلة وتحديات مش لأي حد. لو قلبك خفيف بلاش.",
             players: "للكبار فقط",
@@ -220,23 +231,40 @@ const cardVar = {
     }
 };
 
+import { useAuth } from '../context/AuthContext';
+
 export const GamesPage: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const { user, accountData, activeTeam, isAdmin } = useAuth();
+
+    // Use Team Points for Unlocks
+    const currentPoints = isAdmin ? 999999 : (activeTeam?.totalPoints || 0);
 
     // State
     const [selectedGame, setSelectedGame] = useState<GameDef | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [gameKey, setGameKey] = useState(0);
+    const [lockedGameAttempt, setLockedGameAttempt] = useState<{ game: GameDef; remaining: number } | null>(null);
 
     // Reset Logic
-    useTabReset('/games', () => {
+    const handleTabReset = React.useCallback(() => {
         setSelectedGame(null);
         setIsPlaying(false);
-    });
+        setLockedGameAttempt(null);
+    }, []);
+
+    useTabReset('/games', handleTabReset);
 
     // Handlers
-    const openDetails = (game: GameDef) => {
+    const handleGameClick = (game: GameDef) => {
+        if (currentPoints < game.requiredPoints) {
+            setLockedGameAttempt({
+                game,
+                remaining: game.requiredPoints - currentPoints
+            });
+            return;
+        }
         setSelectedGame(game);
         setIsPlaying(false);
     };
@@ -367,54 +395,75 @@ export const GamesPage: React.FC = () => {
                 animate="show"
                 className="px-4 pb-40 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8 max-w-7xl mx-auto"
             >
-                {GAMES_CATALOG.map((game) => (
-                    <motion.div
-                        key={game.id}
-                        variants={cardVar}
-                        whileHover={{ scale: 1.05, rotate: 1, y: -5 }}
-                        whileTap={{ scale: 0.92 }}
-                        onClick={() => openDetails(game)}
-                        className={`
-                            relative aspect-[4/5] rounded-[2.5rem] p-6 cursor-pointer
+                {GAMES_CATALOG.map((game) => {
+                    const isLocked = currentPoints < game.requiredPoints;
+
+                    return (
+                        <motion.div
+                            key={game.id}
+                            variants={cardVar}
+                            whileHover={!isLocked ? { scale: 1.05, rotate: 1, y: -5 } : {}}
+                            whileTap={!isLocked ? { scale: 0.92 } : {}}
+                            onClick={() => handleGameClick(game)}
+                            className={`
+                            relative aspect-[4/5] rounded-[2.5rem] p-6 
+                            ${isLocked ? 'cursor-not-allowed grayscale-[0.8] opacity-80' : 'cursor-pointer'}
                             bg-gradient-to-br ${game.gradient}
                             flex flex-col justify-between overflow-hidden
                             ${game.shadow} shadow-2xl ring-4 ring-white/5
                             group
                         `}
-                    >
-                        {/* Huge Icon Background */}
-                        <div className="absolute -right-6 -top-6 text-[8rem] opacity-20 rotate-12 group-hover:rotate-0 group-hover:scale-110 transition-all duration-500">
-                            {game.icon}
-                        </div>
-
-                        {/* Top Area: Icon & Title */}
-                        <div className="relative z-10 pt-2">
-                            <span className="text-5xl mb-4 block filter drop-shadow-md group-hover:animate-pulse">
+                        >
+                            {/* Huge Icon Background */}
+                            <div className="absolute -right-6 -top-6 text-[8rem] opacity-20 rotate-12 group-hover:rotate-0 group-hover:scale-110 transition-all duration-500">
                                 {game.icon}
-                            </span>
-                            <h3 className={`text-2xl md:text-3xl font-black leading-[0.9] tracking-tight ${game.isHeavy ? 'text-white' : 'text-[#0a0a0a]'}`}>
-                                {game.title}
-                            </h3>
-                        </div>
+                            </div>
 
-                        {/* Bottom Area: Desc & CTA */}
-                        <div className="relative z-10">
-                            <p className={`text-sm md:text-base font-bold leading-tight mb-4 line-clamp-2 ${game.isHeavy ? 'text-white/70' : 'text-[#0a0a0a]/70'}`}>
-                                {game.desc}
-                            </p>
+                            {/* Top Area: Icon & Title */}
+                            <div className="relative z-10 pt-2">
+                                <div className="flex justify-between items-start">
+                                    <span className="text-5xl mb-4 block filter drop-shadow-md group-hover:animate-pulse">
+                                        {game.icon}
+                                    </span>
+                                    {isLocked && (
+                                        <div className="bg-black/60 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1 border border-white/20">
+                                            <span className="text-xl">🔒</span>
+                                            <span className="text-white font-bold text-sm">{game.requiredPoints} pt</span>
+                                        </div>
+                                    )}
+                                </div>
 
-                            {/* CTA Pill */}
-                            <div className={`
+                                <h3 className={`text-2xl md:text-3xl font-black leading-[0.9] tracking-tight ${game.isHeavy ? 'text-white' : 'text-[#0a0a0a]'}`}>
+                                    {game.title}
+                                </h3>
+                            </div>
+
+                            {/* Bottom Area: Desc & CTA */}
+                            <div className="relative z-10">
+                                <p className={`text-sm md:text-base font-bold leading-tight mb-4 line-clamp-2 ${game.isHeavy ? 'text-white/70' : 'text-[#0a0a0a]/70'}`}>
+                                    {game.desc}
+                                </p>
+
+                                {/* CTA Pill */}
+                                <div className={`
                                 w-full py-3 rounded-2xl flex items-center justify-center gap-2 font-black text-sm
-                                ${game.isHeavy ? 'bg-white/20 text-white' : 'bg-black/10 text-black'}
+                                ${isLocked
+                                        ? 'bg-black/40 text-white/50'
+                                        : (game.isHeavy ? 'bg-white/20 text-white' : 'bg-black/10 text-black')
+                                    }
                                 backdrop-blur-sm group-hover:bg-black/20 transition-colors
                             `}>
-                                <span>يلا</span>
-                                <PlayIcon />
+                                    <span>{isLocked ? 'مقفولة' : 'يلا'}</span>
+                                    {isLocked ? (
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                                    ) : (
+                                        <PlayIcon />
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    </motion.div>
-                ))}
+                        </motion.div>
+                    )
+                })}
             </motion.div>
 
             {/* --- GAME LOBBY MODAL --- */}

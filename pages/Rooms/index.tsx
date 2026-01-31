@@ -14,10 +14,12 @@ const RoomsPage: React.FC = () => {
     const [selectedName, setSelectedName] = useState<string | null>(null);
 
     // Tab Reset Logic
-    useTabReset('/rooms', () => {
+    const handleTabReset = React.useCallback(() => {
         setView('LANDING');
         setSelectedName(null);
-    });
+    }, []);
+
+    useTabReset('/rooms', handleTabReset);
 
     const assignments = getAllAssignments();
     const selectedAssignment = selectedName ? assignments.find(a => a.personName === selectedName) : null;

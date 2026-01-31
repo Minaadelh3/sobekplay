@@ -3,12 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import BackButton from '../components/BackButton';
 import { SMART_GAMES_DATA } from '../data/smart_games_data';
+import { useAuth } from '../context/AuthContext';
 
 const SmartGamesPage: React.FC = () => {
     const navigate = useNavigate();
+    const { accountData, isAdmin } = useAuth();
 
-    // Mock progress - in real app, read from localStorage
-    const unlockedLevel = 15; // All unlocked for demo
+    // Account Points (Admin gets infinite)
+    const totalPoints = isAdmin ? 999999 : (accountData?.totalPoints || 0);
+
+    const getRequiredPoints = (difficulty: string) => {
+        switch (difficulty) {
+            case 'Easy': return 0;
+            case 'Medium': return 500;
+            case 'Hard': return 1000;
+            default: return 0;
+        }
+    };
 
     return (
         <div className="min-h-screen bg-[#050505] text-white font-arabic safe-area-pb selection:bg-purple-500/30 overflow-x-hidden" dir="rtl">
@@ -32,6 +43,9 @@ const SmartGamesPage: React.FC = () => {
                     <p className="text-white/70 text-lg font-bold">
                         15 تحدي.. وريني شطارتك
                     </p>
+                    <div className="mt-2 text-indigo-400 font-mono text-sm">
+                        رصيد الذكاء: {totalPoints} نقطة
+                    </div>
                 </motion.div>
             </div>
 
@@ -39,7 +53,8 @@ const SmartGamesPage: React.FC = () => {
             <div className="max-w-4xl mx-auto px-6 pb-20">
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {SMART_GAMES_DATA.map((level) => {
-                        const isLocked = level.id > unlockedLevel;
+                        const needed = getRequiredPoints(level.difficulty);
+                        const isLocked = totalPoints < needed;
 
                         return (
                             <motion.button
@@ -58,7 +73,7 @@ const SmartGamesPage: React.FC = () => {
                             >
                                 {/* Level Number & Icon */}
                                 <div className={`
-                                    w-12 h-12 rounded-full flex items-center justify-center text-2xl font-black
+                                    w-12 h-12 rounded-full flex items-center justify-center text-2xl font-black relative
                                     ${isLocked ? 'bg-white/5 text-white/20' : 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-indigo-500/50 shadow-lg'}
                                 `}>
                                     {isLocked ? '🔒' : level.id}
@@ -68,14 +83,23 @@ const SmartGamesPage: React.FC = () => {
                                     <h3 className="font-bold text-sm md:text-base leading-tight mb-1 line-clamp-2">
                                         {level.title}
                                     </h3>
-                                    <span className={`
-                                        text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded
-                                        ${level.difficulty === 'Easy' ? 'bg-green-500/20 text-green-400' : ''}
-                                        ${level.difficulty === 'Medium' ? 'bg-yellow-500/20 text-yellow-400' : ''}
-                                        ${level.difficulty === 'Hard' ? 'bg-red-500/20 text-red-400' : ''}
-                                    `}>
-                                        {level.difficulty}
-                                    </span>
+
+                                    {isLocked && (
+                                        <span className="text-[10px] text-red-400 font-mono block">
+                                            مطلوب {needed}
+                                        </span>
+                                    )}
+
+                                    {!isLocked && (
+                                        <span className={`
+                                            text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded
+                                            ${level.difficulty === 'Easy' ? 'bg-green-500/20 text-green-400' : ''}
+                                            ${level.difficulty === 'Medium' ? 'bg-yellow-500/20 text-yellow-400' : ''}
+                                            ${level.difficulty === 'Hard' ? 'bg-red-500/20 text-red-400' : ''}
+                                        `}>
+                                            {level.difficulty}
+                                        </span>
+                                    )}
                                 </div>
                             </motion.button>
                         );

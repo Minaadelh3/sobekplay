@@ -26,11 +26,7 @@ export const useTabReset = (tabPath: string, onReset: () => void) => {
         };
     }, [tabPath, onReset]);
 
-    // Optional: Also listen to location state if legacy implementation exists
-    useEffect(() => {
-        if (location.state && (location.state as any).resetTab && location.pathname.startsWith(tabPath)) {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            onReset();
-        }
-    }, [location.state, location.pathname, tabPath, onReset]);
+    // 2. Cleanup
+    // No need to listen to location.state as custom event handles the click-to-reset behavior.
+    // Preserving location.state would cause infinite reset loops on re-renders.
 };

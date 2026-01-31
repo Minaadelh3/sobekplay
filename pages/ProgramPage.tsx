@@ -176,9 +176,11 @@ import { useTabReset } from '../hooks/useTabReset';
 export const ProgramPage: React.FC = () => {
     const [selectedEpisode, setSelectedEpisode] = useState<Episode | null>(null);
 
-    useTabReset('/program', () => {
+    const handleTabReset = React.useCallback(() => {
         setSelectedEpisode(null);
-    });
+    }, []);
+
+    useTabReset('/program', handleTabReset);
 
     const closeModal = () => setSelectedEpisode(null);
 

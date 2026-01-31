@@ -24,6 +24,7 @@ export default defineConfig(({ mode }) => {
     define: {
       // Security: Do NOT expose API keys here.
     },
+    envPrefix: ['VITE_', 'NEXT_PUBLIC_'],
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./"),
