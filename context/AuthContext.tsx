@@ -72,12 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [allPlayers, setAllPlayers] = useState<PlayerProfile[]>([]);
     const [activeTeam, setActiveTeam] = useState<TeamProfile | null>(null);
 
-    // Initial Redirect Handling
-    useEffect(() => {
-        handleGoogleRedirectResult().catch((err) => console.error("Google Redirect Error", err));
-    }, []);
-
-    // --- 1. INITIAL LOAD ---
+    // --- 1. INITIAL LOAD (Unified) ---
     useEffect(() => {
         if (!auth) {
             console.error("⛔ CRITICAL: Firebase Auth ID not initialized. Check Env Vars.");
@@ -85,32 +80,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return;
         }
 
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            if (firebaseUser) {
-                setFirebaseUser(firebaseUser);
+        let unsubscribe: (() => void) | undefined;
 
-                // Basic User Mapping
-                // Basic User Mapping
-                setUser({
-                    id: firebaseUser.uid,
-                    name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
-                    email: firebaseUser.email || "",
-                    role: 'USER', // Role now determined by Active Team (Uncle Joy)
-                    avatar: firebaseUser.photoURL || 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png'
-                });
-
-            } else {
-                setFirebaseUser(null);
-                setUser(null);
-                setActivePlayer(null);
-                setActiveTeam(null);
-                setAccountData(null);
-                setAllPlayers([]);
-                localStorage.removeItem('sobek_active_player_id');
+        const initializeAuth = async () => {
+            try {
+                // 1. Process Redirect Result FIRST
+                // This resolves the user if they just came back from Google Login.
+                // We await this to prevent 'onAuthStateChanged' from firing 'null' prematurely.
+                console.log("[AuthContext] Checking Redirect Result...");
+                await handleGoogleRedirectResult();
+            } catch (error) {
+                console.error("[AuthContext] Redirect Error:", error);
             }
-            setLoading(false);
-        });
-        return () => unsubscribe();
+
+            // 2. Listen for Auth Changes
+            unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+                console.log("[AuthContext] Auth State User:", firebaseUser?.email);
+
+                if (firebaseUser) {
+                    setFirebaseUser(firebaseUser);
+
+                    // Basic User Mapping
+                    setUser({
+                        id: firebaseUser.uid,
+                        name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+                        email: firebaseUser.email || "",
+                        role: 'USER',
+                        avatar: firebaseUser.photoURL || 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png'
+                    });
+
+                } else {
+                    setFirebaseUser(null);
+                    setUser(null);
+                    setActivePlayer(null);
+                    setActiveTeam(null);
+                    setAccountData(null);
+                    setAllPlayers([]);
+                    localStorage.removeItem('sobek_active_player_id');
+                }
+
+                // 3. Finally, stop loading
+                setLoading(false);
+            });
+        };
+
+        initializeAuth();
+
+        return () => {
+            if (unsubscribe) unsubscribe();
+        };
     }, []);
 
     // 2. Data Subscriptions (Only when logged in)

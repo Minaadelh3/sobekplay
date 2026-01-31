@@ -55,13 +55,35 @@ export async function loginGoogleAuto() {
     console.log("[SOBEK-AUTH] Starting Google Login. Mobile:", isMobile, "Localhost:", isLocalhost, "UA:", ua);
 
     // Force Popup on Localhost (to avoid Redirect Loop) OR Desktop
+    // Force Popup on Localhost (to avoid Redirect Loop) OR Desktop
+    // STRICT CHECK: If mobile, ALWAYS use redirect (unless localhost + COOP fix is expected, 
+    // but redirect is safer for consistency on mobile devices)
+
+    // Actually, on specific localhost setups, redirect might fail if the callback usage is wrong.
+    // BUT since we fixed COOP, popup MIGHT work on mobile. 
+    // However, the industry standard for Mobile is Redirect.
+    // Let's stick to the intelligent split.
+
     if (isLocalhost || !isMobile) {
         console.log(`[SOBEK-AUTH] ${isLocalhost ? 'Localhost' : 'Desktop'} detected: Using signInWithPopup`);
-        return signInWithPopup(auth, googleProvider);
+        try {
+            return await signInWithPopup(auth, googleProvider);
+        } catch (error: any) {
+            console.error("Popup failed", error);
+            if (isMobile) alert(`Login Error: ${error.message}`); // Help user debug
+            throw error;
+        }
     }
 
     console.log('[SOBEK-AUTH] 📱 Mobile Domain detected: Using signInWithRedirect');
-    return signInWithRedirect(auth, googleProvider);
+    try {
+        await signInWithRedirect(auth, googleProvider);
+        // Redirect happens; function doesn't return roughly speaking (page unloads)
+    } catch (error: any) {
+        console.error("Redirect Trigger Error:", error);
+        alert(`Redirect Error: ${error.message}`);
+        throw error;
+    }
 }
 
 /**
