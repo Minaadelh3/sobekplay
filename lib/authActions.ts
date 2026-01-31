@@ -47,26 +47,38 @@ export async function loginGoogleAuto() {
     const ua = navigator.userAgent || "";
     const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
 
-    if (isMobile) {
-        console.log('📱 Mobile detected: Using signInWithRedirect');
-        return signInWithRedirect(auth, googleProvider);
+    // Check if running on localhost or local IP (common for dev)
+    const isLocalhost = window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1" ||
+        window.location.hostname.startsWith("192.168.");
+
+    console.log("[SOBEK-AUTH] Starting Google Login. Mobile:", isMobile, "Localhost:", isLocalhost, "UA:", ua);
+
+    // Force Popup on Localhost (to avoid Redirect Loop) OR Desktop
+    if (isLocalhost || !isMobile) {
+        console.log(`[SOBEK-AUTH] ${isLocalhost ? 'Localhost' : 'Desktop'} detected: Using signInWithPopup`);
+        return signInWithPopup(auth, googleProvider);
     }
 
-    return signInWithPopup(auth, googleProvider);
+    console.log('[SOBEK-AUTH] 📱 Mobile Domain detected: Using signInWithRedirect');
+    return signInWithRedirect(auth, googleProvider);
 }
 
 /**
  * Must be called on App Mount to handle returning from a redirect flow (Mobile).
  */
 export async function handleGoogleRedirectResult() {
+    console.log("[SOBEK-AUTH] Checking for redirect result...");
     try {
         const result = await getRedirectResult(auth);
         if (result) {
-            console.log("✅ Google Redirect Login Successful", result.user.email);
+            console.log("✅ [SOBEK-AUTH] Google Redirect Login Successful", result.user.email);
+        } else {
+            console.log("[SOBEK-AUTH] No redirect result found.");
         }
         return result;
     } catch (error) {
-        console.error("❌ Google Redirect Error:", error);
+        console.error("❌ [SOBEK-AUTH] Google Redirect Error:", error);
         throw error;
     }
 }

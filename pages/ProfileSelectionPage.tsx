@@ -40,7 +40,7 @@ const TeamAvatar = ({ team }: { team: TeamProfile }) => {
 };
 
 export default function ProfileSelectionPage() {
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const [verifyingTeam, setVerifyingTeam] = useState<TeamProfile | null>(null);
 
     return (
@@ -102,7 +102,7 @@ export default function ProfileSelectionPage() {
             {/* Sign Out Button */}
             <div className="z-10 mt-12 pb-8">
                 <button
-                    onClick={() => user && useAuth().logout()}
+                    onClick={() => user && logout()}
                     className="text-gray-500 hover:text-red-400 transition-colors text-sm font-bold flex items-center gap-2"
                 >
                     <span>تسجيل الخروج من الحساب</span>
