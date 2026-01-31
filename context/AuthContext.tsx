@@ -89,8 +89,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 // We await this to prevent 'onAuthStateChanged' from firing 'null' prematurely.
                 console.log("[AuthContext] Checking Redirect Result...");
                 await handleGoogleRedirectResult();
-            } catch (error) {
+            } catch (error: any) {
                 console.error("[AuthContext] Redirect Error:", error);
+                // CRITICAL: Alert on mobile so user sees why it failed
+                alert(`Auth Redirect Failed: ${error.message || error}`);
             }
 
             // 2. Listen for Auth Changes
