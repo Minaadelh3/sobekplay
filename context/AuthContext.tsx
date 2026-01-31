@@ -86,7 +86,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            console.log("[SOBEK-AUTH] Auth State Changed:", firebaseUser ? "User Logged In" : "No User", firebaseUser?.email);
             if (firebaseUser) {
                 setFirebaseUser(firebaseUser);
 

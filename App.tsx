@@ -47,6 +47,7 @@ import SettingsPage from './pages/SettingsPage';
 import TeamChatPage from './pages/TeamChatPage';
 import AchievementsPage from './pages/AchievementsPage';
 import AdminPointsPage from './pages/AdminPointsPage';
+import TeamChatPopup from './components/TeamChatPopup';
 
 const App: React.FC = () => {
   // Data Fetching at Root Level
@@ -135,6 +136,7 @@ const App: React.FC = () => {
 
         </Routes>
         <DailyRewardModal />
+        <TeamChatPopup />
       </AuthProvider>
     </Router>
   );

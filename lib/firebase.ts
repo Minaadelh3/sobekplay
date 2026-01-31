@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
+import { getStorage, type FirebaseStorage } from "firebase/storage";
 import { getAnalytics, isSupported } from "firebase/analytics";
 
 // --- 1. CONFIGURATION ---
@@ -36,6 +37,7 @@ export const isFirebaseConfigValid = missingKeys.length === 0;
 let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
+let storage: FirebaseStorage;
 
 if (isFirebaseConfigValid) {
     try {
@@ -44,6 +46,7 @@ if (isFirebaseConfigValid) {
         app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
         auth = getAuth(app);
         db = getFirestore(app);
+        storage = getStorage(app);
     } catch (error) {
         console.error("🔥 Firebase Init Fatal Error:", error);
         // We do typically want to throw here to stop the app from running in a broken state
@@ -61,7 +64,7 @@ if (isFirebaseConfigValid) {
 // We export these. If init failed, they will be undefined, 
 // so consumers (like AuthContext) MUST handle strict checks or try-catch.
 // However, typically the app should crash early if backend is required.
-export { app, auth, db };
+export { app, auth, db, storage };
 
 // --- 4. SAFE ANALYTICS ---
 export async function initAnalytics() {
