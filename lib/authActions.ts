@@ -48,43 +48,28 @@ export async function loginGoogleAuto() {
     const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
 
     // Check if running on localhost or local IP (common for dev)
-    const isLocalhost = window.location.hostname === "localhost" ||
-        window.location.hostname === "127.0.0.1" ||
-        window.location.hostname.startsWith("192.168.");
+    // UNIFIED STRATEGY: Always use Popup
+    // Why? 'signInWithRedirect' fails on Vercel deployments (Mobile) due to Third-Party Cookie blocking (ITP).
+    // The Redirect flow requires the auth domain and app domain to share cookies, which they don't (firebaseapp.com vs vercel.app).
+    // Since we fixed Cross-Origin-Opener-Policy (COOP) in vite.config.ts, Popup is now viable on Mobile.
 
-    console.log("[SOBEK-AUTH] Starting Google Login. Mobile:", isMobile, "Localhost:", isLocalhost, "UA:", ua);
+    console.log(`[SOBEK-AUTH] Starting Google Login (Popup Mode) - Mobile: ${isMobile}`);
 
-    // Force Popup on Localhost (to avoid Redirect Loop) OR Desktop
-    // Force Popup on Localhost (to avoid Redirect Loop) OR Desktop
-    // STRICT CHECK: If mobile, ALWAYS use redirect (unless localhost + COOP fix is expected, 
-    // but redirect is safer for consistency on mobile devices)
-
-    // Actually, on specific localhost setups, redirect might fail if the callback usage is wrong.
-    // BUT since we fixed COOP, popup MIGHT work on mobile. 
-    // However, the industry standard for Mobile is Redirect.
-    // Let's stick to the intelligent split.
-
-    if (isLocalhost || !isMobile) {
-        console.log(`[SOBEK-AUTH] ${isLocalhost ? 'Localhost' : 'Desktop'} detected: Using signInWithPopup`);
-        try {
-            return await signInWithPopup(auth, googleProvider);
-        } catch (error: any) {
-            console.error("Popup failed", error);
-            if (isMobile) alert(`Login Error: ${error.message}`); // Help user debug
-            throw error;
-        }
-    }
-
-    console.log('[SOBEK-AUTH] 📱 Mobile Domain detected: Using signInWithRedirect');
     try {
-        await signInWithRedirect(auth, googleProvider);
-        // Redirect happens; function doesn't return roughly speaking (page unloads)
+        return await signInWithPopup(auth, googleProvider);
     } catch (error: any) {
-        console.error("Redirect Trigger Error:", error);
-        alert(`Redirect Error: ${error.message}`);
+        console.error("Popup Login Failed:", error);
+
+        // Specific handling for Mobile Popup Blocks
+        if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
+            alert("Please allow popups for this site to sign in with Google.");
+        } else {
+            alert(`Login Failed: ${error.message}`);
+        }
         throw error;
     }
 }
+/* REMOVED REDIRECT LOGIC TO PREVENT LOOP */
 
 /**
  * Must be called on App Mount to handle returning from a redirect flow (Mobile).
