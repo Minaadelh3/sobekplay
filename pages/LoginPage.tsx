@@ -3,28 +3,33 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function LoginPage() {
+    const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
-    const { login, loginWithGoogle } = useAuth();
+    const { login, signupEmail, loginWithGoogle } = useAuth(); // signupEmail is now available
     const navigate = useNavigate();
     const location = useLocation();
 
     // Redirect to PROFILES instead of app
     const next = location?.state?.from ?? "/profiles";
 
-    const handleLogin = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
         setLoading(true);
         try {
-            await login(email, password);
+            if (isLogin) {
+                await login(email, password);
+            } else {
+                await signupEmail(email, password);
+            }
             navigate(next, { replace: true });
         } catch (err: any) {
-            console.error("Login Failed:", err);
-            setError("عفواً، هناك خطأ في البريد أو كلمة السر");
+            console.error("Auth Failed:", err);
+            setError(isLogin ? "عفواً، هناك خطأ في البريد أو كلمة السر" : "فشل إنشاء الحساب، ربما البريد مستخدم بالفعل");
         } finally {
             setLoading(false);
         }
@@ -50,7 +55,7 @@ export default function LoginPage() {
             <div className="absolute inset-0 bg-gradient-to-br from-[#08111A] via-[#0B5D4B]/30 to-[#070A0F] z-0" />
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 z-0 pointer-events-none" />
 
-            <div className="z-10 w-full max-w-md p-8 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl">
+            <div className="z-50 w-full max-w-md p-8 bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl relative">
                 {/* Logo Section */}
                 <div className="flex justify-center mb-8">
                     <img
@@ -61,10 +66,10 @@ export default function LoginPage() {
                 </div>
 
                 <h1 className="text-2xl md:text-3xl font-bold text-center mb-2 text-white">
-                    أهلاً بيك في سوبك بلاي
+                    {isLogin ? "أهلاً بيك في سوبك بلاي" : "انضم لعائلة سوبك"}
                 </h1>
                 <p className="text-gray-400 text-center mb-8 text-sm">
-                    سجل دخولك عشان تبدأ رحلتك
+                    {isLogin ? "سجل دخولك عشان تبدأ رحلتك" : "سجل حساب جديد وابدأ المنافسة"}
                 </p>
 
                 {error && (
@@ -73,7 +78,7 @@ export default function LoginPage() {
                     </div>
                 )}
 
-                <form onSubmit={handleLogin} className="space-y-5" dir="rtl">
+                <form onSubmit={handleSubmit} className="space-y-5" dir="rtl">
                     <div className="relative group">
                         <input
                             type="email"
@@ -102,7 +107,7 @@ export default function LoginPage() {
                     >
                         {loading ? (
                             <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
-                        ) : "ادخل المقبرة"}
+                        ) : (isLogin ? "ادخل المقبرة" : "إنشاء الحساب")}
                     </button>
                 </form>
 
@@ -139,15 +144,19 @@ export default function LoginPage() {
                             d="M5.277 14.268A7.127 7.127 0 0 1 4.909 12c0-.782.125-1.533.357-2.235L1.378 6.822A11.957 11.957 0 0 0 0 12c0 1.92.445 3.719 1.233 5.313l4.044-3.045z"
                         />
                     </svg>
-                    <span>تسجيل الدخول بجوجل</span>
+                    <span>{isLogin ? "تسجيل الدخول بجوجل" : "انضم باستخدام جوجل"}</span>
                 </button>
 
                 <div className="mt-8 text-center">
                     <p className="text-gray-400 text-sm">
-                        لسه جديد؟{" "}
-                        <Link to="#" className="text-accent-gold hover:text-white transition-colors underline">
-                            اعمل حساب دلوقتي
-                        </Link>
+                        {isLogin ? "لسه جديد؟" : "عندك حساب بالفعل؟"}{" "}
+                        <button
+                            type="button"
+                            onClick={() => setIsLogin(!isLogin)}
+                            className="text-accent-gold hover:text-white transition-colors underline bg-transparent border-0 cursor-pointer p-0 font-bold"
+                        >
+                            {isLogin ? "اعمل حساب دلوقتي" : "سجل دخولك"}
+                        </button>
                     </p>
                 </div>
             </div>
