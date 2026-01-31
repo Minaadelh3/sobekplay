@@ -5,6 +5,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { AdminRoute } from './components/AdminRoute';
 import MainLayout from './components/MainLayout';
 import LoginPage from './pages/LoginPage';
+import OnboardingPage from './pages/OnboardingPage';
 import ProfileSelectionPage from './pages/ProfileSelectionPage';
 import AdminDashboard from './pages/AdminDashboard'; // Keep for legacy if needed, or remove
 import AdminLandingPage from './pages/AdminLandingPage'
@@ -77,6 +78,12 @@ const App: React.FC = () => {
           <Route path="/admin/logs" element={<AdminRoute><AdminLogsPage /></AdminRoute>} />
 
           {/* Profile Selection (Intermediate Step) */}
+          <Route path="/onboarding" element={
+            <ProtectedRoute>
+              <OnboardingPage />
+            </ProtectedRoute>
+          } />
+
           <Route path="/profiles" element={
             <ProtectedRoute>
               <ProfileSelectionPage />

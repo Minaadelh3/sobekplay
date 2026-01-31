@@ -81,8 +81,11 @@ export default function TeamChatCore({ mode }: TeamChatCoreProps) {
             await addDoc(collection(db, `teams/${activeTeam!.id}/messages`), {
                 text: text,
                 uid: user!.id,
-                name: user!.name,
-                avatarUrl: user?.avatar || '',
+                // Prefers Nickname -> DisplayName -> Name -> 'Unknown'
+                name: user?.nickname || user?.displayName || user?.name || "Unknown",
+                displayName: user?.displayName || "",
+                nickname: user?.nickname || "",
+                avatarUrl: user?.photoURL || user?.avatar || '',
                 type: 'text',
                 createdAt: serverTimestamp()
             });
@@ -108,8 +111,8 @@ export default function TeamChatCore({ mode }: TeamChatCoreProps) {
             await addDoc(collection(db, `teams/${activeTeam.id}/messages`), {
                 text: 'Sent an image',
                 uid: user.id,
-                name: user.name,
-                avatarUrl: user.avatar || '',
+                name: user.nickname || user.displayName || user.name || "Unknown",
+                avatarUrl: user.photoURL || user.avatar || '',
                 type: 'image',
                 mediaUrl: url,
                 createdAt: serverTimestamp()
@@ -174,8 +177,8 @@ export default function TeamChatCore({ mode }: TeamChatCoreProps) {
             await addDoc(collection(db, `teams/${activeTeam.id}/messages`), {
                 text: 'Voice Note',
                 uid: user.id,
-                name: user.name,
-                avatarUrl: user.avatar || '',
+                name: user.nickname || user.displayName || user.name || "Unknown",
+                avatarUrl: user.photoURL || user.avatar || '',
                 type: 'audio',
                 mediaUrl: url,
                 createdAt: serverTimestamp()
@@ -209,6 +212,18 @@ export default function TeamChatCore({ mode }: TeamChatCoreProps) {
             <div className="flex-1 overflow-y-auto p-4 space-y-2 z-10 scrollbar-thin scrollbar-thumb-gray-300">
                 {messages.map((msg) => {
                     const isMe = msg.uid === user?.id;
+
+                    // System Message Handling
+                    if (msg.uid === 'SYSTEM') {
+                        return (
+                            <div key={msg.id} className="flex justify-center my-3">
+                                <div className="bg-[#E1F5FE] text-[#0277BD] text-xs px-3 py-1 rounded-full shadow-sm border border-[#B3E5FC] flex items-center gap-1">
+                                    <span>{msg.text}</span>
+                                </div>
+                            </div>
+                        );
+                    }
+
                     return (
                         <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} mb-1`}>
                             <div className={`

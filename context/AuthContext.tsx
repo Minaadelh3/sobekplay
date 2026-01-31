@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { onAuthStateChanged, type User as FirebaseUser, getIdTokenResult } from "firebase/auth";
-import { doc, onSnapshot, collection, query, where, setDoc, updateDoc, getDocs, serverTimestamp, increment, runTransaction, writeBatch } from "firebase/firestore";
+import { doc, onSnapshot, collection, query, where, setDoc, updateDoc, getDoc, getDocs, serverTimestamp, increment, runTransaction, writeBatch, addDoc } from "firebase/firestore";
 import { auth, db } from "../lib/firebase";
 import {
     handleGoogleRedirectResult,
@@ -72,6 +72,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [allPlayers, setAllPlayers] = useState<PlayerProfile[]>([]);
     const [activeTeam, setActiveTeam] = useState<TeamProfile | null>(null);
 
+    // --- User Doc Management ---
+    const onAuthLoginUpsertUser = async (user: FirebaseUser) => {
+        try {
+            const ref = doc(db, "users", user.uid);
+            const snap = await getDoc(ref);
+
+            if (!snap.exists()) {
+                console.log("🆕 New User Detected: Creating Profile...");
+                // New user: reset + welcome
+                await setDoc(ref, {
+                    email: user.email || "",
+                    displayName: user.displayName || "",
+                    photoURL: user.photoURL || "",
+                    nickname: "",
+                    isOnboarded: false,
+                    streak: 0,
+                    rewards: { points: 0, dailyBonusClaimedAt: null },
+                    createdAt: serverTimestamp(),
+                    lastLoginAt: serverTimestamp(),
+                });
+
+                // Welcome message in team chat
+                try {
+                    await addDoc(collection(db, "teams", "uncle_joy", "messages"), {
+                        text: `👋 Welcome ${user.displayName || "new friend"} to the family!`,
+                        uid: "SYSTEM",
+                        name: "Sobek Bot",
+                        avatarUrl: "https://cdn-icons-png.flaticon.com/512/4712/4712035.png",
+                        type: 'text',
+                        createdAt: serverTimestamp(),
+                    });
+                } catch (e) {
+                    console.error("Welcome msg failed", e);
+                }
+
+            } else {
+                console.log("Welcome back! Updating last login.");
+                await updateDoc(ref, {
+                    lastLoginAt: serverTimestamp(),
+                });
+
+                // Force Reset Check (Admin Flag)
+                if (snap.data().forceReset) {
+                    await updateDoc(ref, {
+                        streak: 0,
+                        'rewards.points': 0,
+                        forceReset: false
+                    });
+                    alert("Your stats have been reset by Admin.");
+                }
+            }
+        } catch (error) {
+            console.error("Upsert user failed:", error);
+        }
+    };
+
     // --- 1. INITIAL LOAD (Unified) ---
     useEffect(() => {
         if (!auth) {
@@ -100,15 +156,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 console.log("[AuthContext] Auth State User:", firebaseUser?.email);
 
                 if (firebaseUser) {
+                    // UPSERT USER DOC (New Logic)
+                    await onAuthLoginUpsertUser(firebaseUser);
                     setFirebaseUser(firebaseUser);
 
-                    // Basic User Mapping
+                    // Basic User Mapping (Initially)
+                    const userDocRef = doc(db, "users", firebaseUser.uid);
+                    const userSnap = await getDoc(userDocRef);
+                    const userData = userSnap.data();
+
                     setUser({
                         id: firebaseUser.uid,
-                        name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+                        name: firebaseUser.displayName || 'User',
                         email: firebaseUser.email || "",
                         role: 'USER',
-                        avatar: firebaseUser.photoURL || 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png'
+                        avatar: firebaseUser.photoURL || 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png',
+                        displayName: userData?.displayName || firebaseUser.displayName || '',
+                        nickname: userData?.nickname || '',
+                        photoURL: userData?.avatarURL || firebaseUser.photoURL || '',
+                        isOnboarded: userData?.isOnboarded || false
                     });
 
                 } else {

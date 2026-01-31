@@ -25,5 +25,10 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
         return <Navigate to="/profiles" replace />;
     }
 
+    // Force Onboarding
+    if (user?.isOnboarded === false && location.pathname !== '/onboarding') {
+        return <Navigate to="/onboarding" replace />;
+    }
+
     return <>{children}</>;
 };

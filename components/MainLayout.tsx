@@ -4,6 +4,8 @@ import Navbar from './Navbar';
 import MobileBottomNav from './MobileBottomNav';
 import SearchModal from './SearchModal';
 import SobekChatbot from './SobekChatbot';
+import PullToRefresh from './PullToRefresh';
+import MobileBackHeader from './MobileBackHeader';
 import { motion } from 'framer-motion';
 import { PosterItem } from '../types';
 import PointsAnimation from './PointsAnimation';
@@ -61,6 +63,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ analyzedPosters, isAnalyzing })
     return (
         <div className="min-h-screen selection:bg-accent-green selection:text-white">
 
+            <MobileBackHeader />
+
             {!isWatchPage && (
                 <Navbar onSearchOpen={() => setIsSearchOpen(true)} />
             )}
@@ -73,9 +77,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ analyzedPosters, isAnalyzing })
                 posters={analyzedPosters}
             />
 
-            <main className={`${!isWatchPage ? "pt-20" : ""} pb-24 md:pb-0`}>
-                <Outlet />
-            </main>
+            <PullToRefresh>
+                <main className={`${!isWatchPage ? "pt-20" : ""} pb-24 md:pb-0`}>
+                    <Outlet />
+                </main>
+            </PullToRefresh>
 
             <SobekChatbot />
             <MobileBottomNav />

@@ -15,6 +15,11 @@ export interface User {
     avatar?: string; // URL or asset path
     mobile?: string;
     password?: string;
+    // New Fields for Social/Chat
+    displayName?: string;
+    nickname?: string;
+    photoURL?: string;
+    isOnboarded?: boolean;
 }
 
 export const BADGES: Badge[] = [
