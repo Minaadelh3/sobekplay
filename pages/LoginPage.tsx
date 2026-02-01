@@ -9,12 +9,20 @@ export default function LoginPage() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
-    const { login, signupEmail, loginWithGoogle } = useAuth(); // signupEmail is now available
+    const { login, signupEmail, loginWithGoogle, user, loading: authLoading } = useAuth(); // Access user & loading
     const navigate = useNavigate();
     const location = useLocation();
 
     // Redirect to PROFILES instead of app
     const next = location?.state?.from ?? "/profiles";
+
+    // 1. AUTO-REDIRECT IF ALREADY LOGGED IN (Fixes Loop)
+    React.useEffect(() => {
+        if (!authLoading && user) {
+            console.log("🚀 [LOGIN] User already authenticated. Redirecting to:", next);
+            navigate(next, { replace: true });
+        }
+    }, [user, authLoading, navigate, next]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -26,11 +34,10 @@ export default function LoginPage() {
             } else {
                 await signupEmail(email, password);
             }
-            navigate(next, { replace: true });
+            // Navigation handled by useEffect above or AuthContext flow
         } catch (err: any) {
             console.error("Auth Failed:", err);
             setError(isLogin ? "عفواً، هناك خطأ في البريد أو كلمة السر" : "فشل إنشاء الحساب، ربما البريد مستخدم بالفعل");
-        } finally {
             setLoading(false);
         }
     };
@@ -39,12 +46,13 @@ export default function LoginPage() {
         setError("");
         setLoading(true);
         try {
+            // This promise might effectively never resolve if redirect happens
             await loginWithGoogle();
-            navigate(next, { replace: true });
+            // If Popup used (desktop), we end up here.
+            // If Redirect used (mobile/PWA), page reloads -> AuthContext -> useEffect above handles redirect.
         } catch (err: any) {
             console.error("Google Login Failed:", err);
             setError("فشل تسجيل الدخول بجوجل");
-        } finally {
             setLoading(false);
         }
     };

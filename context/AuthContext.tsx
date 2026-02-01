@@ -1,59 +1,48 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { onAuthStateChanged, type User as FirebaseUser, getRedirectResult } from "firebase/auth";
+import { onAuthStateChanged, type User as FirebaseUser, getRedirectResult, UserCredential } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { auth, db } from "../lib/firebase";
 import {
     loginEmail,
     signupEmail,
     loginGoogleAuto,
-    logoutFull,
-    handleGoogleRedirectResult
+    logoutFull
 } from "../lib/authActions";
 import { User, TEAMS, TeamProfile } from "../types/auth";
 import { PlayerProfile, TeamId } from "../types/store";
 
 type AuthCtx = {
-    // Auth State
     user: User | null;
     firebaseUser: FirebaseUser | null;
+    authLoading: boolean;
+    roleLoading: boolean;
+    loading: boolean;
 
-    // Explicit Loading States
-    authLoading: boolean;  // Firebase Auth Check
-    roleLoading: boolean;  // Firestore User Doc Fetch
-    loading: boolean;      // Combined (authLoading || roleLoading)
-
-    // Core Actions
     loginEmail: (email: string, password: string) => Promise<void>;
     signupEmail: (email: string, password: string) => Promise<void>;
     loginGoogle: () => Promise<void>;
-    loginWithGoogle: () => Promise<void>; // Alias
+    loginWithGoogle: () => Promise<void>;
     logout: () => Promise<void>;
 
-    // Data State
-    activePlayer: PlayerProfile | null;
+    // Data & Logic
     activeTeam: TeamProfile | null;
-    selectedTeam: TeamProfile | null; // Added alias for compatibility
-
-    // Logic
+    selectedTeam: TeamProfile | null;
     isAdmin: boolean;
     selectTeam: (teamId: string, pin: string) => Promise<boolean>;
     hasAccess: (feature: string) => boolean;
 
-    // Legacy / Aliases
+    // Legacy
     login: (email: string, password: string) => Promise<boolean>;
+    activePlayer: any;
     TEAMS: TeamProfile[];
 };
 
 const Ctx = createContext<AuthCtx | null>(null);
 
 const TEAM_PINS: Record<string, string> = {
-    'tout': '1234',
-    'ankh': '1234',
-    'amon': '1234',
-    'ra': '1234',
-    'uncle_joy': '1234'
+    'tout': '1234', 'ankh': '1234', 'amon': '1234', 'ra': '1234', 'uncle_joy': '1234'
 };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -61,119 +50,139 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [activeTeam, setActiveTeam] = useState<TeamProfile | null>(null);
 
-    // Split Loading States
+    // Initial loading state MUST be true to block any routing until Firebase speaks
     const [authLoading, setAuthLoading] = useState(true);
-    const [roleLoading, setRoleLoading] = useState(true);
+    const [roleLoading, setRoleLoading] = useState(false); // Starts false, becomes true if user found
 
-    // 1. GLOBAL AUTH LISTENER (THE ONLY ONE)
+    // --- 1. GLOBAL INITIALIZATION ---
     useEffect(() => {
-        // Handle Redirect Result FIRST (for PWA)
-        getRedirectResult(auth).catch(e => console.error("Redirect Result Error:", e));
+        let unsubscribe: () => void;
 
-        const unsubscribe = onAuthStateChanged(auth, async (fUser) => {
-            console.log("🔐 [AUTH STATE CHANGED]:", fUser?.email || "No User");
-
-            // Phase 1: Auth Identity Determined
+        const initAuth = async () => {
+            console.log("🔐 [AUTH] Initializing...");
             setAuthLoading(true);
-            setRoleLoading(true); // Assume fetching profile if user exists
 
-            if (!fUser) {
-                setFirebaseUser(null);
-                setUser(null);
-                setActiveTeam(null);
-                setAuthLoading(false);
-                setRoleLoading(false); // No profile to fetch
-                return;
-            }
-
-            setFirebaseUser(fUser);
-            setAuthLoading(false); // Auth identity known, now fetching profile
-
-            // Phase 2: Fetch or Create User Doc
+            // A. Handle Redirect Result (Critical for PWA)
             try {
-                const ref = doc(db, "users", fUser.uid);
-                const snap = await getDoc(ref);
-
-                let userData;
-
-                if (!snap.exists()) {
-                    console.log("🆕 Creating New User Profile:", fUser.email);
-                    userData = {
-                        uid: fUser.uid,
-                        email: fUser.email || "",
-                        displayName: fUser.displayName || "",
-                        role: "USER",
-                        status: "active",
-                        teamId: null, // Force them to pick a team
-                        provider: fUser.providerData[0]?.providerId || 'unknown',
-                        createdAt: serverTimestamp(),
-                        lastLogin: serverTimestamp(),
-                        photoURL: fUser.photoURL || ""
-                    };
-                    await setDoc(ref, userData);
-                } else {
-                    console.log("✅ Existing User Found:", snap.data().email);
-                    await updateDoc(ref, { lastLogin: serverTimestamp() });
-                    userData = snap.data();
+                const redirectResult = await getRedirectResult(auth);
+                if (redirectResult) {
+                    console.log("🔁 [AUTH] Redirect Login Detected:", redirectResult.user.email);
+                    // No further action needed here; onAuthStateChanged will fire with this user immediately after.
                 }
-
-                // Construct Safe App User Object
-                const appUser: User = {
-                    id: fUser.uid,
-                    name: userData.name || userData.displayName || fUser.displayName || "User",
-                    email: fUser.email || "",
-                    role: (userData.role === 'admin' || userData.role === 'ADMIN') ? 'ADMIN' : 'USER',
-                    avatar: userData.photoURL || fUser.photoURL || "",
-                    isDisabled: userData.status === 'suspended' || userData.isDisabled,
-                    teamId: userData.teamId,
-                    isOnboarded: !!userData.teamId // Simple onboarding check
-                };
-
-                setUser(appUser);
-
-                // Set Active Team
-                if (appUser.teamId) {
-                    const t = TEAMS.find(team => team.id === appUser.teamId);
-                    if (t) setActiveTeam(t);
-                }
-
-            } catch (error) {
-                console.error("❌ CRITICAL AUTH ERROR:", error);
-                // User is authenticated but profile missing/error.
-                // We should ideally show an error page, but for now we fallback to keeping them logged in without profile data (User will match, role will be USER)
-                // Or force logout?
-                // Let's keep minimal user state so they aren't booted instantly
-                setUser({
-                    id: fUser.uid,
-                    name: fUser.displayName || "User",
-                    role: 'USER',
-                    teamId: undefined
-                } as any);
-            } finally {
-                console.log("🔓 Role Loading Complete");
-                setRoleLoading(false);
+            } catch (e: any) {
+                console.error("❌ [AUTH] Redirect Result Error:", e);
+                // We don't block; we just log. User can try logging in again if it failed.
             }
-        });
 
-        return () => unsubscribe();
+            // B. Listen for Auth Changes
+            unsubscribe = onAuthStateChanged(auth, async (fUser) => {
+                console.log("👤 [AUTH] Change Detected:", fUser?.email || "Guest");
+
+                if (!fUser) {
+                    // LOGGED OUT
+                    setFirebaseUser(null);
+                    setUser(null);
+                    setActiveTeam(null);
+                    setAuthLoading(false);
+                    setRoleLoading(false);
+                    return;
+                }
+
+                // LOGGED IN
+                setFirebaseUser(fUser);
+                setAuthLoading(false); // Firebase knows who we are
+                setRoleLoading(true);  // Now fetching local profile
+
+                try {
+                    const ref = doc(db, "users", fUser.uid);
+                    const snap = await getDoc(ref);
+
+                    let userData: any;
+
+                    if (!snap.exists()) {
+                        console.log("🆕 [AUTH] Creating New Profile...");
+                        userData = {
+                            uid: fUser.uid,
+                            email: fUser.email || "",
+                            displayName: fUser.displayName || "New User",
+                            role: "USER",
+                            status: "active",
+                            teamId: null,
+                            provider: fUser.providerData[0]?.providerId || 'unknown',
+                            createdAt: serverTimestamp(),
+                            lastLogin: serverTimestamp(),
+                            photoURL: fUser.photoURL || ""
+                        };
+                        // Use setDoc with merge to be safe, though snap !exists implies purely new
+                        await setDoc(ref, userData);
+                    } else {
+                        console.log("✅ [AUTH] Profile Loaded");
+                        await updateDoc(ref, { lastLogin: serverTimestamp() });
+                        userData = snap.data();
+                    }
+
+                    // Map to App User
+                    const appUser: User = {
+                        id: fUser.uid,
+                        name: userData.name || userData.displayName || fUser.displayName || "User",
+                        email: fUser.email || "",
+                        role: (userData.role === 'admin' || userData.role === 'ADMIN') ? 'ADMIN' : 'USER',
+                        avatar: userData.photoURL || fUser.photoURL || "",
+                        isDisabled: userData.isDisabled === true,
+                        teamId: userData.teamId,
+                        isOnboarded: !!userData.teamId
+                    };
+
+                    setUser(appUser);
+
+                    if (appUser.teamId) {
+                        const t = TEAMS.find(team => team.id === appUser.teamId);
+                        if (t) setActiveTeam(t);
+                    }
+
+                } catch (err) {
+                    console.error("❌ [AUTH] Profile Fetch Error:", err);
+                    // Fallback so user isn't stuck endlessly loading
+                    setUser({
+                        id: fUser.uid,
+                        name: fUser.displayName || "User",
+                        role: 'USER',
+                        email: fUser.email || "",
+                        idAsString: fUser.uid // legacy
+                    } as any);
+                } finally {
+                    setRoleLoading(false);
+                }
+            });
+        };
+
+        initAuth();
+
+        return () => {
+            if (unsubscribe) unsubscribe();
+        };
     }, []);
 
-    // Derived State
     const isAdmin = user?.role === 'ADMIN' || user?.teamId === 'uncle_joy';
     const loading = authLoading || roleLoading;
 
-    // Helpers
+    // Actions
+    const handleLoginGoogle = async () => {
+        // This function will handle PWA redirect checks internally
+        await loginGoogleAuto();
+        // NOTE: If redirect happens, this promise chain halts here as page reloads.
+        // If popup happens, it continues.
+    };
+
     const selectTeam = async (teamId: string, pin: string): Promise<boolean> => {
         if (!firebaseUser) return false;
-        if (TEAM_PINS[teamId] && TEAM_PINS[teamId] !== pin) return false; // Basic PIN check
+        if (TEAM_PINS[teamId] && TEAM_PINS[teamId] !== pin) return false;
 
         try {
-            await updateDoc(doc(db, "users", firebaseUser.uid), { teamId: teamId });
+            await updateDoc(doc(db, "users", firebaseUser.uid), { teamId });
+            setUser(prev => prev ? { ...prev, teamId: teamId as TeamId } : null);
             const t = TEAMS.find(x => x.id === teamId);
-            if (t) {
-                setActiveTeam(t);
-                setUser(prev => prev ? { ...prev, teamId: teamId as TeamId } : null);
-            }
+            if (t) setActiveTeam(t);
             return true;
         } catch (e) {
             console.error("Team Select Error", e);
@@ -181,43 +190,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
-    const value = useMemo<AuthCtx>(() => ({
+    const value: AuthCtx = {
         user,
         firebaseUser,
         authLoading,
         roleLoading,
         loading,
-
-        activePlayer: user as any, // Legacy compat
+        loginEmail,
+        signupEmail,
+        loginGoogle: handleLoginGoogle,
+        loginWithGoogle: handleLoginGoogle,
+        logout: logoutFull,
         activeTeam,
-        selectedTeam: activeTeam, // Alias
+        selectedTeam: activeTeam,
         isAdmin,
         selectTeam,
-        hasAccess: () => true, // Simplified
-
-        loginEmail: async (e, p) => { await loginEmail(e, p); },
-        signupEmail: async (e, p) => { await signupEmail(e, p); },
-        loginGoogle: async () => { await loginGoogleAuto(); },
-        loginWithGoogle: async () => { await loginGoogleAuto(); },
+        hasAccess: () => true,
         login: async (e, p) => { try { await loginEmail(e, p); return true; } catch { return false; } },
-        logout: async () => {
-            await logoutFull();
-            // State will be cleared by listener
-        },
+        activePlayer: user,
         TEAMS
-    }), [user, firebaseUser, loading, activeTeam, isAdmin, authLoading, roleLoading]);
+    };
 
-    // Initial Splash Screen
-    // Only block if AUTH is unknown. If Auth is known but Role is loading, we might show a spinner inside the layout?
-    // Requirement: "roleLoading ends as soon as Firestore user doc is ready".
-    // "No return null".
-    // Let's allow the Provider to render children even if loading, so Guards can handle specific redirects.
-    // BUT, for the *very first* load (authLoading), we should probably block to prevent a flash of Login Page if user is actually logged in.
+    // BLOCKING LOADER (Global)
+    // We block the entire app during the initial Auth Check (authLoading).
+    // This prevents "Login Page" flash for PWA users who are actually logged in.
     if (authLoading) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-[#070A0F] text-accent-gold">
+            <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#070A0F] text-accent-gold">
                 <div className="w-16 h-16 border-4 border-current border-t-transparent rounded-full animate-spin mb-4" />
                 <div className="text-xl font-bold tracking-widest animate-pulse">SOBEK PLAY</div>
+                <p className="mt-4 text-xs text-gray-500 font-mono tracking-widest">AUTHENTICATING...</p>
             </div>
         );
     }
