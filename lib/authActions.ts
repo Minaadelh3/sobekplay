@@ -23,9 +23,13 @@ export const isPWA = (): boolean => {
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
         (window.navigator as any).standalone === true;
 
-    // Optional: Also treat strict mobile user agents as PWA-like if needed, 
-    // but usually 'standalone' is the key for "Add to Home Screen" behavior.
     return isStandalone;
+};
+
+export const isIOS = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 };
 
 // --- Core Actions ---
@@ -50,20 +54,27 @@ export async function loginEmail(email: string, password: string) {
 export async function loginGoogleAuto() {
     await ensureAuthPersistence();
 
-    // PWA Strategy: Use Redirect to avoid Popup Blocking in Standalone Mode
-    const shouldUseRedirect = isPWA(); // or isMobile if we want to be very safe
+    const isPwaMode = isPWA();
+    const isIosDevice = isIOS();
 
-    console.log(`[SOBEK-AUTH] Google Login - Mode: ${shouldUseRedirect ? 'REDIRECT' : 'POPUP'} (PWA: ${isPWA()})`);
+    // PWA Strategy: 
+    // - Android/Desktop PWA: Use REDIRECT (better UX, no popup blocking)
+    // - iOS PWA: Use POPUP (Redirect often fails to return to app context or causes loops)
+    // - Regular Browser: Use POPUP
+
+    // We only use Redirect if it's a PWA AND NOT iOS.
+    const shouldUseRedirect = isPwaMode && !isIosDevice;
+
+    console.log(`[SOBEK-AUTH] Google Login - PWA: ${isPwaMode}, iOS: ${isIosDevice} -> Mode: ${shouldUseRedirect ? 'REDIRECT' : 'POPUP'}`);
 
     try {
         if (shouldUseRedirect) {
-            // REDIRECT FLOW
+            // REDIRECT FLOW (Android/Desktop PWA)
             await signInWithRedirect(auth, googleProvider);
             // The page will reload. The result is handled in AuthContext -> handleGoogleRedirectResult
-            // intentionally return nothing or a promise that never resolves/resolves empty
             return;
         } else {
-            // POPUP FLOW (Desktop)
+            // POPUP FLOW (iOS PWA or Regular Browser)
             return await signInWithPopup(auth, googleProvider);
         }
     } catch (error: any) {
