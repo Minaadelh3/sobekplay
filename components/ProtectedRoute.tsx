@@ -3,10 +3,11 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-    const { user, loading, selectedTeam } = useAuth();
+    const { user, authReady, selectedTeam } = useAuth();
     const location = useLocation();
 
-    if (loading) {
+    // 1. Wait for Auth to be completely ready (no guessing)
+    if (!authReady) {
         return (
             <div className="h-screen w-full flex flex-col items-center justify-center bg-black text-gold">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent-gold mb-4"></div>
@@ -15,17 +16,17 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
         );
     }
 
+    // 2. Auth Ready? Check User
     if (!user) {
-        // Redirect to login while saving the attempted URL
+        // Redirect to login only after we are sure there is no user
         return <Navigate to="/login" state={{ from: location.pathname }} replace />;
     }
 
-    // Force Team Selection
-    // If not selected, and we are NOT already on the selection page => Redirect
+    // 3. Check Team (if not on profiles page)
     if (!selectedTeam && location.pathname !== '/profiles') {
         return <Navigate to="/profiles" replace />;
     }
 
-    // Allow access
+    // 4. Access Granted
     return <>{children}</>;
 };

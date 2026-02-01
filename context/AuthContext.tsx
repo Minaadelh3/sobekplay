@@ -18,6 +18,8 @@ type AuthCtx = {
     firebaseUser: FirebaseUser | null;
     authLoading: boolean;
     roleLoading: boolean;
+    authReady: boolean;
+    roleReady: boolean;
     loading: boolean;
 
     loginEmail: (email: string, password: string) => Promise<UserCredential>;
@@ -54,18 +56,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [authLoading, setAuthLoading] = useState(true);
     const [roleLoading, setRoleLoading] = useState(false); // Starts false, becomes true if user found
 
+    // Stable Readiness Flags
+    const [authReady, setAuthReady] = useState(false);
+    const [roleReady, setRoleReady] = useState(false);
+
     // --- 1. GLOBAL INITIALIZATION ---
     // --- 1. GLOBAL INITIALIZATION ---
     // Strict Mode / Double-Init Guard
-    const isInitializing = React.useRef(false);
+    // --- 1. GLOBAL INITIALIZATION ---
 
     useEffect(() => {
-        // Prevent double-invocation in Strict Mode
-        if (isInitializing.current) {
-            return;
-        }
-        isInitializing.current = true;
-
         let unsubscribe: () => void;
 
         const initAuth = async () => {
@@ -96,12 +96,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     setActiveTeam(null);
                     setAuthLoading(false);
                     setRoleLoading(false);
+
+                    setAuthReady(true);
+                    setRoleReady(true);
                     return;
                 }
 
                 // LOGGED IN
                 setFirebaseUser(fUser);
                 setAuthLoading(false); // Firebase knows who we are
+                setAuthReady(true);
                 setRoleLoading(true);  // Now fetching local profile
 
                 try {
@@ -163,6 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     } as any);
                 } finally {
                     setRoleLoading(false);
+                    setRoleReady(true);
                 }
             });
         };
@@ -250,6 +255,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         firebaseUser,
         authLoading,
         roleLoading,
+        authReady,
+        roleReady,
         loading,
         loginEmail,
         signupEmail,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AdminRoute } from './components/AdminRoute';
@@ -137,8 +137,15 @@ const App: React.FC = () => {
             </Route>
 
             {/* Root Redirect */}
-            <Route path="/" element={<Navigate to="/app/home" replace />} />
-            <Route path="*" element={<Navigate to="/app/home" replace />} />
+            {/* Root Redirect - Auth Aware */}
+            <Route path="/" element={
+              <ProtectedRoute>
+                <Navigate to="/app/home" replace />
+              </ProtectedRoute>
+            } />
+
+            {/* Catch-all Redirect */}
+            <Route path="*" element={<Navigate to="/login" replace />} />
 
           </Routes>
           <TeamChatPopup />

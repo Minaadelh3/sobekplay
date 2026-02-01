@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
-import { getAuth, type Auth } from "firebase/auth";
+import { getAuth, type Auth, setPersistence, indexedDBLocalPersistence, browserLocalPersistence } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 import { getStorage, type FirebaseStorage } from "firebase/storage";
 import { getAnalytics, isSupported } from "firebase/analytics";
@@ -47,6 +47,18 @@ if (isFirebaseConfigValid) {
         auth = getAuth(app);
         db = getFirestore(app);
         storage = getStorage(app);
+
+        // --- AUTH PERSISTENCE FIX ---
+        // Explicitly set persistence to fix iOS PWA guest issues
+        (async () => {
+            try {
+                await setPersistence(auth, indexedDBLocalPersistence);
+            } catch (err) {
+                console.warn("IndexedDB Persistence failed, falling back to local:", err);
+                await setPersistence(auth, browserLocalPersistence);
+            }
+        })();
+
     } catch (error) {
         console.error("🔥 Firebase Init Fatal Error:", error);
         // We do typically want to throw here to stop the app from running in a broken state
