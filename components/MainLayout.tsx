@@ -8,7 +8,6 @@ import PullToRefresh from './PullToRefresh';
 import MobileBackHeader from './MobileBackHeader';
 import { motion } from 'framer-motion';
 import { PosterItem } from '../types';
-import PointsAnimation from './PointsAnimation';
 
 // Footer Component (Internal)
 const Footer: React.FC = () => (
@@ -69,7 +68,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ analyzedPosters, isAnalyzing })
                 <Navbar onSearchOpen={() => setIsSearchOpen(true)} />
             )}
 
-            <PointsAnimation />
+
 
             <SearchModal
                 isOpen={isSearchOpen}

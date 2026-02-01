@@ -103,10 +103,14 @@ export default function LoginPage() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-accent-green hover:bg-[#0e7a63] text-white font-bold py-4 rounded-xl shadow-lg transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="w-full bg-accent-green hover:bg-[#0e7a63] text-white font-bold py-4 rounded-xl shadow-lg transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 relative overflow-hidden"
                     >
                         {loading ? (
-                            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+                            <>
+                                <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white relative z-10"></div>
+                                <span className="relative z-10">جاري الدخول...</span>
+                            </>
                         ) : (isLogin ? "ادخل المقبرة" : "إنشاء الحساب")}
                     </button>
                 </form>
@@ -124,9 +128,12 @@ export default function LoginPage() {
                     type="button"
                     onClick={handleGoogleLogin}
                     disabled={loading}
-                    className="w-full bg-white text-black font-bold py-3.5 rounded-xl hover:bg-gray-100 transition-all flex items-center justify-center gap-3"
+                    className="w-full bg-white text-black font-bold py-3.5 rounded-xl hover:bg-gray-100 transition-all flex items-center justify-center gap-3 relative overflow-hidden"
                 >
-                    <svg className="w-5 h-5" viewBox="0 0 24 24">
+                    {loading ? (
+                        <div className="absolute inset-0 bg-gray-200 animate-pulse" />
+                    ) : null}
+                    <svg className="w-5 h-5 relative z-10" viewBox="0 0 24 24">
                         <path
                             fill="#EA4335"
                             d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3C17.782 1.145 15.065 0 12 0 7.31 0 3.256 2.744 1.378 6.822l3.888 2.943z"
@@ -144,7 +151,7 @@ export default function LoginPage() {
                             d="M5.277 14.268A7.127 7.127 0 0 1 4.909 12c0-.782.125-1.533.357-2.235L1.378 6.822A11.957 11.957 0 0 0 0 12c0 1.92.445 3.719 1.233 5.313l4.044-3.045z"
                         />
                     </svg>
-                    <span>{isLogin ? "تسجيل الدخول بجوجل" : "انضم باستخدام جوجل"}</span>
+                    <span className="relative z-10">{loading ? "جاري التحميل..." : (isLogin ? "تسجيل الدخول بجوجل" : "انضم باستخدام جوجل")}</span>
                 </button>
 
                 <div className="mt-8 text-center">

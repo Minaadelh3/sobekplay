@@ -16,12 +16,20 @@ import { auth } from "./firebase";
 const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 
+// --- Helpers ---
+export const isPWA = (): boolean => {
+    if (typeof window === 'undefined') return false;
+
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as any).standalone === true;
+
+    // Optional: Also treat strict mobile user agents as PWA-like if needed, 
+    // but usually 'standalone' is the key for "Add to Home Screen" behavior.
+    return isStandalone;
+};
+
 // --- Core Actions ---
 
-/** 
- * Ensures session persists across browser restarts.
- * Called automatically before every login action.
- */
 export async function ensureAuthPersistence() {
     await setPersistence(auth, browserLocalPersistence);
 }
@@ -37,68 +45,66 @@ export async function loginEmail(email: string, password: string) {
 }
 
 /**
- * Intelligent Google Login:
- * - Desktop: Popup (Better UX)
- * - Mobile: Redirect (Required for reliable auth on iOS/Android WebViews)
+ * Intelligent Google Login for PWA / Mobile
  */
 export async function loginGoogleAuto() {
     await ensureAuthPersistence();
 
-    const ua = navigator.userAgent || "";
-    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    // PWA Strategy: Use Redirect to avoid Popup Blocking in Standalone Mode
+    const shouldUseRedirect = isPWA(); // or isMobile if we want to be very safe
 
-    // Check if running on localhost or local IP (common for dev)
-    // UNIFIED STRATEGY: Always use Popup
-    // Why? 'signInWithRedirect' fails on Vercel deployments (Mobile) due to Third-Party Cookie blocking (ITP).
-    // The Redirect flow requires the auth domain and app domain to share cookies, which they don't (firebaseapp.com vs vercel.app).
-    // Since we fixed Cross-Origin-Opener-Policy (COOP) in vite.config.ts, Popup is now viable on Mobile.
-
-    console.log(`[SOBEK-AUTH] Starting Google Login (Popup Mode) - Mobile: ${isMobile}`);
+    console.log(`[SOBEK-AUTH] Google Login - Mode: ${shouldUseRedirect ? 'REDIRECT' : 'POPUP'} (PWA: ${isPWA()})`);
 
     try {
-        return await signInWithPopup(auth, googleProvider);
+        if (shouldUseRedirect) {
+            // REDIRECT FLOW
+            await signInWithRedirect(auth, googleProvider);
+            // The page will reload. The result is handled in AuthContext -> handleGoogleRedirectResult
+            // intentionally return nothing or a promise that never resolves/resolves empty
+            return;
+        } else {
+            // POPUP FLOW (Desktop)
+            return await signInWithPopup(auth, googleProvider);
+        }
     } catch (error: any) {
-        console.error("Popup Login Failed:", error);
+        console.error("Google Login Failed:", error);
 
-        // Specific handling for Mobile Popup Blocks
         if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
-            alert("Please allow popups for this site to sign in with Google.");
+            alert("Please allow popups to sign in, or try the app installed on your home screen.");
         } else {
             alert(`Login Failed: ${error.message}`);
         }
         throw error;
     }
 }
-/* REMOVED REDIRECT LOGIC TO PREVENT LOOP */
 
 /**
- * Must be called on App Mount to handle returning from a redirect flow (Mobile).
+ * Must be called on App Mount (AuthContext) to capture the returning user from Redirect
  */
 export async function handleGoogleRedirectResult() {
-    console.log("[SOBEK-AUTH] Checking for redirect result...");
     try {
         const result = await getRedirectResult(auth);
         if (result) {
-            console.log("✅ [SOBEK-AUTH] Google Redirect Login Successful", result.user.email);
-        } else {
-            console.log("[SOBEK-AUTH] No redirect result found.");
+            console.log("✅ [SOBEK-AUTH] Redirect Login Success:", result.user.email);
+            return result.user;
         }
-        return result;
+        return null;
     } catch (error) {
-        console.error("❌ [SOBEK-AUTH] Google Redirect Error:", error);
-        throw error;
+        console.error("❌ [SOBEK-AUTH] Redirect Error:", error);
+        // Do not throw here, just log, so app can continue
+        return null;
     }
 }
 
 export async function logoutFull() {
     console.log("🔒 Signing out...");
     await signOut(auth);
-    // Optional: Clear any app-specific local storage if strictly required
-    // localStorage.removeItem('sobek_gamification'); 
-    // window.location.reload(); // Aggressive but ensures clean slate
+    localStorage.clear();
+    // Optional: reload to clear memory state completely
+    // window.location.reload(); 
 }
 
-// --- Helpers ---
+// --- Error Mapping ---
 
 export function mapAuthError(e: unknown): string {
     const err = e as AuthError;
@@ -106,23 +112,21 @@ export function mapAuthError(e: unknown): string {
 
     switch (code) {
         case "auth/popup-blocked":
-            return "Popup blocked. Please allow popups or use mobile.";
+            return "Popup blocked. Please allow popups.";
         case "auth/popup-closed-by-user":
             return "Login cancelled.";
         case "auth/unauthorized-domain":
-            return "Unauthorized domain. Check Firebase Console settings.";
+            return "Unauthorized domain (Firebase Console).";
         case "auth/network-request-failed":
-            return "Network error. Please check your connection.";
+            return "Check your internet connection.";
         case "auth/invalid-credential":
         case "auth/user-not-found":
         case "auth/wrong-password":
             return "Invalid email or password.";
         case "auth/email-already-in-use":
-            return "Email already registered. Please login.";
+            return "Email already registered.";
         case "auth/weak-password":
-            return "Password is too weak (min 6 chars).";
-        case "auth/too-many-requests":
-            return "Too many requests. Try again later.";
+            return "Password too weak.";
         default:
             return err?.message || "Authentication failed.";
     }

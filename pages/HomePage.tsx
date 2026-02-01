@@ -2,12 +2,13 @@ import React, { useMemo } from 'react';
 import Hero from '../components/Hero';
 import Carousel from '../components/Carousel';
 import VerseOfTheDay from '../components/VerseOfTheDay';
-import Leaderboard from '../components/Leaderboard';
 import { PosterItem } from '../types';
 
 interface HomeProps {
     posters: PosterItem[];
 }
+
+import TeamRankList from '../components/TeamRankList';
 
 const HomePage: React.FC<HomeProps> = ({ posters }) => {
     const rows = useMemo(() => {
@@ -40,9 +41,11 @@ const HomePage: React.FC<HomeProps> = ({ posters }) => {
         <div className="pb-24">
             <Hero posters={posters} />
 
+            {/* Team Ranking Pulse */}
+            <TeamRankList />
+
             {/* Real-time Content */}
-            <div className="relative z-30 -mt-16 md:-mt-20 px-4 max-w-7xl mx-auto space-y-8">
-                <Leaderboard />
+            <div className="relative z-30 px-4 max-w-7xl mx-auto space-y-8">
                 <VerseOfTheDay />
             </div>
 

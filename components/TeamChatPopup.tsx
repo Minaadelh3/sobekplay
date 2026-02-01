@@ -3,6 +3,9 @@ import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import TeamChatCore from './TeamChatCore';
 
+// Feature Flag - Toggle to false to disable temporarily
+const ENABLE_WHATSAPP_POPUP = false;
+
 export default function TeamChatPopup() {
     const { user, activeTeam } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
@@ -15,7 +18,7 @@ export default function TeamChatPopup() {
         }
     }, [user, activeTeam]);
 
-    if (!activeTeam) return null;
+    if (!ENABLE_WHATSAPP_POPUP || !activeTeam) return null;
 
     return (
         <div className="fixed bottom-24 right-5 z-[9999] font-sans" dir="ltr">
@@ -40,7 +43,7 @@ export default function TeamChatPopup() {
                             <div className="flex-1">
                                 <h3 className="font-bold text-base leading-tight">{activeTeam.name}</h3>
                                 <p className="text-xs text-green-200 truncate">
-                                    {activeTeam.id === 'uncle_joy' ? 'Official Admin Channels' : `${activeTeam.totalPoints || 0} Points • Tap for info`}
+                                    {activeTeam.id === 'uncle_joy' ? 'Official Admin Channels' : `${activeTeam.points || 0} Points • Tap for info`}
                                 </p>
                             </div>
                             <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">

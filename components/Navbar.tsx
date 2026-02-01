@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import BrandLogo from './BrandLogo';
 import { useAuth } from '../context/AuthContext';
@@ -11,7 +11,7 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const location = useLocation();
-  const { user, logout, activePlayer, selectedTeam, accountData, isAdmin } = useAuth();
+  const { user, logout, selectedTeam, isAdmin, roleLoading } = useAuth();
 
   // Close dropdowns on route change
   useEffect(() => {
@@ -150,19 +150,12 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
                     {/* Team Identity */}
                     <div className="text-sm font-black text-white flex items-center gap-2">
                       {selectedTeam.name}
-                      {/* Admin indication hidden */}
-                    </div>
-
-                    {/* Points Display */}
-                    <div className="flex flex-col items-start gap-0.5 mt-0.5 font-mono text-[10px]">
-                      {!isAdmin && (
-                        <div className="text-accent-gold">
-                          ⭐ مساهمتي: <span className="font-bold">{activePlayer?.personalPoints ?? 0}</span>
-                        </div>
+                      {/* Show Points if Scorable */}
+                      {selectedTeam.isScorable !== false && (
+                        <span className="bg-accent-gold/10 text-accent-gold px-2 py-0.5 rounded text-[10px] border border-accent-gold/20 flex items-center gap-1">
+                          🏆 {selectedTeam.points ?? 0}
+                        </span>
                       )}
-                      <div className="text-blue-300">
-                        🏆 الفريق: <span className="font-bold">{accountData?.totalPoints ?? 0}</span>
-                      </div>
                     </div>
                   </div>
 
@@ -191,7 +184,13 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
                         <span>⚙️</span> الإعدادات
                       </Link>
 
-                      {isAdmin ? (
+                      {/* Admin Link with Loading State */}
+                      {roleLoading ? (
+                        <div className="px-5 py-3 flex items-center gap-2">
+                          <div className="w-4 h-4 rounded-full bg-white/10 animate-pulse" />
+                          <div className="h-3 w-24 bg-white/10 rounded animate-pulse" />
+                        </div>
+                      ) : isAdmin ? (
                         <Link to="/admin" onClick={() => setActiveDropdown(null)} className="block px-5 py-3 text-sm text-accent-gold font-bold hover:bg-white/5 transition-colors">
                           لوحة التحكم (Admin) ⚡
                         </Link>
@@ -267,20 +266,13 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
                       </div>
                       <div className="flex-1">
                         <div className="text-gray-400 text-xs uppercase font-bold tracking-wider mb-1">{user.name}</div>
-                        <div className="text-white font-bold text-lg mb-2">{selectedTeam.name}</div>
-
-                        {/* Points Display - Mobile */}
-                        <div className="flex flex-col gap-1 text-xs font-mono bg-black/30 p-2 rounded-lg">
-                          {!isAdmin && (
-                            <div className="text-accent-gold flex justify-between">
-                              <span>⭐ مساهمتي:</span>
-                              <span className="font-bold">{activePlayer?.personalPoints ?? 0}</span>
-                            </div>
+                        <div className="text-white font-bold text-lg mb-2 flex items-center gap-2">
+                          {selectedTeam.name}
+                          {selectedTeam.isScorable !== false && (
+                            <span className="text-accent-gold text-sm bg-accent-gold/10 px-2 py-1 rounded-lg border border-accent-gold/20">
+                              🏆 {selectedTeam.points ?? 0}
+                            </span>
                           )}
-                          <div className="text-blue-300 flex justify-between border-t border-white/10 pt-1 mt-1">
-                            <span>🏆 الفريق:</span>
-                            <span className="font-bold">{accountData?.totalPoints ?? 0}</span>
-                          </div>
                         </div>
                       </div>
                     </div>
@@ -302,7 +294,13 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
                       </Link>
                     </div>
 
-                    {isAdmin && (
+
+                    {roleLoading ? (
+                      <div className="w-full bg-white/5 rounded-xl border border-white/5 p-3 flex items-center justify-center gap-2 mb-3">
+                        <div className="w-4 h-4 rounded-full bg-white/10 animate-pulse" />
+                        <div className="h-3 w-24 bg-white/10 rounded animate-pulse" />
+                      </div>
+                    ) : isAdmin && (
                       <Link
                         to="/admin"
                         onClick={() => setIsMobileMenuOpen(false)}
