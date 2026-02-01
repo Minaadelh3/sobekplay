@@ -20,8 +20,8 @@ type AuthCtx = {
     roleLoading: boolean;
     loading: boolean;
 
-    loginEmail: (email: string, password: string) => Promise<void>;
-    signupEmail: (email: string, password: string) => Promise<void>;
+    loginEmail: (email: string, password: string) => Promise<UserCredential>;
+    signupEmail: (email: string, password: string) => Promise<UserCredential>;
     loginGoogle: () => Promise<void>;
     loginWithGoogle: () => Promise<void>;
     logout: () => Promise<void>;
