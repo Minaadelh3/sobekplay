@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-export default function MobileBackHeader() {
+export default function MobileBackHeader({ title }: { title?: string }) {
     const navigate = useNavigate();
     const location = useLocation();
     const [show, setShow] = useState(false);

@@ -8,6 +8,8 @@ import PullToRefresh from './PullToRefresh';
 import MobileBackHeader from './MobileBackHeader';
 import { motion } from 'framer-motion';
 import { PosterItem } from '../types';
+import { useAuth } from '../context/AuthContext';
+import { useAchievements } from '../context/AchievementsContext';
 
 // Footer Component (Internal)
 const Footer: React.FC = () => (
@@ -30,6 +32,20 @@ interface MainLayoutProps {
 }
 
 const MainLayout: React.FC<MainLayoutProps> = ({ analyzedPosters, isAnalyzing }) => {
+    const { user, selectedTeam } = useAuth();
+    const { unlockAchievement } = useAchievements();
+
+    // Check for Achievements
+    useEffect(() => {
+        if (user) {
+            unlockAchievement('first_login');
+
+            if (user.teamId) {
+                unlockAchievement('team_player');
+            }
+        }
+    }, [user, unlockAchievement]);
+
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // Used implicitly by MobileNav?
     const location = useLocation();

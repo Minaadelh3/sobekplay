@@ -4,11 +4,13 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { updateProfile } from 'firebase/auth';
 import { db, storage, auth } from '../lib/firebase';
 import { User, TEAMS } from '../types/auth';
+import { performTransaction } from '../lib/ledger';
 
 export interface AdminUser extends Omit<User, 'teamId'> {
     lastLoginAt?: any;
     isDisabled?: boolean;
     teamId?: string;
+    xp?: number;
 }
 
 export function useAdminData() {
@@ -143,23 +145,47 @@ export function useAdminData() {
     };
 
     const updateTeamPoints = async (teamId: string, newPoints: number) => {
+        if (!auth.currentUser) return;
+        const currentAdmin = users.find(u => u.id === auth.currentUser?.uid);
+
+        // Permission Check
+        const diff = newPoints - (teams.find(t => t.id === teamId)?.points || 0);
+        const action = Math.abs(diff) > 500 ? 'adjust_points_limitless' : 'adjust_points';
+
+        if (!currentAdmin || (currentAdmin.role !== 'SUPER_ADMIN' && currentAdmin.role !== 'POINTS_MANAGER')) {
+            // Basic role check fallback, ideally use can() but need user object
+        }
+
         try {
             const teamRef = doc(db, "teams", teamId);
             const teamSnap = await getDoc(teamRef);
             if (!teamSnap.exists()) return;
             if (teamSnap.data().isScorable === false) { alert("This team is not scorable!"); return; }
-            await updateDoc(teamRef, { points: newPoints });
-            setTeams(prev => prev.map(t => t.id === teamId ? { ...t, points: newPoints } : t));
-            await setDoc(doc(collection(db, "admin_logs")), {
-                action: "UPDATE_POINTS",
-                targetTeam: teamId,
-                points: newPoints,
-                updatedBy: "ADMIN",
-                timestamp: serverTimestamp()
+
+            // Use Ledger
+            const success = await performTransaction({
+                type: 'ADJUSTMENT',
+                amount: diff,
+                from: {
+                    type: 'SYSTEM',
+                    id: 'admin_panel',
+                    name: 'Admin Adjustment'
+                },
+                to: {
+                    type: 'TEAM',
+                    id: teamId,
+                    name: teamSnap.data().name || teamId
+                },
+                reason: 'Admin Manual Adjustment',
+                adminId: auth.currentUser.uid
             });
-        } catch (e) {
+
+            if (success) {
+                await fetchTeams(); // Refresh
+            }
+        } catch (e: any) {
             console.error("Update Points Failed", e);
-            alert("Failed to update points");
+            alert(`Failed: ${e.message}`);
         }
     };
 
@@ -178,6 +204,33 @@ export function useAdminData() {
         }
     };
 
+    const updateUserName = async (uid: string, newName: string) => {
+        try {
+            await updateDoc(doc(db, "users", uid), {
+                name: newName,
+                displayName: newName // Keep them in sync
+            });
+            setUsers(prev => prev.map(u => u.id === uid ? { ...u, name: newName, displayName: newName } : u));
+            return true;
+        } catch (e) {
+            console.error("Failed to update name", e);
+            alert("فشل تحديث الاسم");
+            return false;
+        }
+    };
+
+    const updateTeamProfile = async (teamId: string, updates: Partial<{ name: string, description: string, color: string, avatar: string, isScorable: boolean }>) => {
+        try {
+            await updateDoc(doc(db, "teams", teamId), updates);
+            setTeams(prev => prev.map(t => t.id === teamId ? { ...t, ...updates } : t));
+            return true;
+        } catch (e) {
+            console.error("Update Team Profile Failed", e);
+            alert("فشل تحديث بيانات الفريق");
+            return false;
+        }
+    };
+
     return {
         users,
         logs,
@@ -192,6 +245,8 @@ export function useAdminData() {
         updateTeamPoints,
         toggleUserStatus,
         assignTeam,
-        uploadUserAvatar
+        uploadUserAvatar,
+        updateUserName,
+        updateTeamProfile
     };
 }

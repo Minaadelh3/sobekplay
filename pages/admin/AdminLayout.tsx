@@ -10,10 +10,12 @@ export default function AdminLayout() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const navItems = [
-        { path: '/admin', end: true, label: 'لوحة التحكم', icon: '📊' },
+        { path: '/admin', end: true, label: 'الرئيسية', icon: '⚡' },
+        { path: '/admin/games', label: 'إدارة الألعاب', icon: '🎮' },
         { path: '/admin/teams', label: 'إدارة الفرق', icon: '🏆' },
         { path: '/admin/users', label: 'الأعضاء', icon: '👥' },
         { path: '/admin/logs', label: 'سجل العمليات', icon: '📜' },
+        { path: '/admin/balancing', label: 'الميزان (God Mode)', icon: '⚖️' },
     ];
 
     const getPageTitle = () => {

@@ -1,4 +1,4 @@
-export type UserRole = 'ADMIN' | 'USER';
+export type UserRole = 'SUPER_ADMIN' | 'POINTS_MANAGER' | 'GAMES_MODERATOR' | 'VIEWER' | 'ADMIN' | 'USER';
 
 export interface User {
     id: string;
@@ -14,6 +14,11 @@ export interface User {
     isOnboarded?: boolean;
     teamId?: TeamId;
     isDisabled?: boolean;
+    // Gamification
+    points?: number;
+    badges?: string[];
+    rankIdentifier?: string;
+    unlockedAchievements?: string[]; // IDs of unlocked achievements
 }
 
 export const USERS_DB: User[] = [

@@ -24,6 +24,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
 
   const navLinks = [
     { name: '🏠 Home', path: '/app/home' },
+    { name: '🏅 Rankings', path: '/app/rankings' },
     { name: '🎮 Games', path: '/app/games' },
     { name: '🧭 Program', path: '/app/program' },
     { name: '🔔 Reminders', path: '/app/reminders' },

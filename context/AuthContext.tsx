@@ -104,8 +104,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                 // LOGGED IN
                 setFirebaseUser(fUser);
-                setAuthLoading(false); // Firebase knows who we are
-                setAuthReady(true);
                 setRoleLoading(true);  // Now fetching local profile
 
                 try {
@@ -151,8 +149,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     setUser(appUser);
 
                     if (appUser.teamId) {
-                        const t = TEAMS.find(team => team.id === appUser.teamId);
-                        if (t) setActiveTeam(t);
+                        const staticTeam = TEAMS.find(team => team.id === appUser.teamId);
+                        if (staticTeam) {
+                            setActiveTeam(staticTeam);
+                        } else {
+                            // Fetch Dynamic Team
+                            try {
+                                const teamDoc = await getDoc(doc(db, "teams", appUser.teamId));
+                                if (teamDoc.exists()) {
+                                    setActiveTeam({ id: appUser.teamId, ...teamDoc.data() } as TeamProfile);
+                                } else {
+                                    // Fallback placeholder to prevent loop
+                                    setActiveTeam({
+                                        id: appUser.teamId as any,
+                                        name: appUser.teamId,
+                                        avatar: '/assets/brand/logo.png',
+                                        color: 'from-gray-700 to-black',
+                                        points: 0,
+                                        isScorable: true
+                                    });
+                                }
+                            } catch (err) {
+                                console.error("Error fetching dynamic team", err);
+                                // Fallback
+                                setActiveTeam({
+                                    id: appUser.teamId as any,
+                                    name: appUser.teamId,
+                                    avatar: '/assets/brand/logo.png',
+                                    color: 'from-gray-700 to-black',
+                                    points: 0,
+                                    isScorable: true
+                                });
+                            }
+                        }
                     }
 
                 } catch (err) {
@@ -168,6 +197,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 } finally {
                     setRoleLoading(false);
                     setRoleReady(true);
+                    setAuthLoading(false); // Auth is now fully ready (User + Profile + Team)
+                    setAuthReady(true);
                 }
             });
         };
@@ -241,8 +272,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
             await updateDoc(doc(db, "users", firebaseUser.uid), { teamId });
             setUser(prev => prev ? { ...prev, teamId: teamId as TeamId } : null);
-            const t = TEAMS.find(x => x.id === teamId);
-            if (t) setActiveTeam(t);
+
+            // Update Active Team State Logic
+            const staticTeam = TEAMS.find(x => x.id === teamId);
+            if (staticTeam) {
+                setActiveTeam(staticTeam);
+            } else {
+                // Dynamic Fetch for immediate UI update
+                const teamDoc = await getDoc(doc(db, "teams", teamId));
+                if (teamDoc.exists()) {
+                    setActiveTeam({ id: teamId, ...teamDoc.data() } as TeamProfile);
+                }
+            }
             return true;
         } catch (e) {
             console.error("Team Select Error", e);

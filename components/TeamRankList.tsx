@@ -74,11 +74,20 @@ const TeamRankList = () => {
 
                                 {/* HEADER: Name & Rank */}
                                 <div className="flex items-start justify-between mb-4 relative z-10">
-                                    <div className="flex flex-col">
-                                        <h3 className="text-xl font-bold text-white leading-tight tracking-tight group-hover:text-accent-gold transition-colors">
-                                            {team.name}
-                                        </h3>
-                                        <div className="h-0.5 w-8 bg-gradient-to-r from-transparent via-white/20 to-transparent mt-2 rounded-full hidden" />
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 rounded-xl bg-black/20 p-1 border border-white/10 shadow-lg">
+                                            <img
+                                                src={team.avatar || '/assets/brand/logo.png'}
+                                                alt={team.name}
+                                                className="w-full h-full object-contain drop-shadow"
+                                            />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <h3 className="text-xl font-bold text-white leading-tight tracking-tight group-hover:text-accent-gold transition-colors">
+                                                {team.name}
+                                            </h3>
+                                            <div className="h-0.5 w-8 bg-gradient-to-r from-transparent via-white/20 to-transparent mt-2 rounded-full hidden" />
+                                        </div>
                                     </div>
 
                                     {!isNonScorable && (

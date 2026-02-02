@@ -43,7 +43,7 @@ export default function AdminPointsPerson() {
         }
     }, [selectedTeam]);
 
-    const filteredMembers = members.filter(m => m.name.toLowerCase().includes(search.toLowerCase()));
+    const filteredMembers = members.filter(m => (m.name || '').toLowerCase().includes(search.toLowerCase()));
 
     const handleExecute = async () => {
         if (!selectedUser || !amount || !user) return;
@@ -179,8 +179,8 @@ export default function AdminPointsPerson() {
                                 key={val}
                                 onClick={() => setAmount(val)}
                                 className={`py-2 rounded-lg font-mono text-sm border ${val > 0
-                                        ? 'bg-green-500/10 border-green-500/20 text-green-400'
-                                        : 'bg-red-500/10 border-red-500/20 text-red-400'
+                                    ? 'bg-green-500/10 border-green-500/20 text-green-400'
+                                    : 'bg-red-500/10 border-red-500/20 text-red-400'
                                     }`}
                             >
                                 {val > 0 ? '+' : ''}{val}

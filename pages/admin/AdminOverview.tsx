@@ -6,8 +6,10 @@ export default function AdminOverview() {
 
     if (loading) return <div className="text-gray-500">جاري تحميل البيانات...</div>;
 
-    const totalPoints = teams.reduce((acc, t) => acc + (t.points || 0), 0);
-    const scorableTeams = teams.filter(t => t.isScorable).length;
+    const totalPoints = teams
+        .filter(t => t.id !== 'uncle_joy')
+        .reduce((acc, t) => acc + (t.points || 0), 0);
+    const scorableTeams = teams.filter(t => t.isScorable && t.id !== 'uncle_joy').length;
     const adminUsers = users.filter(u => u.role === 'ADMIN').length;
 
     const stats = [

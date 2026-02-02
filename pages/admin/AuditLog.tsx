@@ -1,48 +1,104 @@
-import React, { useEffect } from 'react';
-import { useAdminData } from '../../hooks/useAdminData';
+import React, { useState, useEffect } from 'react';
+import { fetchLedger, LedgerEntry } from '../../lib/ledger';
 
-export default function AuditLog() {
-    const { logs, fetchLogs, loading } = useAdminData();
+const AuditLog = () => {
+    const [entries, setEntries] = useState<LedgerEntry[]>([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetchLogs();
+        loadLog();
     }, []);
 
+    const loadLog = async () => {
+        setLoading(true);
+        try {
+            const data = await fetchLedger(100);
+            setEntries(data);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
-        <div className="bg-[#141414] rounded-2xl border border-white/10 p-6 overflow-x-auto shadow-xl">
-            <h2 className="text-xl font-bold mb-6 text-white flex items-center gap-2">
-                <span>📜</span> سجل العمليات
-            </h2>
-            <table className="w-full text-right text-sm">
-                <thead className="text-gray-500 border-b border-white/5 uppercase font-mono text-xs">
-                    <tr>
-                        <th className="pb-4">الحدث</th>
-                        <th className="pb-4">المستهدف</th>
-                        <th className="pb-4">المسؤول</th>
-                        <th className="pb-4">التوقيت</th>
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                    {loading ? (
-                        <tr><td colSpan={4} className="p-8 text-center text-gray-500 animate-pulse">جاري تحميل السجل...</td></tr>
-                    ) : logs.length === 0 ? (
-                        <tr><td colSpan={4} className="p-8 text-center text-gray-500">السجل فارغ.</td></tr>
-                    ) : logs.map(log => (
-                        <tr key={log.id} className="hover:bg-white/5 transition-colors">
-                            <td className="py-4 text-accent-gold font-mono">{log.action || 'Unknown Action'}</td>
-                            <td className="py-4 text-white">
-                                {log.targetTeam ? `Team: ${log.targetTeam}` :
-                                    log.targetUser ? `User: ${log.targetUser}` :
-                                        log.targetUid || '-'}
-                            </td>
-                            <td className="py-4 text-gray-400">{log.adminEmail || 'Unknown'}</td>
-                            <td className="py-4 text-gray-500 font-mono text-xs">
-                                {log.timestamp?.toDate ? log.timestamp.toDate().toLocaleString() : 'N/A'}
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <h1 className="text-3xl font-black text-white">📜 سجل العمليات (Audit Log)</h1>
+                <button onClick={loadLog} className="bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg text-sm text-gray-300">
+                    تحديث 🔄
+                </button>
+            </div>
+
+            <div className="bg-[#141414] border border-white/5 rounded-xl overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead className="bg-black/20 text-gray-500 text-[10px] uppercase tracking-wider">
+                            <tr>
+                                <th className="px-6 py-4">الوقت</th>
+                                <th className="px-6 py-4">النوع</th>
+                                <th className="px-6 py-4">من</th>
+                                <th className="px-6 py-4">إلى</th>
+                                <th className="px-6 py-4 text-right">المبلغ</th>
+                                <th className="px-6 py-4">السبب</th>
+                                <th className="px-6 py-4">بواسطة</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                            {loading ? (
+                                <tr><td colSpan={7} className="p-8 text-center text-gray-500">Loading log...</td></tr>
+                            ) : entries.length === 0 ? (
+                                <tr><td colSpan={7} className="p-8 text-center text-gray-500">سجل نظيف ✨</td></tr>
+                            ) : (
+                                entries.map(entry => {
+                                    const isPositive = true; // Ledger tracks absolute amount, context determines meaning
+                                    // But usually visual "From -> To" is enough.
+
+                                    return (
+                                        <tr key={entry.id} className="hover:bg-white/5 transition-colors text-sm text-gray-300">
+                                            <td className="px-6 py-4 font-mono text-xs text-gray-500">
+                                                {entry.timestamp?.seconds ? new Date(entry.timestamp.seconds * 1000).toLocaleString('en-US') : 'Pending...'}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className={`px-2 py-1 rounded text-[10px] uppercase font-bold
+                                                    ${entry.type === 'ADJUSTMENT' ? 'bg-blue-500/20 text-blue-400' :
+                                                        entry.type === 'TRANSFER' ? 'bg-purple-500/20 text-purple-400' :
+                                                            'bg-gray-500/20 text-gray-400'}
+                                                `}>
+                                                    {entry.type}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-1">
+                                                    <span className="text-[10px] opacity-50 bg-white/10 px-1 rounded">{entry.fromType}</span>
+                                                    <span className="font-bold">{entry.fromName}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-1">
+                                                    <span className="text-[10px] opacity-50 bg-white/10 px-1 rounded">{entry.toType}</span>
+                                                    <span className="font-bold">{entry.toName}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-right font-mono font-bold text-white">
+                                                {entry.amount}
+                                            </td>
+                                            <td className="px-6 py-4 text-gray-400 italic">
+                                                "{entry.reason}"
+                                            </td>
+                                            <td className="px-6 py-4 text-xs text-gray-500">
+                                                {entry.adminId}
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     );
-}
+};
+
+export default AuditLog;

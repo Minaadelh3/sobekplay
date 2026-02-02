@@ -9,6 +9,7 @@ export interface RankingMember {
     avatar?: string;
     name: string;
     role?: string;
+    points?: number;
 }
 
 export interface RankedTeam extends TeamProfile {
@@ -17,102 +18,145 @@ export interface RankedTeam extends TeamProfile {
 }
 
 export function useTeamRanking() {
+    // DEBUG: Verify HMR
+    console.log("🚀 useTeamRanking v3 (Clean) loaded");
+
     const [sortedTeams, setSortedTeams] = useState<RankedTeam[]>([]);
     const [teamMembers, setTeamMembers] = useState<Record<string, RankingMember[]>>({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        setLoading(true);
-        const qTeams = query(collection(db, "teams"));
-        const qUsers = query(collection(db, "users"));
+    // Raw Data State
+    const [rawTeams, setRawTeams] = useState<TeamProfile[]>([]);
+    const [rawUsers, setRawUsers] = useState<RankingMember[]>([]);
+    const [teamsLoaded, setTeamsLoaded] = useState(false);
+    const [usersLoaded, setUsersLoaded] = useState(false);
 
-        const unsubTeams = onSnapshot(qTeams, (snap) => {
+    // 1. Subscribe to Teams
+    useEffect(() => {
+        const qTeams = query(collection(db, "teams"));
+        const unsub = onSnapshot(qTeams, (snap) => {
             const teams: TeamProfile[] = [];
             snap.forEach((doc) => teams.push(doc.data() as TeamProfile));
-
-            // Separation Logic
-            const scorable = teams.filter(t => t.isScorable !== false && t.id !== 'uncle_joy');
-            const nonScorable = teams.filter(t => t.isScorable === false || t.id === 'uncle_joy');
-
-            // Sort Scorable by Points (Desc), then by Name (Asc) for stability
-            scorable.sort((a, b) => {
-                const pointsDiff = (b.points || 0) - (a.points || 0);
-                if (pointsDiff !== 0) return pointsDiff;
-                return a.name.localeCompare(b.name);
-            });
-
-            // Assign Ranks with Tie Handling
-            const rankedScorable: RankedTeam[] = [];
-
-            for (let i = 0; i < scorable.length; i++) {
-                const team = scorable[i];
-                const prevTeam = i > 0 ? scorable[i - 1] : null;
-
-                // If points tie with previous, share rank
-                if (prevTeam && (team.points || 0) === (prevTeam.points || 0)) {
-                    rankedScorable.push({
-                        ...team,
-                        rank: rankedScorable[i - 1].rank,
-                        displayRank: rankedScorable[i - 1].displayRank
-                    });
-                } else {
-                    // Standard competition ranking: 1, 2, 2, 4... is technically correct but users often prefer 1, 2, 2, 3 in casual contexts.
-                    // User Request says "ties in points" handling. 
-                    // Let's stick to standard 1, 2, 2, 4 for accuracy in "ranking" or 1, 2, 2, 3 for dense rank?
-                    // Typically 'rank' is the row index + 1, skipping for ties. 
-                    // But visually simple: Current index + 1 is easiest explanation.
-                    // Actually, let's do: 1, 2, 2, 4 (Standard Competition Ranking)
-                    rankedScorable.push({
-                        ...team,
-                        rank: i + 1,
-                        displayRank: (i + 1).toString()
-                    });
-                }
-            }
-
-            // Process Non-Scorable
-            const processedNonScorable: RankedTeam[] = nonScorable.map(t => ({
-                ...t,
-                rank: null,
-                displayRank: null
-            }));
-
-            // Final Combined List: Scorable first, then Non-Scorable
-            setSortedTeams([...rankedScorable, ...processedNonScorable]);
-            setLoading(false);
+            setRawTeams(teams);
+            setTeamsLoaded(true);
         }, (err) => {
             console.error("Teams fetch error", err);
             setError("Failed to load teams");
         });
+        return () => unsub();
+    }, []);
 
-        const unsubUsers = onSnapshot(qUsers, (snap) => {
-            const membersMap: Record<string, RankingMember[]> = {};
-
+    // 2. Subscribe to Users
+    useEffect(() => {
+        const qUsers = query(collection(db, "users"));
+        const unsub = onSnapshot(qUsers, (snap) => {
+            const users: RankingMember[] = [];
             snap.forEach((doc) => {
-                const u = doc.data();
-                if (u.role === 'ADMIN') return; // Exclude Admins
-
-                if (u.teamId) {
-                    if (!membersMap[u.teamId]) membersMap[u.teamId] = [];
-                    membersMap[u.teamId].push({
-                        id: doc.id,
-                        name: u.name || u.displayName,
-                        avatar: u.avatar || u.photoURL,
-                        photoURL: u.avatar || u.photoURL
-                    });
-                }
+                const d = doc.data();
+                users.push({
+                    id: doc.id,
+                    name: d.name || d.displayName || "Unknown",
+                    avatar: d.avatar || d.photoURL,
+                    role: d.role,
+                    points: d.points || 0,
+                    ...d // Include other fields if needed temporarily
+                } as RankingMember);
             });
-            setTeamMembers(membersMap);
+            setRawUsers(users);
+            setUsersLoaded(true);
         }, (err) => {
             console.error("Users fetch error", err);
         });
-
-        return () => {
-            unsubTeams();
-            unsubUsers();
-        };
+        return () => unsub();
     }, []);
+
+    // 3. Aggregate & Calculate
+    useEffect(() => {
+        if (!teamsLoaded || !usersLoaded) return;
+
+        // --- AGGREGATION LOGIC ---
+        const teamPointsMap: Record<string, number> = {};
+        const membersMap: Record<string, RankingMember[]> = {};
+
+        // Initialize maps
+        rawTeams.forEach(t => {
+            teamPointsMap[t.id] = 0;
+            membersMap[t.id] = [];
+        });
+
+        // Distribute Users & Sum Points
+        rawUsers.forEach(u => {
+            // Strict Admin Exclusion from Team Points
+            if (u.role === 'ADMIN' || u.role === 'admin') return;
+
+            // Allow user to be in a team map even if strict typing of u.teamId is missing in interface (cast as any if needed)
+            const tid = (u as any).teamId;
+            if (tid && teamPointsMap[tid] !== undefined) {
+                teamPointsMap[tid] += (u.points || 0);
+                membersMap[tid].push(u);
+            }
+        });
+
+        // Sort members within teams
+        Object.keys(membersMap).forEach(tid => {
+            membersMap[tid].sort((a, b) => (b.points || 0) - (a.points || 0));
+        });
+
+        // --- RANKING LOGIC ---
+        const scorable = rawTeams.filter(t => t.isScorable !== false && t.id !== 'uncle_joy');
+        const nonScorable = rawTeams.filter(t => t.isScorable === false || t.id === 'uncle_joy');
+
+        // Apply calculated points
+        const calculatedScorable = scorable.map(t => ({
+            ...t,
+            points: teamPointsMap[t.id] // Override DB points with Sum
+        }));
+
+        // Sort Teams
+        calculatedScorable.sort((a, b) => {
+            const pointsDiff = (b.points || 0) - (a.points || 0);
+            if (pointsDiff !== 0) return pointsDiff;
+            return (a.name || '').localeCompare(b.name || '');
+        });
+
+        // Assign Ranks
+        const rankedScorable: RankedTeam[] = [];
+        for (let i = 0; i < calculatedScorable.length; i++) {
+            const team = calculatedScorable[i];
+            let rank = i + 1;
+
+            // Tie handling (Competition Rank: 1, 2, 2, 4)
+            if (i > 0) {
+                const prev = rankedScorable[i - 1];
+                if (prev.points === team.points) {
+                    rank = prev.rank!;
+                }
+            }
+
+            rankedScorable.push({
+                ...team,
+                rank: rank,
+                displayRank: rank.toString()
+            });
+        }
+
+        // Process Non-Scorable
+        const processedNonScorable: RankedTeam[] = nonScorable.map(t => ({
+            ...t,
+            points: teamPointsMap[t.id] || 0,
+            rank: null,
+            displayRank: null
+        }));
+
+        // Filter out 'uncle_joy' (Admin Team) from public view
+        const visibleNonScorable = processedNonScorable.filter(t => t.id !== 'uncle_joy');
+
+        setSortedTeams([...rankedScorable, ...visibleNonScorable]);
+        setTeamMembers(membersMap);
+        setLoading(false);
+
+    }, [rawTeams, rawUsers, teamsLoaded, usersLoaded]);
 
     return { sortedTeams, teamMembers, loading, error };
 }

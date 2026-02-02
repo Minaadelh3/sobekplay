@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { TEAMS, TeamProfile } from '../types/auth';
 import { useAuth } from '../context/AuthContext';
+import { useAchievements } from '../context/AchievementsContext';
 import PinModal from '../components/PinModal';
 import { motion } from 'framer-motion';
 import { ToutIcon, AnkhIcon, AmonIcon, RaIcon } from '../components/icons/teams/TeamIcons';

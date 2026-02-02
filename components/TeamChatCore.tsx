@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useAchievements } from '../context/AchievementsContext';
 import { db, storage } from '../lib/firebase';
 import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -23,6 +24,7 @@ interface TeamChatCoreProps {
 
 export default function TeamChatCore({ mode }: TeamChatCoreProps) {
     const { user, activeTeam } = useAuth();
+    const { unlockAchievement } = useAchievements();
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -89,6 +91,8 @@ export default function TeamChatCore({ mode }: TeamChatCoreProps) {
                 type: 'text',
                 createdAt: serverTimestamp()
             });
+
+            unlockAchievement('social_fly');
         } catch (error) {
             console.error("Failed to send", error);
         }
