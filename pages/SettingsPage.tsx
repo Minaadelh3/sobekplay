@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
+import { useNotifications } from '../hooks/useNotifications';
 import { doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, getStorage } from 'firebase/storage';
 import { db, app } from '../lib/firebase';
@@ -16,6 +17,15 @@ export default function SettingsPage() {
     const [uploading, setUploading] = useState(false);
     const [success, setSuccess] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const { permissionStatus, enableNotifications, isSupported } = useNotifications();
+    const [notifLoading, setNotifLoading] = useState(false);
+
+    const handleEnableNotifs = async () => {
+        setNotifLoading(true);
+        await enableNotifications();
+        setNotifLoading(false);
+    };
 
     useEffect(() => {
         if (user) {
@@ -148,6 +158,35 @@ export default function SettingsPage() {
                             className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-accent-gold focus:outline-none transition"
                         />
                     </div>
+
+                    {/* Notifications Section */}
+                    {isSupported && (
+                        <div className="pt-4 border-t border-white/10 mt-4">
+                            <label className="block text-gray-400 text-sm font-bold mb-2">
+                                إشعارات التطبيق
+                            </label>
+                            <div className="flex items-center justify-between bg-black/30 p-4 rounded-xl border border-white/5">
+                                <div>
+                                    <h4 className="text-white font-bold">تنبيهات المباريات والأخبار</h4>
+                                    <p className="text-xs text-gray-400 mt-1">
+                                        {permissionStatus === 'granted'
+                                            ? 'مفعلة وتصلك أول بأول ✅'
+                                            : 'فعلها عشان يوصلك كل جديد 🔔'}
+                                    </p>
+                                </div>
+                                {permissionStatus !== 'granted' && (
+                                    <button
+                                        type="button"
+                                        onClick={handleEnableNotifs}
+                                        disabled={notifLoading}
+                                        className="bg-accent-gold hover:bg-yellow-500 text-black px-4 py-2 rounded-lg text-sm font-bold transition-colors"
+                                    >
+                                        {notifLoading ? 'جاري التفعيل...' : 'تفعيل'}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                     <div className="pt-4 flex gap-4">
                         <button

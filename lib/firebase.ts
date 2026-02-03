@@ -3,6 +3,7 @@ import { getAuth, type Auth, setPersistence, indexedDBLocalPersistence, browserL
 import { getFirestore, type Firestore } from "firebase/firestore";
 import { getStorage, type FirebaseStorage } from "firebase/storage";
 import { getAnalytics, isSupported } from "firebase/analytics";
+import { getMessaging, type Messaging } from "firebase/messaging";
 
 // --- 1. CONFIGURATION ---
 // Best Practice: Use a strictly typed utility to fetch env vars. 
@@ -25,6 +26,8 @@ const firebaseConfig = {
     measurementId: getEnv("FIREBASE_MEASUREMENT_ID"),
 };
 
+export const VAPID_KEY = getEnv("FIREBASE_VAPID_KEY");
+
 // --- VALIDATION ---
 // We identify missing keys to provide a clear error in the console.
 export const missingKeys = Object.entries(firebaseConfig)
@@ -38,6 +41,7 @@ let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 let storage: FirebaseStorage;
+let messaging: Messaging;
 
 if (isFirebaseConfigValid) {
     try {
@@ -45,7 +49,7 @@ if (isFirebaseConfigValid) {
         // This is crucial in strict mode / hot-reload environments
         app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
         auth = getAuth(app);
-        
+
         // --- AUTH PERSISTENCE FIX ---
         // Force Browser Local Persistence (works best for PWA)
         // We fire this immediately. Auth actions will also ensure it.
@@ -55,6 +59,7 @@ if (isFirebaseConfigValid) {
 
         db = getFirestore(app);
         storage = getStorage(app);
+        messaging = getMessaging(app);
 
     } catch (error) {
         console.error("🔥 Firebase Init Fatal Error:", error);
@@ -73,7 +78,7 @@ if (isFirebaseConfigValid) {
 // We export these. If init failed, they will be undefined, 
 // so consumers (like AuthContext) MUST handle strict checks or try-catch.
 // However, typically the app should crash early if backend is required.
-export { app, auth, db, storage };
+export { app, auth, db, storage, messaging };
 
 // --- 4. SAFE ANALYTICS ---
 export async function initAnalytics() {

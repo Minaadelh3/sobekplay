@@ -29,7 +29,10 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       VitePWA({
-        registerType: 'autoUpdate', // Golden Fix: Immediately update SW
+        registerType: 'autoUpdate',
+        strategies: 'injectManifest', // Use custom SW
+        srcDir: 'src',
+        filename: 'sw.ts',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
         manifest: {
           name: 'Sobek Play',
@@ -58,15 +61,9 @@ export default defineConfig(({ mode }) => {
             }
           ]
         },
-        workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'], // Cache assets
-          cleanupOutdatedCaches: true,
-          skipWaiting: true,
-          clientsClaim: true,
-          maximumFileSizeToCacheInBytes: 3000000, // Increase limit to 3MB (fix build error)
-        },
         devOptions: {
-          enabled: true // Enable SW in dev to test
+          enabled: true,
+          type: 'module',
         }
       })
     ],
