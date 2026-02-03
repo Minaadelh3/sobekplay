@@ -61,9 +61,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [roleReady, setRoleReady] = useState(false);
 
     // --- 1. GLOBAL INITIALIZATION ---
-    // --- 1. GLOBAL INITIALIZATION ---
-    // Strict Mode / Double-Init Guard
-    // --- 1. GLOBAL INITIALIZATION ---
 
     useEffect(() => {
         let unsubscribe: () => void;
@@ -73,20 +70,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // We start true, and ONLY set to false when Firebase returns a User or Null.
             setAuthLoading(true);
 
-<<<<<<< HEAD
-            // A. Handle Redirect Result (Crucial for iOS PWA)
-            // We check this BEFORE listening to auth state to ensure we capture the returning user
-            // and don't prematurely render the "Guest" state if they just signed in.
-            try {
-                if (!auth) {
-                    console.warn("⚠️ [AUTH] Firebase Auth not initialized (Missing Config?). Skipping redirect check.");
-                    setAuthLoading(false);
-                    return;
-                }
+            if (!auth) {
+                console.warn("⚠️ [AUTH] Firebase Auth not initialized (Missing Config?). Skipping.");
+                setAuthLoading(false);
+                return;
+            }
 
+            try {
                 // 1. Enforce Persistence FIRST
                 await setPersistence(auth, browserLocalPersistence);
                 console.log("💾 [AUTH] Persistence Enforced (Browser Local)");
+
+                // 2. Handle Redirect Result (Crucial for iOS PWA)
+                // We check this BEFORE listening to auth state to ensure we capture the returning user
+                // and don't prematurely render the "Guest" state if they just signed in.
 
                 // Determine if we are likely returning from a redirect flow
                 // This prevents unnecessary processing on every app load, though getRedirectResult is generally lightweight.
@@ -108,8 +105,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 // But generally, we just proceed to the normal listener.
             }
 
-=======
->>>>>>> parent of eed2d52 (Login IOS)
             // B. Listen for Auth Changes
             unsubscribe = onAuthStateChanged(auth, async (fUser) => {
                 console.log("👤 [AUTH] Change Detected:", fUser?.email || "Guest");
@@ -233,49 +228,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         initAuth();
 
         return () => {
-            // In Strict Mode, this cleanup runs immediately after the first effect.
-            // We DO NOT want to unsubscribe if we are maintaining the singleton connection,
-            // but normally we should. However, for Auth, we often want the listener to persist
-            // unless the component truly unmounts.
-            //
-            // With the `isInitializing` guard at the top, the second effect won't run `initAuth` again.
-            // But if we unsubscribe here in the first cleanup, we kill the listener that `initAuth` just set up.
-            //
-            // FIX: We only unsubscribe if we are NOT in the "double-fire" instant unmount.
-            // But since we can't easily detect that, a common pattern for Auth is to ref-count or just leave it,
-            // or simply accept that the Ref guard prevents the *second* setup, but we risk the first cleanup killing the first setup.
-            //
-            // BETTER FIX for Strict Mode:
-            // Let the cleanup happen. But then the `initAuth` needs to be robust.
-            //
-            // Actually, the `isInitializing` guard prevents the SECOND run.
-            // But the FIRST run's cleanup will kill the FIRST listener.
-            // Result: No listener.
-            //
-            // CORRECT PATTERN:
-            // Allow the effect to run every time, but ensure `getRedirectResult` is only called ONCE globally if possible,
-            // or just rely on Firebase's internal handling.
-            //
-            // IF we strictly blocked the second run, we are broken because the first run cleans up.
-            //
-            // REVISED STRATEGY IN CODE BELOW:
-            // We remove the `isInitializing` strict return for the listener part,
-            // but we keep the `getRedirectResult` guarded or just allow it (Firebase handles it okay usually, but loop implies otherwise).
-            //
-            // Actually, the loop might be `LoginPage` redirecting to itself?
-            // Let's stick to the plan: Guard it.
-            // NOTE: To fix the "Cleanup kills it" issue, we actually need to NOT cleanup in strict mode's fake unmount.
-            // But we can't know.
-            //
-            // Alternative: use a mounted ref to avoid setting state if unmounted.
-            //
-            // Let's try the simple guard first BUT with a twist: we won't unsubscribe in the cleanup if it's just a remount? 
-            // No, standard practice: cleaning up is correct.
-            //
-            // The issue with `getRedirectResult` is likely that it consumes the token.
-            //
-            // Let's wrap the `getRedirectResult` in a separate verified boolean or just try-catch it safely.
-
             if (unsubscribe) unsubscribe();
         };
     }, []);
