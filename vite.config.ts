@@ -58,7 +58,7 @@ export default defineConfig(({ mode }) => {
               src: 'icons/icon-512.png',
               sizes: '512x512',
               type: 'image/png',
-              purpose: 'any maskable'
+              purpose: 'maskable' // Explicit maskable icon for Android 13+
             }
           ]
         },
@@ -67,8 +67,14 @@ export default defineConfig(({ mode }) => {
           cleanupOutdatedCaches: true,
           skipWaiting: true,
           clientsClaim: true,
-          maximumFileSizeToCacheInBytes: 3000000, // Increase limit to 3MB (fix build error)
+          maximumFileSizeToCacheInBytes: 3000000,
           importScripts: ['/OneSignalSDKWorker.js'], // Merge OneSignal Worker
+          // CRITICAL FIX: Do NOT cache or route Firebase Auth / API calls via SW
+          navigateFallback: '/index.html',
+          navigateFallbackDenylist: [
+            /^\/__\/auth/, // Exclude Firebase Auth handler from SW (Fixes Login Loop)
+            /^\/api/       // Exclude API calls
+          ]
         },
         devOptions: {
           enabled: true // Enable SW in dev to test
