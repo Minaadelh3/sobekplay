@@ -23,23 +23,31 @@ export function useOneSignal() {
         if (isInitialized) return;
 
         const initOneSignal = async () => {
-            // Basic support check
-            if (typeof window !== 'undefined' && !('os' in window) && !('OneSignal' in window)) {
-                // Very basic check, mainly we rely on OneSignal's own init to not crash
+            // 1. Abort if Offline (Prevents Network Errors)
+            if (typeof window !== 'undefined' && !navigator.onLine) {
+                console.log("📴 [OneSignal] Offline, skipping init.");
+                return;
             }
 
             console.log("🔔 [OneSignal] Initializing...");
 
             try {
-                await OneSignal.init({
+                // 2. Timeout Wrapper: If OneSignal script is blocked, don't wait forever
+                const initPromise = OneSignal.init({
                     appId: ONESIGNAL_APP_ID,
                     allowLocalhostAsSecureOrigin: true,
-                    serviceWorkerPath: 'sw.js', // Merged worker
+                    serviceWorkerPath: 'sw.js',
                     serviceWorkerParam: { scope: '/' },
                     promptOptions: {
-                        slidedown: { prompts: [] } // Manual prompting only
+                        slidedown: { prompts: [] }
                     },
                 });
+
+                // Race against a 3s timeout
+                await Promise.race([
+                    initPromise,
+                    new Promise((_, reject) => setTimeout(() => reject(new Error("OneSignal Init Timeout")), 5000))
+                ]);
 
                 setIsInitialized(true);
                 setIsSupported(OneSignal.Notifications.isPushSupported());
@@ -52,13 +60,15 @@ export function useOneSignal() {
                 OneSignal.Notifications.addEventListener("permissionChange", updateState);
 
             } catch (error) {
-                console.error("❌ OneSignal Init Error:", error);
+                // Suppress excessive noise for known network blocks
+                console.warn("⚠️ [OneSignal] Init Failed (likely AdBlock/Network):", error);
                 setIsSupported(false);
             }
         };
 
         if (typeof window !== 'undefined') {
-            initOneSignal();
+            // Small delay to allow main thread to settle
+            setTimeout(initOneSignal, 1000);
         }
 
     }, [isInitialized]);
