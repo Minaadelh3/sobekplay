@@ -47,8 +47,22 @@ const TEAM_PINS: Record<string, string> = {
     'tout': '1234', 'ankh': '1234', 'amon': '1234', 'ra': '1234', 'uncle_joy': '1234'
 };
 
-// Global flag to prevent double-execution of getRedirectResult in React Strict Mode
-let redirectCheckPerformed = false;
+// Global Log Buffer for PWA Debugging
+declare global {
+    interface Window {
+        __SOBEK_LOGS__: string[];
+    }
+}
+if (typeof window !== 'undefined') {
+    window.__SOBEK_LOGS__ = window.__SOBEK_LOGS__ || [];
+}
+
+const log = (msg: string) => {
+    console.log(msg);
+    if (typeof window !== 'undefined') {
+        window.__SOBEK_LOGS__.push(`[${new Date().toLocaleTimeString()}] ${msg}`);
+    }
+};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
@@ -69,12 +83,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         let unsubscribe: () => void;
 
         const initAuth = async () => {
-            console.log("🔐 [AUTH] Initializing...");
+            log("🔐 [AUTH] Initializing AuthProvider v2.1...");
             // We start true, and ONLY set to false when Firebase returns a User or Null.
             setAuthLoading(true);
 
             if (!auth) {
-                console.warn("⚠️ [AUTH] Firebase Auth not initialized (Missing Config?). Skipping.");
+                log("⚠️ [AUTH] Firebase Auth not initialized (Missing Config?). Skipping.");
                 setAuthLoading(false);
                 return;
             }
@@ -82,34 +96,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             try {
                 // 1. Enforce Persistence FIRST
                 await setPersistence(auth, browserLocalPersistence);
-                console.log("💾 [AUTH] Persistence Enforced (Browser Local)");
+                log("💾 [AUTH] Persistence Enforced (Browser Local)");
 
                 // 2. Handle Redirect Result (Crucial for iOS PWA)
-                // We check this BEFORE listening to auth state to ensure we capture the returning user
-                // and don't prematurely render the "Guest" state if they just signed in.
-                // Guard against Strict Mode double-invocation
-                if (!redirectCheckPerformed) {
-                    redirectCheckPerformed = true; // Mark as done immediately
+                // REMOVED STRICT MODE GUARD: Better to check twice than zero times.
+                log("🔄 [AUTH] Checking Redirect Result...");
+                const result = await getRedirectResult(auth);
 
-                    console.log("🔄 [AUTH] Checking Redirect Result...");
-                    const result = await getRedirectResult(auth);
-                    if (result) {
-                        console.log("✅ [AUTH] Redirect Login Success:", result.user.email);
-                        // OPTIMISTIC UPDATE: Set user immediately to prevent "Guest" flash
-                        setFirebaseUser(result.user);
-                        // The onAuthStateChanged will fire anyway and update standard flows, 
-                        // but this ensures we don't accidentally show login screen.
-                    } else {
-                        console.log("ℹ️ [AUTH] No redirect result found.");
-                    }
+                if (result) {
+                    log(`✅ [AUTH] Redirect Login Success: ${result.user.email}`);
+                    // OPTIMISTIC UPDATE: Set user immediately to prevent "Guest" flash
+                    setFirebaseUser(result.user);
+                    // The onAuthStateChanged will fire anyway
+                } else {
+                    log("ℹ️ [AUTH] No redirect result found (Normal load or Popup).");
                 }
             } catch (e: any) {
-                console.error("❌ [AUTH] Redirect Result Error:", e);
-                console.error("Code:", e.code);
-                console.error("Message:", e.message);
-
-                // If the error is regarding pending redirects or other recoverable states, we might want to alert.
-                // But generally, we just proceed to the normal listener.
+                log(`❌ [AUTH] Redirect Result Error: ${e.code} - ${e.message}`);
             }
 
             // B. Listen for Auth Changes

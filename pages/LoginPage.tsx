@@ -177,10 +177,43 @@ export default function LoginPage() {
             </div>
 
             {/* Simple Footer */}
-            <div className="absolute bottom-4 text-center w-full z-10">
+            <div className="absolute bottom-4 text-center w-full z-10 flex flex-col items-center gap-2">
                 <p className="text-[10px] text-gray-600 font-mono tracking-widest uppercase opacity-50">
-                    Powered by Sobek Play
+                    Powered by Sobek Play v2.1
                 </p>
+
+                {/* DEBUG CONSOLE (Temporary) */}
+                <div className="w-full max-w-md px-4 mt-4">
+                    <details className="text-left bg-black/80 border border-white/10 rounded-lg p-2">
+                        <summary className="text-[10px] text-red-500 cursor-pointer font-bold select-none">
+                            🐞 DEV CONSOLE (CLICK TO OPEN)
+                        </summary>
+                        <div className="mt-2 text-[10px] font-mono text-green-400 h-32 overflow-y-auto whitespace-pre-wrap">
+                            {typeof window !== 'undefined' ? window.__SOBEK_LOGS__?.join('\n') : 'No Logs'}
+                        </div>
+                        <div className="mt-2 pt-2 border-t border-white/10 flex gap-2">
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="px-2 py-1 bg-white/10 text-[10px] text-white rounded"
+                            >
+                                Force Reload
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (navigator.serviceWorker) {
+                                        navigator.serviceWorker.getRegistrations().then(regs => {
+                                            regs.forEach(r => r.unregister());
+                                            window.location.reload();
+                                        })
+                                    }
+                                }}
+                                className="px-2 py-1 bg-red-500/20 text-[10px] text-red-400 rounded"
+                            >
+                                Reset Service Worker
+                            </button>
+                        </div>
+                    </details>
+                </div>
             </div>
 
 
