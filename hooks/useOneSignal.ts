@@ -4,10 +4,14 @@ import { useAuth } from '../context/AuthContext';
 
 const ONESIGNAL_APP_ID = import.meta.env.VITE_ONESIGNAL_APP_ID;
 
+type PermissionState = 'default' | 'granted' | 'denied';
+
 export function useOneSignal() {
     const { firebaseUser } = useAuth();
     const [isInitialized, setIsInitialized] = useState(false);
     const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
+    const [permission, setPermission] = useState<PermissionState>('default');
+    const [isSupported, setIsSupported] = useState(true);
 
     // Initialize OneSignal
     useEffect(() => {
@@ -19,42 +23,37 @@ export function useOneSignal() {
         if (isInitialized) return;
 
         const initOneSignal = async () => {
-            console.log("🔔 [OneSignal] Initializing with App ID:", ONESIGNAL_APP_ID);
-
-            if (!ONESIGNAL_APP_ID || ONESIGNAL_APP_ID.length < 10) {
-                console.error("❌ [OneSignal] App ID invalid or too short.");
-                return;
+            // Basic support check
+            if (typeof window !== 'undefined' && !('os' in window) && !('OneSignal' in window)) {
+                // Very basic check, mainly we rely on OneSignal's own init to not crash
             }
+
+            console.log("🔔 [OneSignal] Initializing...");
 
             try {
                 await OneSignal.init({
                     appId: ONESIGNAL_APP_ID,
                     allowLocalhostAsSecureOrigin: true,
-                    // Use the main PWA worker which imports OneSignal scripts
-                    serviceWorkerPath: 'sw.js',
+                    serviceWorkerPath: 'sw.js', // Merged worker
                     serviceWorkerParam: { scope: '/' },
-                    // We handle prompting manually
                     promptOptions: {
-                        slidedown: {
-                            prompts: []
-                        }
+                        slidedown: { prompts: [] } // Manual prompting only
                     },
                 });
 
                 setIsInitialized(true);
-                console.log("✅ OneSignal Initialized");
+                setIsSupported(OneSignal.Notifications.isPushSupported());
 
-                // Get current subscription state
-                const state = await OneSignal.User.PushSubscription.id;
-                setSubscriptionId(state || null);
+                // Initial State
+                updateState();
 
-                // Listen for subscription changes
-                OneSignal.User.PushSubscription.addEventListener("change", (event) => {
-                    setSubscriptionId(event.current.id || null);
-                });
+                // Listeners
+                OneSignal.User.PushSubscription.addEventListener("change", updateState);
+                OneSignal.Notifications.addEventListener("permissionChange", updateState);
 
             } catch (error) {
                 console.error("❌ OneSignal Init Error:", error);
+                setIsSupported(false);
             }
         };
 
@@ -64,30 +63,50 @@ export function useOneSignal() {
 
     }, [isInitialized]);
 
+    const updateState = useCallback(async () => {
+        try {
+            // Permission
+            // OneSignal wraps this, but we can also use native for raw truth
+            const rawPermission = Notification.permission;
+            setPermission(rawPermission as PermissionState);
+
+            // Subscription
+            const subId = OneSignal.User.PushSubscription.id;
+            const optedIn = OneSignal.User.PushSubscription.optedIn;
+
+            // We consider them "Subscribed" only if they have an ID and are opted in
+            if (subId && optedIn) {
+                setSubscriptionId(subId);
+            } else {
+                setSubscriptionId(null);
+            }
+
+            // Update supported flag again just in case
+            setIsSupported(OneSignal.Notifications.isPushSupported());
+
+        } catch (e) {
+            console.warn("OneSignal State Update Error", e);
+        }
+    }, []);
+
     // Handle User Identification (Login/Logout)
     useEffect(() => {
         if (!isInitialized) return;
 
         if (firebaseUser?.uid) {
             // Identify user
-            // Note: v16 SDK uses OneSignal.login, older used setExternalUserId.
-            // react-onesignal usually wraps v16+.
             console.log(`👤 OneSignal: Logging in as ${firebaseUser.uid}`);
             try {
                 OneSignal.login(firebaseUser.uid);
             } catch (e) {
-                console.warn("OneSignal.login failed, trying setExternalUserId fallback", e);
-                // Fallback if older SDK version
-                // @ts-ignore
-                if (OneSignal.setExternalUserId) OneSignal.setExternalUserId(firebaseUser.uid);
+                console.warn("OneSignal login error", e);
             }
         } else {
             // Logout
-            console.log("👤 OneSignal: Logging out");
             try {
                 OneSignal.logout();
             } catch (e) {
-                console.warn("OneSignal.logout failed", e);
+                console.warn("OneSignal logout error", e);
             }
         }
     }, [firebaseUser, isInitialized]);
@@ -98,17 +117,20 @@ export function useOneSignal() {
 
         console.log("🔔 Requesting Notification Permission...");
         try {
-            await OneSignal.Slidedown.promptPush();
+            // This triggers the native prompt
+            await OneSignal.Notifications.requestPermission();
+            // Force an update after
+            await updateState();
         } catch (e) {
             console.error("OneSignal Prompt Error", e);
-            // Fallback to native prompt if slidedown fails/not configured
-            await OneSignal.Notifications.requestPermission();
         }
-    }, [isInitialized]);
+    }, [isInitialized, updateState]);
 
     return {
         isInitialized,
         enableNotifications,
-        subscriptionId
+        subscriptionId,
+        permission,
+        isSupported
     };
 }
