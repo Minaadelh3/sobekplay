@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       VitePWA({
-        registerType: 'autoUpdate',
+        registerType: 'prompt', // STOP AUTO-RELOADS (Fixes infinite SW loops)
         manifestFilename: 'manifest.json', // Ensure manifest is named manifest.json
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg', 'OneSignalSDKWorker.js'],
         manifest: {
