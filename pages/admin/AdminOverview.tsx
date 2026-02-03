@@ -1,6 +1,5 @@
 import React from 'react';
 import { useAdminData } from '../../hooks/useAdminData';
-import { AdminNotificationsPanel } from '../../components/admin/AdminNotificationsPanel';
 
 export default function AdminOverview() {
     const { users, teams, loading } = useAdminData();
@@ -33,9 +32,6 @@ export default function AdminOverview() {
                     </div>
                 ))}
             </div>
-
-            {/* Notifications System */}
-            <AdminNotificationsPanel />
 
             <div className="bg-[#141414] p-6 rounded-2xl border border-white/5">
                 <h3 className="text-xl font-bold mb-4">📢 تنبيهات النظام</h3>

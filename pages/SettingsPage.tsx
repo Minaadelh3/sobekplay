@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
-import { OneSignalPermissionButton } from '../components/OneSignalPermissionButton';
 import { doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, getStorage } from 'firebase/storage';
 import { db, app } from '../lib/firebase';
@@ -148,14 +147,6 @@ export default function SettingsPage() {
                             placeholder="012xxxxxxxx"
                             className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-accent-gold focus:outline-none transition"
                         />
-                    </div>
-
-                    {/* Notifications Section */}
-                    <div className="pt-4 border-t border-white/10 mt-4">
-                        <label className="block text-gray-400 text-sm font-bold mb-2">
-                            إعدادات التنبيهات
-                        </label>
-                        <OneSignalPermissionButton />
                     </div>
 
                     <div className="pt-4 flex gap-4">
