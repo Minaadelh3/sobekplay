@@ -73,6 +73,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // We start true, and ONLY set to false when Firebase returns a User or Null.
             setAuthLoading(true);
 
+            // A. Handle Redirect Result (Crucial for iOS PWA)
+            // We check this BEFORE listening to auth state to ensure we capture the returning user
+            // and don't prematurely render the "Guest" state if they just signed in.
+            try {
+                const result = await getRedirectResult(auth);
+                if (result) {
+                    console.log("✅ [AUTH] Redirect Login Success:", result.user.email);
+                    // We don't need to manually set user here because onAuthStateChanged will fire immediately after with this user.
+                    // But we DO want to ensure we don't clear loading state until that fires.
+                }
+            } catch (e: any) {
+                console.error("❌ [AUTH] Redirect Result Error:", e);
+                // Non-fatal, continue to listener
+            }
+
             // B. Listen for Auth Changes
             unsubscribe = onAuthStateChanged(auth, async (fUser) => {
                 console.log("👤 [AUTH] Change Detected:", fUser?.email || "Guest");
