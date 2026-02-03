@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { onAuthStateChanged, type User as FirebaseUser, getRedirectResult, UserCredential } from "firebase/auth";
+import { onAuthStateChanged, type User as FirebaseUser, getRedirectResult, UserCredential, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { auth, db } from "../lib/firebase";
 import {
@@ -82,6 +82,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     setAuthLoading(false);
                     return;
                 }
+
+                // 1. Enforce Persistence FIRST
+                await setPersistence(auth, browserLocalPersistence);
+                console.log("💾 [AUTH] Persistence Enforced (Browser Local)");
 
                 // Determine if we are likely returning from a redirect flow
                 // This prevents unnecessary processing on every app load, though getRedirectResult is generally lightweight.

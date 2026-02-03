@@ -17,17 +17,16 @@ const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 // --- Helpers ---
+// --- Helpers ---
 export const isPWA = (): boolean => {
     if (typeof window === 'undefined') return false;
-
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+    return window.matchMedia('(display-mode: standalone)').matches ||
         (window.navigator as any).standalone === true;
-
-    return isStandalone;
 };
 
 export const isIOS = (): boolean => {
     if (typeof window === 'undefined') return false;
+    // Robust iOS detection including iPad OS 13+
     return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 };
@@ -43,15 +42,18 @@ export async function ensureAuthPersistence() {
         console.error("❌ Auth Persistence Failed: Auth not initialized.");
         return;
     }
+    // Strict Native-like persistence
     await setPersistence(auth, browserLocalPersistence);
 }
 
 export async function signupEmail(email: string, password: string) {
+    if (!auth) throw new Error("Firebase Auth not initialized");
     await ensureAuthPersistence();
     return createUserWithEmailAndPassword(auth, email, password);
 }
 
 export async function loginEmail(email: string, password: string) {
+    if (!auth) throw new Error("Firebase Auth not initialized");
     await ensureAuthPersistence();
     return signInWithEmailAndPassword(auth, email, password);
 }
@@ -63,6 +65,11 @@ export async function loginEmail(email: string, password: string) {
  * - iOS PWA (Standalone): Uses Redirect (Popup blocked/broken)
  */
 export async function loginGoogleAuto() {
+    if (!auth) {
+        alert("Authentication service is not available. Check your internet connection.");
+        throw new Error("Firebase Auth not initialized");
+    }
+
     await ensureAuthPersistence();
 
     const useRedirect = isIOSStandalone();
@@ -72,7 +79,9 @@ export async function loginGoogleAuto() {
         if (useRedirect) {
             // iOS PWA Standalone Mode -> Must use Redirect
             // The result is handled in AuthContext -> getRedirectResult
+            // logic: This promise will effectively trigger a page unload.
             await signInWithRedirect(auth, googleProvider);
+            // We return here. The app will reload and AuthContext will pick up the user.
             return;
         } else {
             // Default: Use Popup
@@ -99,11 +108,12 @@ export async function handleGoogleRedirectResult() {
 }
 
 export async function logoutFull() {
+    if (!auth) return;
     console.log("🔒 Signing out...");
     await signOut(auth);
     localStorage.clear();
-    // Optional: reload to clear memory state completely
-    // window.location.reload(); 
+    // SPA-friendly logout: Do NOT reload the page.
+    // The AuthContext | onAuthStateChanged will handle state clearing.
 }
 
 // --- Error Mapping ---
