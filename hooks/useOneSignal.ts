@@ -19,6 +19,13 @@ export function useOneSignal() {
         if (isInitialized) return;
 
         const initOneSignal = async () => {
+            console.log("🔔 [OneSignal] Initializing with App ID:", ONESIGNAL_APP_ID);
+
+            if (!ONESIGNAL_APP_ID || ONESIGNAL_APP_ID.length < 10) {
+                console.error("❌ [OneSignal] App ID invalid or too short.");
+                return;
+            }
+
             try {
                 await OneSignal.init({
                     appId: ONESIGNAL_APP_ID,

@@ -42,13 +42,10 @@ let storage: FirebaseStorage;
 if (isFirebaseConfigValid) {
     try {
         // Idempotent check: strictly prevent double-initialization
-        // This is crucial in strict mode / hot-reload environments
         app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
         auth = getAuth(app);
 
         // --- AUTH PERSISTENCE FIX ---
-        // Force Browser Local Persistence (works best for PWA)
-        // We fire this immediately. Auth actions will also ensure it.
         setPersistence(auth, browserLocalPersistence)
             .then(() => console.log("💾 [Firebase] Persistence set to LOCAL"))
             .catch((err) => console.error("❌ [Firebase] Persistence Failed:", err));
@@ -58,21 +55,24 @@ if (isFirebaseConfigValid) {
 
     } catch (error) {
         console.error("🔥 Firebase Init Fatal Error:", error);
-        // We do typically want to throw here to stop the app from running in a broken state
-        // creating confusion with "undefined" errors later.
         throw new Error(`Firebase Initialization Failed: ${error}`);
     }
 } else {
-    // In production, this should likely throw. 
-    // In dev, it might be recoverable if just testing UI.
     console.error("⚠️ Firebase Config Missing Keys:", missingKeys);
-    console.error("Please add these to your .env file or Vercel Project Settings.");
+    // CRITICAL: We DO NOT crash here. We rely on the app to check validation.
+    // However, exporting undefined causes crashes downstream.
+    // We export a dummy or let it be undefined but warn consumers.
+    // Best Approach for Safety: Throw invalid config error only when accessed?
+    // No, better to let it fail loudly in console but allow dev to see UI if possible.
+    // But since `auth` is used immediately in `AuthContext`, we MUST provide a fallback
+    // OR ensure AuthContext handles undefined.
+
+    // For now, valid config is required for this app to work.
 }
 
 // --- 3. EXPORTS ---
-// We export these. If init failed, they will be undefined, 
-// so consumers (like AuthContext) MUST handle strict checks or try-catch.
-// However, typically the app should crash early if backend is required.
+// We export these. Consumers MUST check if they are defined or we accept the crash 
+// as a signal that ENV is missing. 
 export { app, auth, db, storage };
 
 // --- 4. SAFE ANALYTICS ---

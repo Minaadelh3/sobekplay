@@ -39,6 +39,10 @@ export const isIOSStandalone = (): boolean => {
 // --- Core Actions ---
 
 export async function ensureAuthPersistence() {
+    if (!auth) {
+        console.error("❌ Auth Persistence Failed: Auth not initialized.");
+        return;
+    }
     await setPersistence(auth, browserLocalPersistence);
 }
 

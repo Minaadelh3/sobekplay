@@ -30,14 +30,18 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: 'autoUpdate', // Golden Fix: Immediately update SW
+        filename: 'manifest.json', // Fixes Manifest 404/Syntax Error
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg', 'OneSignalSDKWorker.js'],
         manifest: {
           name: 'Sobek Play',
           short_name: 'SobekPlay',
           description: 'Cinematic Streaming Experience',
+          id: '/',
+          start_url: '/',
+          scope: '/',
+          display: 'standalone',
           theme_color: '#0B5D4B',
           background_color: '#070A0F',
-          display: 'standalone',
           orientation: 'portrait',
           icons: [
             {

@@ -77,15 +77,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // We check this BEFORE listening to auth state to ensure we capture the returning user
             // and don't prematurely render the "Guest" state if they just signed in.
             try {
+                if (!auth) {
+                    console.warn("⚠️ [AUTH] Firebase Auth not initialized (Missing Config?). Skipping redirect check.");
+                    setAuthLoading(false);
+                    return;
+                }
+
+                // Determine if we are likely returning from a redirect flow
+                // This prevents unnecessary processing on every app load, though getRedirectResult is generally lightweight.
                 const result = await getRedirectResult(auth);
                 if (result) {
                     console.log("✅ [AUTH] Redirect Login Success:", result.user.email);
-                    // We don't need to manually set user here because onAuthStateChanged will fire immediately after with this user.
-                    // But we DO want to ensure we don't clear loading state until that fires.
+                    console.log("✅ [AUTH] Provider:", result.providerId);
+                    // The user is signed in. `onAuthStateChanged` will fire shortly with the user.
+                    // We stay in `authLoading = true` until that happens.
+                } else {
+                    console.log("ℹ️ [AUTH] No redirect result found.");
                 }
             } catch (e: any) {
                 console.error("❌ [AUTH] Redirect Result Error:", e);
-                // Non-fatal, continue to listener
+                console.error("Code:", e.code);
+                console.error("Message:", e.message);
+
+                // If the error is regarding pending redirects or other recoverable states, we might want to alert.
+                // But generally, we just proceed to the normal listener.
             }
 
             // B. Listen for Auth Changes
