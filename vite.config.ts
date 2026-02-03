@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: 'autoUpdate', // Golden Fix: Immediately update SW
-        filename: 'manifest.json', // Fixes Manifest 404/Syntax Error
+        // filename: 'sw.js', // Default is sw.js, removing bad config
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg', 'OneSignalSDKWorker.js'],
         manifest: {
           name: 'Sobek Play',
