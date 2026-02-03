@@ -31,10 +31,6 @@ export const isIOS = (): boolean => {
         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 };
 
-export const isIOSStandalone = (): boolean => {
-    return isIOS() && isPWA();
-};
-
 // --- Core Actions ---
 
 export async function ensureAuthPersistence() {
@@ -60,9 +56,10 @@ export async function loginEmail(email: string, password: string) {
 
 /**
  * Intelligent Google Login for PWA / Mobile
- * - Desktop/Mobile Web: Uses Popup
- * - Android PWA: Uses Popup (works mostly fine now)
- * - iOS PWA (Standalone): Uses Redirect (Popup blocked/broken)
+ */
+/**
+ * Intelligent Google Login for PWA / Mobile
+ * UPDATED: Strictly uses Popup to avoid PWA Redirect loops/issues.
  */
 export async function loginGoogleAuto() {
     if (!auth) {
@@ -72,10 +69,10 @@ export async function loginGoogleAuto() {
 
     await ensureAuthPersistence();
 
-    const useRedirect = isIOSStandalone();
-    console.log(`[SOBEK-AUTH] Google Login -> Strategy: ${useRedirect ? 'REDIRECT (iOS PWA)' : 'POPUP'}`);
+    console.log(`[SOBEK-AUTH] Google Login -> POPUP Mode (Enforced)`);
 
     try {
+<<<<<<< HEAD
         if (useRedirect) {
             // iOS PWA Standalone Mode -> Must use Redirect
             // The result is handled in AuthContext -> getRedirectResult
@@ -87,6 +84,10 @@ export async function loginGoogleAuto() {
             // Default: Use Popup
             return await signInWithPopup(auth, googleProvider);
         }
+=======
+        // ALWAYS use POPUP for stability in PWAs
+        return await signInWithPopup(auth, googleProvider);
+>>>>>>> parent of eed2d52 (Login IOS)
     } catch (error: any) {
         console.error("Google Login Failed:", error);
 
