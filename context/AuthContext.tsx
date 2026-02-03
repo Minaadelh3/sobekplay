@@ -60,7 +60,18 @@ if (typeof window !== 'undefined') {
 const log = (msg: string) => {
     console.log(msg);
     if (typeof window !== 'undefined') {
-        window.__SOBEK_LOGS__.push(`[${new Date().toLocaleTimeString()}] ${msg}`);
+        const timestamp = new Date().toLocaleTimeString();
+        const logEntry = `[${timestamp}] ${msg}`;
+        window.__SOBEK_LOGS__.push(logEntry);
+
+        // Persist to LocalStorage for PWA Debugging (survives reload)
+        try {
+            const existing = JSON.parse(localStorage.getItem('__SOBEK_LOGS__') || '[]');
+            existing.push(logEntry);
+            // Keep last 50 logs only
+            if (existing.length > 50) existing.shift();
+            localStorage.setItem('__SOBEK_LOGS__', JSON.stringify(existing));
+        } catch (e) { /* ignore */ }
     }
 };
 
