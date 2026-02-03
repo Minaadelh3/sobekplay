@@ -45,19 +45,16 @@ if (isFirebaseConfigValid) {
         // This is crucial in strict mode / hot-reload environments
         app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
         auth = getAuth(app);
+        
+        // --- AUTH PERSISTENCE FIX ---
+        // Force Browser Local Persistence (works best for PWA)
+        // We fire this immediately. Auth actions will also ensure it.
+        setPersistence(auth, browserLocalPersistence)
+            .then(() => console.log("💾 [Firebase] Persistence set to LOCAL"))
+            .catch((err) => console.error("❌ [Firebase] Persistence Failed:", err));
+
         db = getFirestore(app);
         storage = getStorage(app);
-
-        // --- AUTH PERSISTENCE FIX ---
-        // Explicitly set persistence to fix iOS PWA guest issues
-        (async () => {
-            try {
-                await setPersistence(auth, indexedDBLocalPersistence);
-            } catch (err) {
-                console.warn("IndexedDB Persistence failed, falling back to local:", err);
-                await setPersistence(auth, browserLocalPersistence);
-            }
-        })();
 
     } catch (error) {
         console.error("🔥 Firebase Init Fatal Error:", error);

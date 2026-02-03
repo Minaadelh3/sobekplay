@@ -70,20 +70,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const initAuth = async () => {
             console.log("🔐 [AUTH] Initializing...");
+            // We start true, and ONLY set to false when Firebase returns a User or Null.
             setAuthLoading(true);
-
-            // A. Handle Redirect Result (Critical for PWA)
-            try {
-                // Ensure we only check this once per app load
-                const redirectResult = await getRedirectResult(auth);
-                if (redirectResult) {
-                    console.log("🔁 [AUTH] Redirect Login Detected:", redirectResult.user.email);
-                    // No further action needed here; onAuthStateChanged will fire with this user immediately after.
-                }
-            } catch (e: any) {
-                console.error("❌ [AUTH] Redirect Result Error:", e);
-                // We don't block; we just log. User can try logging in again if it failed.
-            }
 
             // B. Listen for Auth Changes
             unsubscribe = onAuthStateChanged(auth, async (fUser) => {
@@ -94,8 +82,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     setFirebaseUser(null);
                     setUser(null);
                     setActiveTeam(null);
-                    setAuthLoading(false);
                     setRoleLoading(false);
+                    // Crucial: Only now do we let the UI render for guests
+                    setAuthLoading(false);
 
                     setAuthReady(true);
                     setRoleReady(true);

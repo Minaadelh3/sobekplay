@@ -51,32 +51,18 @@ export async function loginEmail(email: string, password: string) {
 /**
  * Intelligent Google Login for PWA / Mobile
  */
+/**
+ * Intelligent Google Login for PWA / Mobile
+ * UPDATED: Strictly uses Popup to avoid PWA Redirect loops/issues.
+ */
 export async function loginGoogleAuto() {
     await ensureAuthPersistence();
 
-    const isPwaMode = isPWA();
-    const isIosDevice = isIOS();
-
-    // PWA Strategy: 
-    // - Android/Desktop PWA: Use REDIRECT (better UX, no popup blocking)
-    // - iOS PWA: Use POPUP (Redirect often fails to return to app context or causes loops)
-    // - Regular Browser: Use POPUP
-
-    // We only use Redirect if it's a PWA AND NOT iOS.
-    const shouldUseRedirect = isPwaMode && !isIosDevice;
-
-    console.log(`[SOBEK-AUTH] Google Login - PWA: ${isPwaMode}, iOS: ${isIosDevice} -> Mode: ${shouldUseRedirect ? 'REDIRECT' : 'POPUP'}`);
+    console.log(`[SOBEK-AUTH] Google Login -> POPUP Mode (Enforced)`);
 
     try {
-        if (shouldUseRedirect) {
-            // REDIRECT FLOW (Android/Desktop PWA)
-            await signInWithRedirect(auth, googleProvider);
-            // The page will reload. The result is handled in AuthContext -> handleGoogleRedirectResult
-            return;
-        } else {
-            // POPUP FLOW (iOS PWA or Regular Browser)
-            return await signInWithPopup(auth, googleProvider);
-        }
+        // ALWAYS use POPUP for stability in PWAs
+        return await signInWithPopup(auth, googleProvider);
     } catch (error: any) {
         console.error("Google Login Failed:", error);
 
@@ -90,21 +76,11 @@ export async function loginGoogleAuto() {
 }
 
 /**
- * Must be called on App Mount (AuthContext) to capture the returning user from Redirect
+ * Legacy support stub - no longer used but kept to avoid breaking imports slightly, 
+ * or we can just remove it if we clean up usages.
  */
 export async function handleGoogleRedirectResult() {
-    try {
-        const result = await getRedirectResult(auth);
-        if (result) {
-            console.log("✅ [SOBEK-AUTH] Redirect Login Success:", result.user.email);
-            return result.user;
-        }
-        return null;
-    } catch (error) {
-        console.error("❌ [SOBEK-AUTH] Redirect Error:", error);
-        // Do not throw here, just log, so app can continue
-        return null;
-    }
+    return null;
 }
 
 export async function logoutFull() {
