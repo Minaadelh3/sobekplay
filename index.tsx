@@ -11,10 +11,13 @@ try {
   OneSignal.init({
     appId: "71f9b370-fb2a-4da8-9377-d0546c5900c0",
     allowLocalhostAsSecureOrigin: true,
-    // @ts-ignore - Types are strict but this is valid
+    // @ts-ignore
     notifyButton: {
       enable: false,
     },
+    // Important: Tell OneSignal to use the root scope for SW
+    serviceWorkerParam: { scope: '/' },
+    serviceWorkerPath: 'sw.js', // Match VitePWA public filename
   }).then(() => {
     console.log("✅ OneSignal Initialized");
   });
