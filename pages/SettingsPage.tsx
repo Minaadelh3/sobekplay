@@ -1,12 +1,43 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
 import { doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, getStorage } from 'firebase/storage';
 import { db, app } from '../lib/firebase';
+import { useOneSignal } from '../hooks/useOneSignal'; // Import hook
 
 const storage = getStorage(app);
+
+// Sub-component for Notifications
+function NotificationSection() {
+    const { enableNotifications, subscriptionId } = useOneSignal();
+
+    return (
+        <div className="bg-white/5 border border-white/10 rounded-xl p-5 mt-4">
+            <h3 className="text-lg font-bold text-white mb-2">🔔 الإشعارات</h3>
+            <p className="text-gray-400 text-sm mb-4">
+                فعل الإشعارات عشان يوصلك كل جديد، مواعيد التجمع، والأخبار المهمة.
+            </p>
+
+            <div className="flex items-center justify-between">
+                <span className="text-gray-300 text-sm">
+                    {subscriptionId ? '✅ الإشعارات مفعلة' : '❌ الإشعارات غير مفعلة'}
+                </span>
+                <button
+                    type="button"
+                    onClick={enableNotifications}
+                    className={`px-4 py-2 rounded-lg text-sm font-bold transition
+                        ${subscriptionId
+                            ? 'bg-green-500/20 text-green-400 cursor-default'
+                            : 'bg-accent-gold text-black hover:bg-yellow-500'}
+                    `}
+                >
+                    {subscriptionId ? 'مشترك' : 'تفعيل الإشعارات'}
+                </button>
+            </div>
+        </div>
+    );
+}
 
 export default function SettingsPage() {
     const { user, firebaseUser } = useAuth();
@@ -148,6 +179,10 @@ export default function SettingsPage() {
                             className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-accent-gold focus:outline-none transition"
                         />
                     </div>
+
+                    {/* Notification Settings */}
+                    <NotificationSection />
+
 
                     <div className="pt-4 flex gap-4">
                         <button

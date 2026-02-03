@@ -18,11 +18,11 @@ import TransfersCenter from './pages/admin/TransfersCenter';
 import AuditLog from './pages/admin/AuditLog';
 import AnalyticsDashboard from './pages/admin/Analytics';
 import GameBalancing from './pages/admin/GameBalancingFixed';
-import AchievementsPage from './pages/AchievementsPage'; // New Page
-
+import AchievementsPage from './pages/AchievementsPage';
 
 import GlobalErrorBoundary from './components/GlobalErrorBoundary'; // Ensure this component exists
 import ScrollToTop from './components/ScrollToTop';
+import OneSignalManager from './components/OneSignalManager'; // OneSignal
 import { usePosterMetrics } from './hooks/usePosterMetrics';
 import { posters } from './data/posters';
 
@@ -60,7 +60,6 @@ import ImageGenPage from './pages/ImageGenPage';
 import VeoPage from './pages/VeoPage';
 import SettingsPage from './pages/SettingsPage';
 import TeamChatPage from './pages/TeamChatPage';
-// import AchievementsPage from './pages/AchievementsPage'; // Removed duplicate
 import RankingsPage from './pages/RankingsPage';
 import TeamChatPopup from './components/TeamChatPopup';
 
@@ -72,6 +71,7 @@ const App: React.FC = () => {
     <Router>
       <GlobalErrorBoundary>
         <AuthProvider>
+          <OneSignalManager /> {/* Initialize OneSignal */}
           <AchievementsProvider>
             <ScrollToTop />
             <Routes>

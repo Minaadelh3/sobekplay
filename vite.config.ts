@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: 'autoUpdate', // Golden Fix: Immediately update SW
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg', 'OneSignalSDKWorker.js'],
         manifest: {
           name: 'Sobek Play',
           short_name: 'SobekPlay',
@@ -64,6 +64,7 @@ export default defineConfig(({ mode }) => {
           skipWaiting: true,
           clientsClaim: true,
           maximumFileSizeToCacheInBytes: 3000000, // Increase limit to 3MB (fix build error)
+          importScripts: ['/OneSignalSDKWorker.js'], // Merge OneSignal Worker
         },
         devOptions: {
           enabled: true // Enable SW in dev to test
