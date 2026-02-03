@@ -77,7 +77,9 @@ export default defineConfig(({ mode }) => {
           ]
         },
         devOptions: {
-          enabled: true // Enable SW in dev to test
+          enabled: true, // Enable SW in dev to test
+          type: 'module',
+          navigateFallback: 'index.html',
         }
       })
     ],

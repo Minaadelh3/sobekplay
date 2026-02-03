@@ -14,7 +14,9 @@ export default function LoginPage() {
     const location = useLocation();
 
     // Redirect to PROFILES instead of app
-    const next = location?.state?.from ?? "/profiles";
+    const rawNext = location?.state?.from ?? "/profiles";
+    // Loop Safeguard: Never redirect to login if we are already there
+    const next = rawNext === "/login" ? "/profiles" : rawNext;
 
     // 1. AUTO-REDIRECT IF ALREADY LOGGED IN (Fixes Loop)
     React.useEffect(() => {
