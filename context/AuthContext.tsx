@@ -8,6 +8,7 @@ import {
     loginEmail,
     signupEmail,
     loginGoogleAuto,
+    loginAppleAuto,
     logoutFull
 } from "../lib/authActions";
 import { User, TEAMS, TeamProfile } from "../types/auth";
@@ -26,6 +27,7 @@ type AuthCtx = {
     signupEmail: (email: string, password: string) => Promise<UserCredential>;
     loginGoogle: () => Promise<void>;
     loginWithGoogle: () => Promise<void>;
+    loginWithApple: () => Promise<void>;
     logout: () => Promise<void>;
 
     // Data & Logic
@@ -301,6 +303,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signupEmail,
         loginGoogle: handleLoginGoogle,
         loginWithGoogle: handleLoginGoogle,
+        loginWithApple: async () => { await loginAppleAuto(); },
         logout: logoutFull,
         activeTeam,
         selectedTeam: activeTeam,
