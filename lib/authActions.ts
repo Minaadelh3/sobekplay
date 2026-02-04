@@ -2,9 +2,7 @@ import {
     GoogleAuthProvider,
     browserLocalPersistence,
     setPersistence,
-    signInWithPopup,
     signInWithRedirect,
-    getRedirectResult,
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     signOut,
@@ -16,91 +14,76 @@ import { auth } from "./firebase";
 const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 
-// --- Helpers ---
-export const isPWA = (): boolean => {
-    if (typeof window === 'undefined') return false;
-    return window.matchMedia('(display-mode: standalone)').matches ||
-        (window.navigator as any).standalone === true;
-};
-
-export const isIOS = (): boolean => {
-    if (typeof window === 'undefined') return false;
-    // Robust iOS detection including iPad OS 13+
-    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-};
-
-export const isIOSStandalone = (): boolean => {
-    return isIOS() && isPWA();
-};
-
 // --- Core Actions ---
 
+/**
+ * Enforces Local Persistence before any Auth Action.
+ * Critical for PWA session survival on iOS.
+ */
 export async function ensureAuthPersistence() {
     if (!auth) {
-        console.error("❌ Auth Persistence Failed: Auth not initialized.");
-        return;
+        console.error("❌ [AUTH] Persistence Failed: Auth not initialized.");
+        throw new Error("Firebase Auth not initialized");
     }
-    // Strict Native-like persistence
-    await setPersistence(auth, browserLocalPersistence);
+    try {
+        await setPersistence(auth, browserLocalPersistence);
+    } catch (e) {
+        console.error("❌ [AUTH] Persistence Error:", e);
+        throw e;
+    }
 }
 
 export async function signupEmail(email: string, password: string) {
-    if (!auth) throw new Error("Firebase Auth not initialized");
     await ensureAuthPersistence();
     return createUserWithEmailAndPassword(auth, email, password);
 }
 
 export async function loginEmail(email: string, password: string) {
-    if (!auth) throw new Error("Firebase Auth not initialized");
     await ensureAuthPersistence();
     return signInWithEmailAndPassword(auth, email, password);
 }
 
 /**
- * Strict Redirect Login for PWA Stability
- * - Enforces signInWithRedirect for ALL platforms.
- * - This guarantees iOS PWA compatibility and avoids Popup blockers.
- * - Less 'flashy' on desktop, but 100% robust.
+ * Strict Google Login Strategy (Redirect ONLY)
+ * 
+ * We deliberately avoid signInWithPopup to guarantee stability on:
+ * - iOS PWA (Standalone) -> Popups are blocked/broken.
+ * - Mobile WebViews -> Popups often fail to close.
+ * - Strict Browser Environments.
+ * 
+ * Flow:
+ * 1. Set Persistence.
+ * 2. Redirect to Google.
+ * 3. Page Reloads.
+ * 4. AuthContext captures result via getRedirectResult().
  */
-export async function loginGoogleAuto() {
-    if (!auth) {
-        console.error("Firebase Auth not initialized");
-        return;
+export async function loginGoogleAuto() { // Keep name for compatibility or rename if refactoring Context
+    console.log("🔐 [AUTH] Starting Google Redirect Flow...");
+    await ensureAuthPersistence();
+
+    // Explicitly THROW if called in a non-browser env (sanity check)
+    if (typeof window === 'undefined') {
+        throw new Error("Cannot initiate login on server-side.");
     }
 
     try {
-        // 1. Enforce Persistence
-        await ensureAuthPersistence();
-
-        // 2. STICT REDIRECT STRATEGY (Senior PWA Requirement)
-        console.log(`[SOBEK-AUTH] Initiating Google Redirect Login...`);
-
-        // This triggers a full page redirect. The app will reload.
-        // The result is handled in AuthContext -> getRedirectResult
         await signInWithRedirect(auth, googleProvider);
-
+        // Execution stops here as page unloads.
     } catch (error: any) {
-        console.error("Google Login Failed:", error);
+        console.error("❌ [AUTH] Google Redirect Failed:", error);
         throw error;
     }
 }
 
-/**
- * Legacy support stub - no longer used but kept to avoid breaking imports slightly, 
- * or we can just remove it if we clean up usages.
- */
-export async function handleGoogleRedirectResult() {
-    return null;
-}
-
 export async function logoutFull() {
     if (!auth) return;
-    console.log("🔒 Signing out...");
-    await signOut(auth);
-    localStorage.clear();
-    // SPA-friendly logout: Do NOT reload the page.
-    // The AuthContext | onAuthStateChanged will handle state clearing.
+    console.log("🔒 [AUTH] Signing out...");
+    try {
+        await signOut(auth);
+        localStorage.clear(); // Clear local app state
+    } catch (e) {
+        console.error("Logout Warning:", e);
+    }
 }
 
 // --- Error Mapping ---
@@ -110,12 +93,6 @@ export function mapAuthError(e: unknown): string {
     const code = err?.code ?? "";
 
     switch (code) {
-        case "auth/popup-blocked":
-            return "Popup blocked. Please allow popups.";
-        case "auth/popup-closed-by-user":
-            return "Login cancelled.";
-        case "auth/unauthorized-domain":
-            return "Unauthorized domain (Firebase Console).";
         case "auth/network-request-failed":
             return "Check your internet connection.";
         case "auth/invalid-credential":
@@ -126,6 +103,13 @@ export function mapAuthError(e: unknown): string {
             return "Email already registered.";
         case "auth/weak-password":
             return "Password too weak.";
+        case "auth/too-many-requests":
+            return "Too many attempts. Please try again later.";
+        case "auth/operation-not-allowed":
+            return "Login method not enabled.";
+        case "auth/redirect-cancelled-by-user":
+            return "Login cancelled.";
+        // Removed Popup-specific errors as we no longer use Popups.
         default:
             return err?.message || "Authentication failed.";
     }
