@@ -144,6 +144,24 @@ const appleProvider = new OAuthProvider('apple.com'); // Added Apple Provider
 appleProvider.addScope('email');
 appleProvider.addScope('name');
 
+// --- Helpers ---
+export const isPWA = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as any).standalone === true;
+};
+
+export const isIOS = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    // Robust iOS detection including iPad OS 13+
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+};
+
+export const isIOSStandalone = (): boolean => {
+    return isIOS() && isPWA();
+};
+
 // --- Core Actions ---
 
 /**
