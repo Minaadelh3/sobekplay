@@ -29,8 +29,8 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       VitePWA({
-        registerType: 'prompt', // STOP AUTO-RELOADS (Fixes infinite SW loops)
-        manifestFilename: 'manifest.json', // Ensure manifest is named manifest.json
+        registerType: 'prompt', // Manual update only. Prevents loops.
+        manifestFilename: 'manifest.json',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg', 'OneSignalSDKWorker.js'],
         manifest: {
           name: 'Sobek Play',
@@ -58,26 +58,26 @@ export default defineConfig(({ mode }) => {
               src: 'icons/icon-512.png',
               sizes: '512x512',
               type: 'image/png',
-              purpose: 'maskable' // Explicit maskable icon for Android 13+
+              purpose: 'maskable'
             }
           ]
         },
         workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'], // Cache assets
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
           cleanupOutdatedCaches: true,
           skipWaiting: true,
           clientsClaim: true,
           maximumFileSizeToCacheInBytes: 3000000,
-          importScripts: ['/OneSignalSDKWorker.js'], // Merge OneSignal Worker
-          // CRITICAL FIX: Do NOT cache or route Firebase Auth / API calls via SW
+          importScripts: ['/OneSignalSDKWorker.js'],
           navigateFallback: '/index.html',
+          // SAFELIST: Do not intercept Auth or API
           navigateFallbackDenylist: [
-            /^\/__\/auth/, // Exclude Firebase Auth handler from SW (Fixes Login Loop)
-            /^\/api/       // Exclude API calls
+            /^\/__\/auth/,
+            /^\/api/
           ]
         },
         devOptions: {
-          enabled: true, // Enable SW in dev to test
+          enabled: true,
           type: 'module',
           navigateFallback: 'index.html',
         }
