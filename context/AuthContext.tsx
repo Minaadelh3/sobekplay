@@ -258,10 +258,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Actions
     const handleLoginGoogle = async () => {
-        // This function will handle PWA redirect checks internally
+        // Enforce Strict Redirect (PWA Safe)
         await loginGoogleAuto();
-        // NOTE: If redirect happens, this promise chain halts here as page reloads.
-        // If popup happens, it continues.
+        // Page will redirect. No further code execution expected here.
     };
 
     const selectTeam = async (teamId: string, pin: string): Promise<boolean> => {

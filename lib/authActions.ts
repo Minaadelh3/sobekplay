@@ -58,42 +58,30 @@ export async function loginEmail(email: string, password: string) {
 }
 
 /**
- * Intelligent Google Login for PWA / Mobile
- * - Desktop/Mobile Web: Uses Popup
- * - Android PWA: Uses Popup (works mostly fine now)
- * - iOS PWA (Standalone): Uses Redirect (Popup blocked/broken)
+ * Strict Redirect Login for PWA Stability
+ * - Enforces signInWithRedirect for ALL platforms.
+ * - This guarantees iOS PWA compatibility and avoids Popup blockers.
+ * - Less 'flashy' on desktop, but 100% robust.
  */
 export async function loginGoogleAuto() {
     if (!auth) {
-        alert("Authentication service is not available. Check your internet connection.");
-        throw new Error("Firebase Auth not initialized");
+        console.error("Firebase Auth not initialized");
+        return;
     }
 
-    await ensureAuthPersistence();
-
-    const useRedirect = isIOSStandalone();
-    console.log(`[SOBEK-AUTH] Google Login -> Strategy: ${useRedirect ? 'REDIRECT (iOS PWA)' : 'POPUP'}`);
-
     try {
-        if (useRedirect) {
-            // iOS PWA Standalone Mode -> Must use Redirect
-            // The result is handled in AuthContext -> getRedirectResult
-            // logic: This promise will effectively trigger a page unload.
-            await signInWithRedirect(auth, googleProvider);
-            // We return here. The app will reload and AuthContext will pick up the user.
-            return;
-        } else {
-            // Default: Use Popup
-            return await signInWithPopup(auth, googleProvider);
-        }
+        // 1. Enforce Persistence
+        await ensureAuthPersistence();
+
+        // 2. STICT REDIRECT STRATEGY (Senior PWA Requirement)
+        console.log(`[SOBEK-AUTH] Initiating Google Redirect Login...`);
+
+        // This triggers a full page redirect. The app will reload.
+        // The result is handled in AuthContext -> getRedirectResult
+        await signInWithRedirect(auth, googleProvider);
+
     } catch (error: any) {
         console.error("Google Login Failed:", error);
-
-        if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
-            alert("Please allow popups to sign in, or try the app installed on your home screen.");
-        } else {
-            alert(`Login Failed: ${error.message}`);
-        }
         throw error;
     }
 }
