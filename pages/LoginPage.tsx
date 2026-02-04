@@ -18,19 +18,11 @@ export default function LoginPage() {
     // Loop Safeguard: Never redirect to login if we are already there
     const next = rawNext === "/login" ? "/profiles" : rawNext;
 
-    // 1. AUTO-REDIRECT IF ALREADY LOGGED IN (Fixes Loop)
-    // 1. AUTO-REDIRECT IF ALREADY LOGGED IN (Fixes Loop)
+    // 1. AUTO-REDIRECT IF ALREADY LOGGED IN
     React.useEffect(() => {
         if (!authLoading && user) {
-            console.log("🚀 [LOGIN] User authenticated. Waiting 2s to stabilize...");
-
-            // Artificial Delay to break rapid loops and allow SW to settle
-            const timer = setTimeout(() => {
-                console.log("🚀 [LOGIN] Executing Redirect now.");
-                navigate(next, { replace: true });
-            }, 2000);
-
-            return () => clearTimeout(timer);
+            // Instant redirect for premium feel
+            navigate(next, { replace: true });
         }
     }, [user, authLoading, navigate, next]);
 
@@ -69,10 +61,6 @@ export default function LoginPage() {
 
     return (
         <div className="min-h-screen bg-[#070A0F] font-sans flex flex-col items-center justify-center relative overflow-hidden text-white direction-rtl">
-            {/* Cinematic Background with Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#08111A] via-[#0B5D4B]/30 to-[#070A0F] z-0" />
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 z-0 pointer-events-none" />
-
             <div className="z-50 w-full max-w-md p-8 bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl relative">
                 {/* Logo Section */}
                 <div className="flex justify-center mb-8">
@@ -185,71 +173,8 @@ export default function LoginPage() {
                     </p>
                 </div>
             </div>
-
-            {/* Simple Footer */}
-            <div className="absolute bottom-4 text-center w-full z-10 flex flex-col items-center gap-2">
-                <p className="text-[10px] text-gray-600 font-mono tracking-widest uppercase opacity-50">
-                    Powered by Sobek Play v2.2 (Loop Breaker)
-                </p>
-
-                {/* Visual Status for Redirect */}
-                {!authLoading && user && (
-                    <div className="animate-pulse text-green-400 text-xs font-mono bg-green-900/30 px-3 py-1 rounded border border-green-500/30">
-                        ✅ Logged In. Redirecting...
-                    </div>
-                )}
-
-                {/* DEBUG CONSOLE (Temporary) */}
-                <div className="w-full max-w-md px-4 mt-4">
-                    <details className="text-left bg-black/80 border border-white/10 rounded-lg p-2" open={true}>
-                        <summary className="text-[10px] text-red-500 cursor-pointer font-bold select-none">
-                            🐞 DEV CONSOLE (CLICK TO OPEN)
-                        </summary>
-                        <div className="mt-2 text-[10px] font-mono text-green-400 h-32 overflow-y-auto whitespace-pre-wrap">
-                            {(() => {
-                                try {
-                                    if (typeof window === 'undefined') return 'Loading...';
-                                    const saved = JSON.parse(localStorage.getItem('__SOBEK_LOGS__') || '[]');
-                                    return saved.length ? saved.join('\n') : 'No Logs Yet';
-                                } catch { return 'Log Error'; }
-                            })()}
-                        </div>
-                        <div className="mt-2 pt-2 border-t border-white/10 flex gap-2 flex-wrap">
-                            <button
-                                onClick={() => window.location.reload()}
-                                className="px-2 py-1 bg-white/10 text-[10px] text-white rounded"
-                            >
-                                Force Reload
-                            </button>
-                            <button
-                                onClick={() => {
-                                    localStorage.removeItem('__SOBEK_LOGS__');
-                                    window.location.reload();
-                                }}
-                                className="px-2 py-1 bg-yellow-500/20 text-[10px] text-yellow-400 rounded"
-                            >
-                                Clear Logs
-                            </button>
-                            <button
-                                onClick={() => {
-                                    if (navigator.serviceWorker) {
-                                        navigator.serviceWorker.getRegistrations().then(regs => {
-                                            regs.forEach(r => r.unregister());
-                                            localStorage.clear(); // NUKE IT
-                                            window.location.reload();
-                                        })
-                                    }
-                                }}
-                                className="px-2 py-1 bg-red-500/20 text-[10px] text-red-400 rounded"
-                            >
-                                Factory Reset (Fix Loop)
-                            </button>
-                        </div>
-                    </details>
-                </div>
-            </div>
-
-
+            {/* Clean Footer - No Dev Artifacts */}
         </div>
     );
 }
+```

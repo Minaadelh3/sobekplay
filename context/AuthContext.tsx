@@ -314,14 +314,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     // BLOCKING LOADER (Global)
-    // We block the entire app during the initial Auth Check (authLoading).
-    // This prevents "Login Page" flash for PWA users who are actually logged in.
+    // Branded Loading Screen - Logo Only, No Text
     if (authLoading) {
         return (
-            <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#070A0F] text-accent-gold">
-                <div className="w-16 h-16 border-4 border-current border-t-transparent rounded-full animate-spin mb-4" />
-                <div className="text-xl font-bold tracking-widest animate-pulse">SOBEK PLAY</div>
-                <p className="mt-4 text-xs text-gray-500 font-mono tracking-widest">AUTHENTICATING...</p>
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#070A0F]">
+                {/* Logo with subtle pulse animation */}
+                <div className="relative">
+                    {/* Glow effect behind */}
+                    <div className="absolute inset-0 bg-accent-gold/20 blur-3xl rounded-full animate-pulse" />
+                    <img
+                        src="/assets/brand/logo.png"
+                        alt="Sobek Play"
+                        className="w-24 md:w-32 object-contain relative z-10 animate-fade-in"
+                    />
+                </div>
             </div>
         );
     }
