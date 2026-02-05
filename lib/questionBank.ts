@@ -11,9 +11,9 @@ export interface Question {
 }
 
 export const DIFFICULTY_RULES = {
-    easy: { time: 15, points: 10 },
-    medium: { time: 12, points: 20 },
-    hard: { time: 10, points: 30 }
+    easy: { label: "سهل", time: 15, points: 10 },
+    medium: { label: "متوسط", time: 12, points: 20 },
+    hard: { label: "صعب", time: 10, points: 30 }
 };
 
 // --- A) PROVERBS (20) ---

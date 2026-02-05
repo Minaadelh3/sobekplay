@@ -15,7 +15,7 @@ const getEnv = (key: string): string => {
     return val || "";
 };
 
-const firebaseConfig = {
+export const firebaseConfig = {
     apiKey: getEnv("FIREBASE_API_KEY"),
     authDomain: getEnv("FIREBASE_AUTH_DOMAIN"),
     projectId: getEnv("FIREBASE_PROJECT_ID"),
@@ -52,6 +52,13 @@ if (isFirebaseConfigValid) {
 
         db = getFirestore(app);
         storage = getStorage(app);
+
+        // Messaging is only supported in browser environments
+        if (typeof window !== 'undefined') {
+            // We import dynamically or just use getMessaging if supported
+            // For simplicity in this file structure:
+            // messaging = getMessaging(app); 
+        }
 
     } catch (error) {
         console.error("🔥 Firebase Init Fatal Error:", error);

@@ -15,7 +15,7 @@ import { db } from './firebase';
 
 // --- Types ---
 
-export type TransactionType = 'ADJUSTMENT' | 'TRANSFER' | 'GAME_REWARD' | 'SYSTEM_RESET' | 'ROLLBACK';
+export type TransactionType = 'ADJUSTMENT' | 'TRANSFER' | 'GAME_REWARD' | 'TEAM_REWARD' | 'SYSTEM_RESET' | 'ROLLBACK';
 export type EntityType = 'SYSTEM' | 'TEAM' | 'USER';
 
 export interface LedgerEntry {
@@ -34,6 +34,7 @@ export interface LedgerEntry {
     reason: string;
     adminId?: string; // Who performed it
     timestamp: any;
+    metadata?: any;
 }
 
 // --- Core Logic ---
@@ -50,6 +51,7 @@ export async function performTransaction(
         to: { type: EntityType; id: string; name: string };
         reason: string;
         adminId?: string;
+        metadata?: any;
     }
 ) {
     if (params.amount <= 0) throw new Error("المبلغ لازم يكون أكبر من صفر");
@@ -101,7 +103,8 @@ export async function performTransaction(
             toName: params.to.name,
             reason: params.reason,
             adminId: params.adminId || 'system',
-            timestamp: serverTimestamp()
+            timestamp: serverTimestamp(),
+            metadata: params.metadata || null
         };
 
         transaction.set(ledgerRef, entry as any);

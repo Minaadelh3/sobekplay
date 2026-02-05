@@ -15,12 +15,34 @@ service cloud.firestore {
     // --- Users Collection ---
     // Users can read/write their own basic data.
     // Admins can read/write all.
+    // --- Users Collection ---
+    // Users can read/write their own basic data.
+    // Admins can read/write all.
     match /users/{userId} {
       allow read: if isAuthenticated(); // Allow reading other users (for team lists etc)
-      allow create: if isAuthenticated() && request.auth.uid == userId; 
-      allow update: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Allow update if:
+      // 1. User is Admin OR
+      // 2. User is Owner AND only modifying allowed fields
+      allow update: if isAuthenticated() && (
+        isAdmin() || 
+        (request.auth.uid == userId && 
+         // Helper to check if only allowed fields are being modified
+         // We allow updating: profile, preferences, notifications, privacy, mobile, name (legacy)
+         // We DO NOT allow: role, points, teamId (unless admin), status
+         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'points', 'status', 'teamId', 'createdAt']))
+        )
+      );
+
       // Admin only delete
       allow delete: if isAdmin();
+
+      // --- Device Tokens (Subcollection) ---
+      // Users can manage their own device tokens
+      match /devices/{token} {
+        allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      }
     }
 
     // --- Teams Collection ---

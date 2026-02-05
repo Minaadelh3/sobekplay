@@ -36,6 +36,9 @@ const MalahyEngine: React.FC<MalahyEngineProps> = ({ gameConfig, questions, onEx
     const [isAnswered, setIsAnswered] = useState(false);
     const [streak, setStreak] = useState(0);
 
+    // Timer & Security
+    const startTimeRef = React.useRef(0);
+
     // Derived
     const currentQ = filteredQuestions[qIndex];
     const isLastQ = qIndex === filteredQuestions.length - 1;
@@ -86,6 +89,7 @@ const MalahyEngine: React.FC<MalahyEngineProps> = ({ gameConfig, questions, onEx
         setStreak(0);
         setTimeLeft(DIFFICULTY_RULES[diff].time);
         setGameState('PLAYING');
+        startTimeRef.current = Date.now(); // ⏱️ Start Timer for Security
     };
 
     const handleTimeUp = () => {
@@ -135,6 +139,16 @@ const MalahyEngine: React.FC<MalahyEngineProps> = ({ gameConfig, questions, onEx
     const finishGame = async () => {
         setGameState('RESULT');
         const won = correctCount > filteredQuestions.length / 2;
+        const endTime = Date.now();
+        const duration = endTime - startTimeRef.current;
+        const minDuration = filteredQuestions.length * 1000; // Minimum 1 sec per question
+
+        // 🛡️ Security Check
+        if (won && duration < minDuration) {
+            console.warn("Security Flag: Game completed too fast", duration);
+            alert("⚠️ تم اكتشاف نشاط غير طبيعي. لن يتم احتساب النقاط.");
+            return;
+        }
 
         if (won) {
             confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 } });
@@ -162,11 +176,12 @@ const MalahyEngine: React.FC<MalahyEngineProps> = ({ gameConfig, questions, onEx
             try {
                 // Admin Rule: Admins get 0 Score/XP
                 if (user.role === 'ADMIN') {
-                    console.log("Admin score skipped");
+                    // Toast or visual indicator
+                    // console.log("Admin score skipped"); 
                 } else {
                     // 1. Transaction for User Points (XP + Score)
                     await performTransaction({
-                        type: 'GAME_WIN', // Or GAME_REWARD
+                        type: 'GAME_REWARD', // Or GAME_REWARD
                         amount: finalXp, // We use XP for the transaction value usually, or maybe Score? 
                         // The Ledger tracks 'points' which usually maps to XP/Progression.
                         // Competitive Score is separate. 
@@ -178,7 +193,8 @@ const MalahyEngine: React.FC<MalahyEngineProps> = ({ gameConfig, questions, onEx
                             gameId: gameConfig.id,
                             score: finalScore,
                             xp: finalXp,
-                            correct: correctCount
+                            correct: correctCount,
+                            durationMs: duration // Audit Log
                         }
                     });
 

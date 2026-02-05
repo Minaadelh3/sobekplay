@@ -19,6 +19,58 @@ export interface User {
     badges?: string[];
     rankIdentifier?: string;
     unlockedAchievements?: string[]; // IDs of unlocked achievements
+
+    // settings architecture
+    profile?: UserProfile;
+    preferences?: UserPreferences;
+    privacy?: UserPrivacy;
+    notifications?: UserNotifications;
+
+    // timestamps
+    createdAt?: any; // Firestore Timestamp or Date
+}
+
+export interface UserProfile {
+    displayName?: string;
+    fullName?: string;
+    bio?: string; // new
+    mobile?: string;
+    photoURL?: string;
+}
+
+export interface UserPreferences {
+    language?: 'ar' | 'en';
+    theme?: 'dark' | 'light' | 'system';
+    backgroundStyle?: 'default' | 'pattern' | 'image';
+    colorScheme?: 'gold' | 'blue' | 'custom';
+    accessibility?: {
+        contrast?: 'normal' | 'high';
+        fontScale?: 'small' | 'medium' | 'large';
+        reduceMotion?: boolean;
+    };
+    // Legacy support (optional)
+    reduceMotion?: boolean;
+    reduceData?: boolean;
+    fontSize?: 'small' | 'medium' | 'large';
+}
+
+export interface UserPrivacy {
+    isPublic?: boolean;
+    shareData?: boolean;
+    allowAnalytics?: boolean;
+}
+
+export interface UserNotifications {
+    enabled?: boolean;
+    pushTokens?: string[];
+    marketing?: boolean;
+    games?: boolean;
+    system?: boolean;
+    quietHours?: {
+        start: string;
+        end: string;
+        timezone: string;
+    };
 }
 
 export const USERS_DB: User[] = [

@@ -1,18 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { fetchLedger, LedgerEntry } from '../../lib/ledger';
+import { motion } from 'framer-motion';
 
-const AuditLog = () => {
+export default function AuditLog() {
     const [entries, setEntries] = useState<LedgerEntry[]>([]);
+    const [filteredEntries, setFilteredEntries] = useState<LedgerEntry[]>([]);
     const [loading, setLoading] = useState(true);
+    const [filterType, setFilterType] = useState('ALL');
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         loadLog();
     }, []);
 
+    useEffect(() => {
+        let result = entries;
+        if (filterType !== 'ALL') {
+            result = result.filter(e => e.type === filterType);
+        }
+        if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            result = result.filter(e =>
+                e.fromName?.toLowerCase().includes(q) ||
+                e.toName?.toLowerCase().includes(q) ||
+                e.reason?.toLowerCase().includes(q)
+            );
+        }
+        setFilteredEntries(result);
+    }, [filterType, searchQuery, entries]);
+
     const loadLog = async () => {
         setLoading(true);
         try {
-            const data = await fetchLedger(100);
+            const data = await fetchLedger(200); // Increased limit
             setEntries(data);
         } catch (err) {
             console.error(err);
@@ -23,82 +43,127 @@ const AuditLog = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-black text-white">📜 سجل العمليات (Audit Log)</h1>
-                <button onClick={loadLog} className="bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg text-sm text-gray-300">
-                    تحديث 🔄
-                </button>
+            {/* Header / Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-[#141414] border border-white/5 p-4 rounded-xl">
+                    <h3 className="text-xs uppercase text-gray-500 font-bold mb-1">Total Signals</h3>
+                    <div className="text-2xl font-mono font-bold text-white">{entries.length}</div>
+                </div>
+                <div className="bg-[#141414] border border-white/5 p-4 rounded-xl">
+                    <h3 className="text-xs uppercase text-gray-500 font-bold mb-1">Security Events</h3>
+                    <div className="text-2xl font-mono font-bold text-red-400">
+                        {entries.filter(e => e.type === 'BAN_USER' || e.type === 'UNBAN_USER').length}
+                    </div>
+                </div>
+                <div className="bg-[#141414] border border-white/5 p-4 rounded-xl">
+                    <h3 className="text-xs uppercase text-gray-500 font-bold mb-1">Adjustments</h3>
+                    <div className="text-2xl font-mono font-bold text-blue-400">
+                        {entries.filter(e => e.type === 'ADJUSTMENT').length}
+                    </div>
+                </div>
             </div>
 
-            <div className="bg-[#141414] border border-white/5 rounded-xl overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead className="bg-black/20 text-gray-500 text-[10px] uppercase tracking-wider">
+            {/* Console Filters */}
+            <div className="bg-[#141414] border border-white/5 rounded-t-xl p-4 flex flex-wrap gap-4 items-center justify-between border-b border-white/5 sticky top-0 z-10 shadow-lg">
+                <div className="flex items-center gap-4">
+                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                        <span>📜</span> System Logs
+                    </h2>
+                    <div className="h-6 w-px bg-white/10" />
+                    <div className="flex gap-2">
+                        {['ALL', 'TRANSFER', 'ADJUSTMENT', 'BAN_USER', 'CREATE_TEAM'].map(type => (
+                            <button
+                                key={type}
+                                onClick={() => setFilterType(type)}
+                                className={`text-[10px] uppercase font-bold px-3 py-1.5 rounded-lg transition-all ${filterType === type
+                                        ? 'bg-accent-gold text-black shadow-[0_0_10px_rgba(191,160,90,0.2)]'
+                                        : 'bg-white/5 text-gray-400 hover:text-white'
+                                    }`}
+                            >
+                                {type.replace('_', ' ')}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <input
+                        type="text"
+                        placeholder="Search logs..."
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        className="bg-black/30 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:border-accent-gold outline-none w-64 text-xs font-mono"
+                    />
+                    <button onClick={loadLog} className="p-2 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition-colors">
+                        🔄
+                    </button>
+                </div>
+            </div>
+
+            {/* Log Stream */}
+            <div className="bg-[#0A0C10] border-x border-b border-white/5 rounded-b-xl overflow-hidden min-h-[600px] font-mono text-xs">
+                {loading ? (
+                    <div className="p-12 text-center text-green-500 animate-pulse">
+                        &gt; ESTABLISHING UPLINK... <br />
+                        &gt; FETCHING SECURITY AUDIT...
+                    </div>
+                ) : filteredEntries.length === 0 ? (
+                    <div className="p-12 text-center text-gray-600">
+                        &gt; NO SIGNALS DETECTED.
+                    </div>
+                ) : (
+                    <table className="w-full text-left border-collapse">
+                        <thead className="bg-[#141414] text-gray-500 uppercase tracking-wider sticky top-0 z-0">
                             <tr>
-                                <th className="px-6 py-4">الوقت</th>
-                                <th className="px-6 py-4">النوع</th>
-                                <th className="px-6 py-4">من</th>
-                                <th className="px-6 py-4">إلى</th>
-                                <th className="px-6 py-4 text-right">المبلغ</th>
-                                <th className="px-6 py-4">السبب</th>
-                                <th className="px-6 py-4">بواسطة</th>
+                                <th className="px-4 py-3 border-b border-white/5 w-40">Timestamp</th>
+                                <th className="px-4 py-3 border-b border-white/5 w-32">Type</th>
+                                <th className="px-4 py-3 border-b border-white/5">Details</th>
+                                <th className="px-4 py-3 border-b border-white/5 w-48 text-right">Actor</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
-                            {loading ? (
-                                <tr><td colSpan={7} className="p-8 text-center text-gray-500">Loading log...</td></tr>
-                            ) : entries.length === 0 ? (
-                                <tr><td colSpan={7} className="p-8 text-center text-gray-500">سجل نظيف ✨</td></tr>
-                            ) : (
-                                entries.map(entry => {
-                                    const isPositive = true; // Ledger tracks absolute amount, context determines meaning
-                                    // But usually visual "From -> To" is enough.
-
-                                    return (
-                                        <tr key={entry.id} className="hover:bg-white/5 transition-colors text-sm text-gray-300">
-                                            <td className="px-6 py-4 font-mono text-xs text-gray-500">
-                                                {entry.timestamp?.seconds ? new Date(entry.timestamp.seconds * 1000).toLocaleString('en-US') : 'Pending...'}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span className={`px-2 py-1 rounded text-[10px] uppercase font-bold
-                                                    ${entry.type === 'ADJUSTMENT' ? 'bg-blue-500/20 text-blue-400' :
-                                                        entry.type === 'TRANSFER' ? 'bg-purple-500/20 text-purple-400' :
-                                                            'bg-gray-500/20 text-gray-400'}
-                                                `}>
-                                                    {entry.type}
+                            {filteredEntries.map(entry => (
+                                <tr key={entry.id} className="hover:bg-white/[0.02] group transition-colors">
+                                    <td className="px-4 py-3 text-gray-500">
+                                        {entry.timestamp?.seconds
+                                            ? new Date(entry.timestamp.seconds * 1000).toLocaleString('en-US', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                                            : '--:--:--'}
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${entry.type === 'ADJUSTMENT' ? 'bg-blue-900/20 text-blue-400 border-blue-900/30' :
+                                                entry.type === 'TRANSFER' ? 'bg-purple-900/20 text-purple-400 border-purple-900/30' :
+                                                    entry.type.includes('BAN') ? 'bg-red-900/20 text-red-500 border-red-900/30' :
+                                                        'bg-gray-800 text-gray-400 border-white/5'
+                                            }`}>
+                                            {entry.type}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-gray-300">
+                                                {entry.fromName && <span className="text-gray-500">{entry.fromName} → </span>}
+                                                <span className="text-white font-bold">{entry.toName || 'System'}</span>
+                                            </span>
+                                            {entry.amount > 0 && (
+                                                <span className="text-accent-gold font-bold">
+                                                    [{entry.amount.toLocaleString()} SP]
                                                 </span>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-1">
-                                                    <span className="text-[10px] opacity-50 bg-white/10 px-1 rounded">{entry.fromType}</span>
-                                                    <span className="font-bold">{entry.fromName}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-1">
-                                                    <span className="text-[10px] opacity-50 bg-white/10 px-1 rounded">{entry.toType}</span>
-                                                    <span className="font-bold">{entry.toName}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 text-right font-mono font-bold text-white">
-                                                {entry.amount}
-                                            </td>
-                                            <td className="px-6 py-4 text-gray-400 italic">
-                                                "{entry.reason}"
-                                            </td>
-                                            <td className="px-6 py-4 text-xs text-gray-500">
-                                                {entry.adminId}
-                                            </td>
-                                        </tr>
-                                    );
-                                })
-                            )}
+                                            )}
+                                        </div>
+                                        <div className="text-gray-600 mt-0.5 italic">
+                                            &gt; {entry.reason || 'No details provided'}
+                                        </div>
+                                    </td>
+                                    <td className="px-4 py-3 text-right text-gray-500">
+                                        <div className="truncate w-40 ml-auto" title={entry.adminId}>
+                                            {entry.adminId ? `admin:${entry.adminId.slice(0, 8)}...` : 'system:automated'}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
                         </tbody>
                     </table>
-                </div>
+                )}
             </div>
         </div>
     );
-};
-
-export default AuditLog;
+}

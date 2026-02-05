@@ -124,11 +124,8 @@
  * ============================================================================
  */
 import {
-    GoogleAuthProvider,
-    OAuthProvider,
     browserLocalPersistence,
     setPersistence,
-    signInWithRedirect,
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     signOut,
@@ -137,12 +134,7 @@ import {
 import { auth } from "./firebase";
 
 // --- Configuration ---
-const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({ prompt: 'select_account' });
-
-const appleProvider = new OAuthProvider('apple.com'); // Added Apple Provider
-appleProvider.addScope('email');
-appleProvider.addScope('name');
+// (Email/Pass only - Providers removed)
 
 // --- Helpers ---
 export const isPWA = (): boolean => {
@@ -189,59 +181,6 @@ export async function signupEmail(email: string, password: string) {
 export async function loginEmail(email: string, password: string) {
     await ensureAuthPersistence();
     return signInWithEmailAndPassword(auth, email, password);
-}
-
-/**
- * Strict Google Login Strategy (Redirect ONLY)
- * 
- * We deliberately avoid signInWithPopup to guarantee stability on:
- * - iOS PWA (Standalone) -> Popups are blocked/broken.
- * - Mobile WebViews -> Popups often fail to close.
- * - Strict Browser Environments.
- * 
- * Flow:
- * 1. Set Persistence.
- * 2. Redirect to Google.
- * 3. Page Reloads.
- * 4. AuthContext captures result via getRedirectResult().
- */
-export async function loginGoogleAuto() { // Keep name for compatibility or rename if refactoring Context
-    console.log("🔐 [AUTH] Starting Google Redirect Flow...");
-    await ensureAuthPersistence();
-
-    // Explicitly THROW if called in a non-browser env (sanity check)
-    if (typeof window === 'undefined') {
-        throw new Error("Cannot initiate login on server-side.");
-    }
-
-    try {
-        await signInWithRedirect(auth, googleProvider);
-        // Execution stops here as page unloads.
-    } catch (error: any) {
-        console.error("❌ [AUTH] Google Redirect Failed:", error);
-        throw error;
-    }
-}
-
-/**
- * Strict Apple Sign-In Strategy (Redirect ONLY)
- * - Required for iOS PWA Compliance.
- * - Handles 'Sign in with Apple' native behavior via Firebase.
- */
-export async function loginAppleAuto() {
-    console.log(" [AUTH] Starting Apple Redirect Flow...");
-    await ensureAuthPersistence();
-
-    if (typeof window === 'undefined') {
-        throw new Error("Cannot initiate login on server-side.");
-    }
-
-    try {
-        await signInWithRedirect(auth, appleProvider);
-    } catch (error: any) {
-        console.error("❌ [AUTH] Apple Redirect Failed:", error);
-        throw error;
-    }
 }
 
 export async function logoutFull() {

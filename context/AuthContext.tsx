@@ -2,13 +2,11 @@
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { onAuthStateChanged, type User as FirebaseUser, getRedirectResult, UserCredential, setPersistence, browserLocalPersistence } from "firebase/auth";
-import { doc, getDoc, setDoc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp, updateDoc, onSnapshot } from "firebase/firestore";
 import { auth, db } from "../lib/firebase";
 import {
     loginEmail,
     signupEmail,
-    loginGoogleAuto,
-    loginAppleAuto,
     logoutFull
 } from "../lib/authActions";
 import { User, TEAMS, TeamProfile } from "../types/auth";
@@ -25,9 +23,6 @@ type AuthCtx = {
 
     loginEmail: (email: string, password: string) => Promise<UserCredential>;
     signupEmail: (email: string, password: string) => Promise<UserCredential>;
-    loginGoogle: () => Promise<void>;
-    loginWithGoogle: () => Promise<void>;
-    loginWithApple: () => Promise<void>;
     logout: () => Promise<void>;
 
     // Data & Logic
@@ -93,43 +88,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // --- 1. GLOBAL INITIALIZATION ---
 
     useEffect(() => {
-        let unsubscribe: () => void;
+        let authUnsub: () => void;
+        let profileUnsub: (() => void) | undefined;
 
         const initAuth = async () => {
-            log("🔐 [AUTH] Initializing AuthProvider v2.1...");
-            // We start true, and ONLY set to false when Firebase returns a User or Null.
+            log("🔐 [AUTH] Initializing AuthProvider v2.2 (Realtime)...");
             setAuthLoading(true);
 
             if (!auth) {
-                log("⚠️ [AUTH] Firebase Auth not initialized (Missing Config?). Skipping.");
+                log("⚠️ [AUTH] Firebase Auth not initialized.");
                 setAuthLoading(false);
                 return;
             }
 
             try {
-                // 1. Enforce Persistence FIRST
                 await setPersistence(auth, browserLocalPersistence);
-                log("💾 [AUTH] Persistence Enforced (Browser Local)");
-
-                // 2. Handle Redirect Result (Crucial for iOS PWA)
-                // REMOVED STRICT MODE GUARD: Better to check twice than zero times.
-                log("🔄 [AUTH] Checking Redirect Result...");
                 const result = await getRedirectResult(auth);
-
-                if (result) {
-                    log(`✅ [AUTH] Redirect Login Success: ${result.user.email}`);
-                    // OPTIMISTIC UPDATE: Set user immediately to prevent "Guest" flash
-                    setFirebaseUser(result.user);
-                    // The onAuthStateChanged will fire anyway
-                } else {
-                    log("ℹ️ [AUTH] No redirect result found (Normal load or Popup).");
-                }
+                if (result) setFirebaseUser(result.user);
             } catch (e: any) {
-                log(`❌ [AUTH] Redirect Result Error: ${e.code} - ${e.message}`);
+                console.error("Auth Init Error", e);
             }
 
             // B. Listen for Auth Changes
-            unsubscribe = onAuthStateChanged(auth, async (fUser) => {
+            authUnsub = onAuthStateChanged(auth, async (fUser) => {
+                // 1. Cleanup previous profile listener if user switches
+                if (profileUnsub) {
+                    profileUnsub();
+                    profileUnsub = undefined;
+                }
+
                 console.log("👤 [AUTH] Change Detected:", fUser?.email || "Guest");
 
                 if (!fUser) {
@@ -138,9 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     setUser(null);
                     setActiveTeam(null);
                     setRoleLoading(false);
-                    // Crucial: Only now do we let the UI render for guests
                     setAuthLoading(false);
-
                     setAuthReady(true);
                     setRoleReady(true);
                     return;
@@ -148,12 +133,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                 // LOGGED IN
                 setFirebaseUser(fUser);
-                setRoleLoading(true);  // Now fetching local profile
+                setRoleLoading(true);
 
-                try {
-                    const ref = doc(db, "users", fUser.uid);
-                    const snap = await getDoc(ref);
+                // 2. Setup Real-time Profile Listener
+                const ref = doc(db, "users", fUser.uid);
 
+                profileUnsub = onSnapshot(ref, async (snap) => {
                     let userData: any;
 
                     if (!snap.exists()) {
@@ -170,88 +155,76 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                             lastLogin: serverTimestamp(),
                             photoURL: fUser.photoURL || ""
                         };
-                        // Use setDoc with merge to be safe, though snap !exists implies purely new
+                        // We must create it. Use setDoc. 
+                        // Note: This might trigger another snapshot event, which is fine.
                         await setDoc(ref, userData);
                     } else {
-                        console.log("✅ [AUTH] Profile Loaded");
-                        await updateDoc(ref, { lastLogin: serverTimestamp() });
+                        // console.log("✅ [AUTH] Profile Update Received");
                         userData = snap.data();
                     }
 
                     // Map to App User
                     const appUser: User = {
                         id: fUser.uid,
-                        name: userData.name || userData.displayName || fUser.displayName || "User",
+                        name: userData.nickname || userData.name || userData.displayName || fUser.displayName || "User", // Prefer Nickname
                         email: fUser.email || "",
                         role: (userData.role === 'admin' || userData.role === 'ADMIN') ? 'ADMIN' : 'USER',
-                        avatar: userData.photoURL || fUser.photoURL || "",
+                        avatar: userData.avatarUrl || userData.photoURL || fUser.photoURL || "",
                         isDisabled: userData.isDisabled === true,
                         teamId: userData.teamId,
-                        isOnboarded: !!userData.teamId
+                        isOnboarded: userData.isOnboarded === true || !!userData.teamId,
+
+                        // New Settings Architecture Mapping
+                        profile: userData.profile || {},
+                        preferences: userData.preferences || {},
+                        privacy: userData.privacy || {},
+                        notifications: userData.notifications || {},
+                        createdAt: userData.createdAt
                     };
+
+                    // Backwards Compat / Priority Logic for Display Fields
+                    // 1. profile.displayName -> 2. userData.nickname -> 3. userData.name -> 4. Auth.displayName
+                    appUser.name = userData.profile?.displayName || userData.nickname || userData.name || userData.displayName || fUser.displayName || "User";
+
+                    // 1. profile.photoURL -> 2. userData.avatarUrl -> 3. Auth.photoURL
+                    appUser.avatar = userData.profile?.photoURL || userData.avatarUrl || userData.photoURL || fUser.photoURL || "";
+
+                    // 1. profile.mobile -> 2. userData.mobile
+                    appUser.mobile = userData.profile?.mobile || userData.mobile;
 
                     setUser(appUser);
 
+                    // Team Logic (kept simple for now, fetched once)
                     if (appUser.teamId) {
                         const staticTeam = TEAMS.find(team => team.id === appUser.teamId);
                         if (staticTeam) {
                             setActiveTeam(staticTeam);
                         } else {
-                            // Fetch Dynamic Team
-                            try {
-                                const teamDoc = await getDoc(doc(db, "teams", appUser.teamId));
-                                if (teamDoc.exists()) {
-                                    setActiveTeam({ id: appUser.teamId, ...teamDoc.data() } as TeamProfile);
-                                } else {
-                                    // Fallback placeholder to prevent loop
-                                    setActiveTeam({
-                                        id: appUser.teamId as any,
-                                        name: appUser.teamId,
-                                        avatar: '/assets/brand/logo.png',
-                                        color: 'from-gray-700 to-black',
-                                        points: 0,
-                                        isScorable: true
-                                    });
-                                }
-                            } catch (err) {
-                                console.error("Error fetching dynamic team", err);
-                                // Fallback
-                                setActiveTeam({
-                                    id: appUser.teamId as any,
-                                    name: appUser.teamId,
-                                    avatar: '/assets/brand/logo.png',
-                                    color: 'from-gray-700 to-black',
-                                    points: 0,
-                                    isScorable: true
-                                });
+                            // Only fetch if not already set or different
+                            const teamDoc = await getDoc(doc(db, "teams", appUser.teamId));
+                            if (teamDoc.exists()) {
+                                setActiveTeam({ id: appUser.teamId, ...teamDoc.data() } as TeamProfile);
                             }
                         }
                     }
 
-                } catch (err) {
-                    console.error("❌ [AUTH] Profile Fetch Error:", err);
-                    // Fallback so user isn't stuck endlessly loading
-                    setUser({
-                        id: fUser.uid,
-                        name: fUser.displayName || "User",
-                        role: 'USER',
-                        email: fUser.email || "",
-                        idAsString: fUser.uid // legacy
-                    } as any);
-                } finally {
                     setRoleLoading(false);
                     setRoleReady(true);
-                    setAuthLoading(false); // Auth is now fully ready (User + Profile + Team)
+                    setAuthLoading(false);
                     setAuthReady(true);
-                }
+                }, (err) => {
+                    console.error("❌ [AUTH] Profile Snapshot Error:", err);
+                    setRoleLoading(false);
+                    setAuthLoading(false);
+                });
             });
         };
 
-        // Fire initialization
         initAuth();
 
         return () => {
-            if (unsubscribe) unsubscribe();
+            if (authUnsub) authUnsub();
+            if (profileUnsub) profileUnsub();
         };
     }, []);
 
@@ -259,11 +232,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const loading = authLoading || roleLoading;
 
     // Actions
-    const handleLoginGoogle = async () => {
-        // Enforce Strict Redirect (PWA Safe)
-        await loginGoogleAuto();
-        // Page will redirect. No further code execution expected here.
-    };
+
 
     const selectTeam = async (teamId: string, pin: string): Promise<boolean> => {
         if (!firebaseUser) return false;
@@ -301,9 +270,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loading,
         loginEmail,
         signupEmail,
-        loginGoogle: handleLoginGoogle,
-        loginWithGoogle: handleLoginGoogle,
-        loginWithApple: async () => { await loginAppleAuto(); },
         logout: logoutFull,
         activeTeam,
         selectedTeam: activeTeam,
