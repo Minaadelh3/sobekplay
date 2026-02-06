@@ -27,6 +27,7 @@ export default function AdminSidebar({ mobile = false, onClose }: { mobile?: boo
             title: "System",
             items: [
                 { path: '/admin/games', label: 'Games Config', icon: 'video_game' },
+                { path: '/admin/notifications', label: 'Push Notifications', icon: 'bell' },
                 { path: '/admin/flags', label: 'Feature Flags', icon: 'test_tube' },
                 { path: '/admin/logs', label: 'Audit Logs', icon: 'scroll' },
                 { path: '/admin/settings', label: 'Settings', icon: 'gear' },
@@ -93,8 +94,9 @@ export default function AdminSidebar({ mobile = false, onClose }: { mobile?: boo
                                                             item.icon === 'test_tube' ? '🧪' :
                                                                 item.icon === 'scroll' ? '📜' :
                                                                     item.icon === 'gear' ? '⚙️' :
-                                                                        item.icon === 'bust_in_silhouette' ? '👤' :
-                                                                            item.icon}
+                                                                        item.icon === 'bell' ? '🔔' :
+                                                                            item.icon === 'bust_in_silhouette' ? '👤' :
+                                                                                item.icon}
                                     </span>
                                     <span className="font-medium">{item.label}</span>
                                 </NavLink>

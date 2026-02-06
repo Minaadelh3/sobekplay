@@ -15,7 +15,7 @@ import { db } from './firebase';
 
 // --- Types ---
 
-export type TransactionType = 'ADJUSTMENT' | 'TRANSFER' | 'GAME_REWARD' | 'TEAM_REWARD' | 'SYSTEM_RESET' | 'ROLLBACK';
+export type TransactionType = 'ADJUSTMENT' | 'TRANSFER' | 'GAME_REWARD' | 'TEAM_REWARD' | 'SYSTEM_RESET' | 'ROLLBACK' | 'ACHIEVEMENT_REWARD';
 export type EntityType = 'SYSTEM' | 'TEAM' | 'USER';
 
 export interface LedgerEntry {

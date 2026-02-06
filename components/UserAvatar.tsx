@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 interface UserAvatarProps {
     src?: string | null;
     name?: string | null;
-    size?: 'sm' | 'md' | 'lg' | 'xl' | 'custom';
+    size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'custom';
     className?: string;
     border?: boolean;
     borderColor?: string;
@@ -26,6 +26,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
 
     // Size mappings
     const sizeClasses = {
+        xs: 'w-6 h-6 text-[10px]',
         sm: 'w-8 h-8 text-[10px]',
         md: 'w-10 h-10 text-xs',
         lg: 'w-16 h-16 text-lg',
