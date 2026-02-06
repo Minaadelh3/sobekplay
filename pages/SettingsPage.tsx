@@ -6,11 +6,10 @@ import { useAppConfig } from '../hooks/useAppConfig';
 import SettingsLayout from '../components/settings/SettingsLayout';
 import { Section, Toggle, SettingsInput, DangerButton } from '../components/settings/SettingsComponents';
 import Toast from '../components/Toast';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { app } from '../lib/firebase';
 import { sendPasswordResetEmail, getAuth } from 'firebase/auth';
+import { uploadToCloudinary } from '../lib/cloudinary';
 
-const storage = getStorage(app);
 const auth = getAuth(app);
 
 export default function SettingsPage() {
@@ -65,9 +64,7 @@ export default function SettingsPage() {
         if (!file || !firebaseUser) return;
         setUploading(true);
         try {
-            const storageRef = ref(storage, `avatars/${firebaseUser.uid}/profile_${Date.now()}.jpg`);
-            await uploadBytes(storageRef, file);
-            const downloadURL = await getDownloadURL(storageRef);
+            const downloadURL = await uploadToCloudinary(file);
             await updateProfile({ photoURL: downloadURL });
             showToast('Avatar updated successfully!', 'success');
         } catch (error) {

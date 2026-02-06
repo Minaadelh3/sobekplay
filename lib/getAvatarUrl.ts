@@ -1,5 +1,6 @@
 
 import { DEFAULT_AVATAR, UNCLE_JOY_AVATAR, TEAM_AVATARS } from "./avatars";
+import { getOptimizedAvatarUrl } from "./cloudinary";
 
 type AvatarArgs = {
     uid?: string;
@@ -27,7 +28,7 @@ export function getAvatarUrl(args: AvatarArgs | null | undefined): string {
 
     // 2. User Uploaded Avatar (If valid string and reasonable length)
     if (rawAvatar && typeof rawAvatar === "string" && rawAvatar.trim().length > 5) {
-        return rawAvatar;
+        return getOptimizedAvatarUrl(rawAvatar);
     }
 
     // 3. Team Fallback
@@ -36,5 +37,6 @@ export function getAvatarUrl(args: AvatarArgs | null | undefined): string {
     }
 
     // 4. Generic Fallback
-    return DEFAULT_AVATAR;
+    return getOptimizedAvatarUrl(DEFAULT_AVATAR);
 }
+
