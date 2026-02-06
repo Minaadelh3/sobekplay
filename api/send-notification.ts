@@ -25,8 +25,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const API_KEY = process.env.ONESIGNAL_REST_API_KEY;
     const APP_ID = process.env.ONESIGNAL_APP_ID;
 
+    console.log("DEBUG API: Checking Keys");
+    console.log("APP_ID:", APP_ID ? "Found" : "Missing");
+    console.log("API_KEY:", API_KEY ? "Found" : "Missing");
+
     if (!API_KEY || !APP_ID) {
-        console.error("Missing OneSignal Config");
+        console.error("Missing OneSignal Config", { API_KEY: !!API_KEY, APP_ID: !!APP_ID });
         return res.status(500).json({ error: 'Server Misconfiguration' });
     }
 
