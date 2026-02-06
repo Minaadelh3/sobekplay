@@ -53,7 +53,7 @@ const GamesPage = () => {
 
                 {/* Games Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <AnimatePresence mode='wait'>
+                    <AnimatePresence>
                         {filteredGames.map((game) => (
                             <GameCard key={game.id} game={game} onClick={() => navigate(`/games/${game.id}`)} />
                         ))}

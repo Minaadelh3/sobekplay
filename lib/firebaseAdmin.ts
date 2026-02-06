@@ -3,9 +3,15 @@ import * as admin from 'firebase-admin';
 // Initialize Firebase Admin only once
 if (!admin.apps.length) {
     try {
-        const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
-            ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
-            : undefined;
+        let serviceAccount;
+
+        if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+            try {
+                serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+            } catch (jsonError) {
+                console.error("❌ [Firebase Admin] Failed to parse FIREBASE_SERVICE_ACCOUNT env var. It must be valid JSON.");
+            }
+        }
 
         if (serviceAccount) {
             admin.initializeApp({
@@ -14,7 +20,7 @@ if (!admin.apps.length) {
             console.log("🔥 [Firebase Admin] Initialized with Service Account");
         } else {
             // Fallback for local development or if Google Application Credentials are set automatically
-            console.warn("⚠️ [Firebase Admin] No FIREBASE_SERVICE_ACCOUNT found. Trying default credentials...");
+            console.warn("⚠️ [Firebase Admin] No FIREBASE_SERVICE_ACCOUNT or invalid JSON. Trying default credentials...");
             admin.initializeApp();
         }
     } catch (error) {
