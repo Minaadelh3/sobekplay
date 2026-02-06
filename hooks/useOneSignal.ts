@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import OneSignal from 'react-onesignal';
 import { useAuth } from '../context/AuthContext';
 
-const ONESIGNAL_APP_ID = import.meta.env.VITE_ONESIGNAL_APP_ID;
+const ONESIGNAL_APP_ID = import.meta.env.VITE_ONESIGNAL_APP_ID || "71f9b370-fb2a-4da8-9377-d0546c5900c0";
 
 type PermissionState = 'default' | 'granted' | 'denied';
 
