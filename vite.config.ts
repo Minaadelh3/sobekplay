@@ -64,16 +64,34 @@ export default defineConfig(({ mode }) => {
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+          // Exclude large avatar files from precache to avoid Vercel build limits (limit is ~2-3MB usually)
+          globIgnores: ['**/avatars/**', '**/avatars/*'],
           cleanupOutdatedCaches: true,
           skipWaiting: true,
           clientsClaim: true,
-          maximumFileSizeToCacheInBytes: 3000000,
+          maximumFileSizeToCacheInBytes: 5000000,
           importScripts: ['/OneSignalSDKWorker.js'],
           navigateFallback: '/index.html',
           // SAFELIST: Do not intercept Auth or API
           navigateFallbackDenylist: [
             /^\/__\/auth/,
             /^\/api/
+          ],
+          runtimeCaching: [
+            {
+              urlPattern: ({ url }) => url.pathname.startsWith('/avatars/'),
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'avatar-cache',
+                expiration: {
+                  maxEntries: 50,
+                  maxAgeSeconds: 60 * 60 * 24 * 30, // 30 Days
+                },
+                cacheableResponse: {
+                  statuses: [0, 200]
+                }
+              }
+            }
           ]
         },
         devOptions: {
