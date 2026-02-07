@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { GAMES_CONFIG } from '../../lib/games';
 import { performTransaction } from '../../lib/ledger';
+import ExitButton from '../../components/games/ExitButton';
 
 const PanicGame = () => {
     const navigate = useNavigate();
@@ -48,7 +49,7 @@ const PanicGame = () => {
 
     if (state.phase === 'SETUP') {
         return (
-            <div className="min-h-screen bg-[#070A0F] text-white p-6 flex flex-col items-center justify-center space-y-8">
+            <div className="min-h-screen bg-[#070A0F] text-white p-6 flex flex-col items-center justify-center space-y-8 safe-area-pb">
                 <div className="text-center space-y-2">
                     <h1 className="text-5xl font-black text-red-600 drop-shadow-[0_0_15px_rgba(220,38,38,0.5)] animate-pulse">قول بسرعة 💣</h1>
                     <p className="text-gray-400">٣ ثواني.. ٣ إجابات.. وإلا هتتفضح!</p>
@@ -76,7 +77,7 @@ const PanicGame = () => {
                         START PANIC 🔥
                     </button>
                 </div>
-                <button onClick={() => navigate('/games')} className="absolute top-4 left-4 text-white/30 hover:text-white">✕</button>
+                <ExitButton className="absolute top-4 left-4" showConfirm={false} />
             </div>
         );
     }
@@ -84,7 +85,7 @@ const PanicGame = () => {
     if (state.phase === 'READY') {
         const currentPlayer = state.players[state.currentPlayerIndex];
         return (
-            <div className={`min-h-screen flex flex-col items-center justify-center text-center p-6 space-y-8 bg-red-950`}>
+            <div className={`min-h-screen flex flex-col items-center justify-center text-center p-6 space-y-8 bg-red-950 safe-area-pb`}>
                 <h2 className="text-2xl font-bold text-red-200">الدور على</h2>
                 <h1 className="text-6xl font-black text-white mb-4 animate-bounce">{currentPlayer.name}</h1>
                 <div className="bg-black/30 p-6 rounded-2xl border border-red-500/30 max-w-xs">
@@ -105,7 +106,7 @@ const PanicGame = () => {
         const progress = Math.max(0, (state.timer / 3) * 100);
 
         return (
-            <div className="min-h-screen bg-red-600 text-white flex flex-col justify-between items-center relative overflow-hidden">
+            <div className="min-h-screen bg-red-600 text-white flex flex-col justify-between items-center relative overflow-hidden safe-area-pb">
                 {/* Intense Background Animation */}
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#000000_100%)] opacity-50" />
 
@@ -116,6 +117,8 @@ const PanicGame = () => {
                         style={{ width: `${progress}%` }}
                     />
                 </div>
+
+                <ExitButton className="absolute right-4 top-16" confirmMessage="Quit Panic Mode?" />
 
                 <div className="flex-1 flex flex-col items-center justify-center p-6 text-center z-10 space-y-12">
                     <h2 className="text-2xl font-bold text-red-200 uppercase tracking-widest">{state.currentPrompt?.category}</h2>
@@ -158,7 +161,7 @@ const PanicGame = () => {
 
     if (state.phase === 'FEEDBACK') {
         return (
-            <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center space-y-8">
+            <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center space-y-8 safe-area-pb">
                 <h1 className="text-4xl font-black text-red-500 mb-4">{state.judgment}</h1>
 
                 <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
@@ -183,7 +186,7 @@ const PanicGame = () => {
     if (state.phase === 'GAME_OVER') {
         const sortedPlayers = [...state.players].sort((a, b) => b.score - a.score);
         return (
-            <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center">
+            <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center safe-area-pb">
                 <div className="text-6xl mb-6">🏁</div>
                 <h1 className="text-5xl font-black text-white mb-4">Game Over</h1>
                 <div className="text-red-400 font-bold mb-8 flex items-center gap-2 bg-red-900/20 px-4 py-2 rounded-full border border-red-900/50">
@@ -205,7 +208,7 @@ const PanicGame = () => {
 
                 <div className="flex gap-4 w-full max-w-xs">
                     <button onClick={resetGame} className="flex-1 bg-white/10 py-4 rounded-xl font-bold hover:bg-white/20">Play Again</button>
-                    <button onClick={() => navigate('/games')} className="flex-1 bg-red-600 py-4 rounded-xl font-bold hover:bg-red-700">Exit</button>
+                    <ExitButton className="flex-1 bg-red-600 py-4 rounded-xl font-bold hover:bg-red-700 h-auto" showConfirm={false} />
                 </div>
             </div>
         );

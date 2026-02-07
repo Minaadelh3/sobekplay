@@ -4,17 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
-// 3D/Render Style Avatars with Egyptian/Middle Eastern Vibe
-const EGYPTIAN_3D_AVATARS = [
-    { id: 'modern_king', url: "https://img.freepik.com/free-psd/3d-illustration-person-with-sunglasses_23-2149436188.jpg", label: "كينج العصر" },
-    { id: 'queen_nef', url: "https://img.freepik.com/free-psd/3d-illustration-person-with-long-hair_23-2149436197.jpg", label: "الملكة" }, // Long hair, confident
-    { id: 'smart_guy', url: "https://img.freepik.com/free-psd/3d-illustration-business-man-with-glasses_23-2149436194.jpg", label: "المثقف" },
-    { id: 'cool_hijab', url: "https://img.freepik.com/free-psd/3d-illustration-person-with-hijab_23-2149436189.jpg", label: "البرنسيسة" }, // Assuming hijab or similar headwear if available, fallback to cap/hat one which looks generic
-    { id: 'upper_egypt', url: "https://img.freepik.com/free-psd/3d-illustration-person-with-glasses_23-2149436190.jpg", label: "الزعيم" },
-    { id: 'chill', url: "https://img.freepik.com/free-psd/3d-illustration-person-with-headphones_23-2149436191.jpg", label: "الرايق" }, // Headphones
-    { id: 'cleo_style', url: "https://img.freepik.com/free-psd/3d-illustration-person-with-pink-hair_23-2149436186.jpg", label: "ستايلش" },
-    { id: 'pharaoh_vibes', url: "https://img.freepik.com/free-psd/3d-illustration-person-with-punk-hair_23-2149436198.jpg", label: "المشاكس" },
-];
+import { MASRY_AVATARS } from '../lib/avatars';
 
 export default function OnboardingPage() {
     const { user } = useAuth();
@@ -30,7 +20,7 @@ export default function OnboardingPage() {
     const [nickname, setNickname] = useState('');
 
     // Avatar State
-    const [avatarUrl, setAvatarUrl] = useState(user?.avatar || EGYPTIAN_3D_AVATARS[0].url);
+    const [avatarUrl, setAvatarUrl] = useState(user?.avatar || MASRY_AVATARS[0].src);
 
     // Race Condition Checker
     useEffect(() => {
@@ -174,25 +164,25 @@ export default function OnboardingPage() {
                                         />
                                     </div>
                                     <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/80 text-accent-gold text-[10px] px-3 py-1 rounded-full border border-accent-gold/30 backdrop-blur-md whitespace-nowrap">
-                                        {EGYPTIAN_3D_AVATARS.find(a => a.url === avatarUrl)?.label || "مختار"}
+                                        {MASRY_AVATARS.find(a => a.src === avatarUrl)?.name || "مختار"}
                                     </div>
                                 </div>
 
                                 {/* Grid */}
-                                <div className="grid grid-cols-4 gap-3 w-full p-2">
-                                    {EGYPTIAN_3D_AVATARS.map((avatar) => (
+                                <div className="grid grid-cols-4 gap-3 w-full p-2 overflow-y-auto max-h-[300px] scrollbar-thin scrollbar-thumb-white/10">
+                                    {MASRY_AVATARS.map((avatar) => (
                                         <button
                                             key={avatar.id}
-                                            onClick={() => setAvatarUrl(avatar.url)}
+                                            onClick={() => setAvatarUrl(avatar.src)}
                                             className={`
                                                 aspect-square rounded-2xl overflow-hidden border-2 transition-all duration-300 relative group
-                                                ${avatarUrl === avatar.url
+                                                ${avatarUrl === avatar.src
                                                     ? 'border-accent-gold scale-100 shadow-[0_0_15px_rgba(191,160,90,0.3)] opacity-100'
                                                     : 'border-transparent opacity-50 hover:opacity-100 hover:scale-105 bg-white/5'
                                                 }
                                             `}
                                         >
-                                            <img src={avatar.url} alt={avatar.label} className="w-full h-full object-cover" />
+                                            <img src={avatar.src} alt={avatar.name} className="w-full h-full object-cover" />
                                         </button>
                                     ))}
                                 </div>

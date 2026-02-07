@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
-import { checkAndUnlockAchievement, Achievement } from '../lib/gamification';
+import { processGamificationEvent } from '../lib/gamification';
+import { Achievement } from '../types/achievements';
 import AchievementToast from '../components/gamification/AchievementToast';
 
 interface AchievementsContextType {
-    unlockAchievement: (id: string) => Promise<void>;
+    trackEvent: (eventName: string, metadata?: any) => Promise<void>;
 }
 
 const AchievementsContext = createContext<AchievementsContextType | undefined>(undefined);
@@ -13,26 +14,34 @@ export const AchievementsProvider: React.FC<{ children: ReactNode }> = ({ childr
     const { user } = useAuth();
     const [currentAchievement, setCurrentAchievement] = useState<Achievement | null>(null);
 
-    const unlockAchievement = async (achievementId: string) => {
+    const trackEvent = async (eventName: string, metadata: any = {}) => {
         if (!user) return;
 
-        // Optimistic check (prevent calling DB if we know locally it's unlocked?)
-        // Ideally we trust the server response from checkAndUnlockAchievement which handles duplication checks.
-
         try {
-            const unlocked = await checkAndUnlockAchievement(user.id, achievementId);
-            if (unlocked) {
-                // Show Toast
-                setCurrentAchievement(unlocked);
-                // Play Sound?
+            console.log(`🎮 [XP] Tracking Event: ${eventName}`);
+            const result = await processGamificationEvent(user.id, eventName, metadata);
+
+            if (result.unlocked.length > 0) {
+                // Show most valuable unlocked achievement (or queue them if we improve toast)
+                // For now, show the first one
+                const mainUnlock = result.unlocked[0];
+                setCurrentAchievement(mainUnlock);
+
+                // Play Sound Effect Here if needed
             }
+
+            if (result.newLevel) {
+                // TODO: Show Level Up Modal
+                console.log(`🚀 [XP] Level Up! Now Level ${result.newLevel}`);
+            }
+
         } catch (e) {
-            console.error("Unlock Error", e);
+            console.error("XP Tack Error", e);
         }
     };
 
     return (
-        <AchievementsContext.Provider value={{ unlockAchievement }}>
+        <AchievementsContext.Provider value={{ trackEvent }}>
             {children}
             {/* Global Toast Layer */}
             <AchievementToast

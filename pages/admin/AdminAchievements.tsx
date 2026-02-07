@@ -15,7 +15,8 @@ export default function AdminAchievements() {
         createAchievement,
         updateAchievement,
         toggleAchievementStatus,
-        deleteAchievement
+        deleteAchievement,
+        resetAllAchievements
     } = useAchievements();
 
     // Users needed for Grant Dialog
@@ -93,6 +94,13 @@ export default function AdminAchievements() {
                                 {achievements.filter(a => a.category !== 'JOURNEY').length} Active Achievements
                             </div>
                             <div className="flex gap-3">
+                                <button
+                                    onClick={resetAllAchievements}
+                                    className="px-4 py-2 rounded-xl bg-red-900/20 text-red-500 hover:bg-red-600 hover:text-white transition-colors text-xs font-mono border border-red-500/20 flex items-center gap-2 font-bold"
+                                    title="Revoke all achievements from all users"
+                                >
+                                    <span>☢️</span> Reset All
+                                </button>
                                 <button
                                     onClick={seedAchievements}
                                     className="px-4 py-2 rounded-xl bg-white/5 text-gray-400 hover:text-white transition-colors text-xs font-mono border border-white/5 flex items-center gap-2"

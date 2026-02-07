@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { GAMES_CONFIG } from '../../lib/games';
 import { performTransaction } from '../../lib/ledger';
+import ExitButton from '../../components/games/ExitButton';
 
 const CharadesGame = () => {
     const navigate = useNavigate();
@@ -31,7 +32,7 @@ const CharadesGame = () => {
 
     if (state.phase === 'SETUP') {
         return (
-            <div className="min-h-screen bg-[#070A0F] text-white p-6 flex flex-col items-center justify-center space-y-8">
+            <div className="min-h-screen bg-[#070A0F] text-white p-6 flex flex-col items-center justify-center space-y-8 safe-area-pb">
                 <div className="text-center space-y-2">
                     <h1 className="text-5xl font-black text-white drop-shadow-md">مثلها لو قدك 🎭</h1>
                     <p className="text-gray-400">لعبة التمثيل والفهلوة.. مين بيفهم التاني أكتر؟</p>
@@ -93,7 +94,7 @@ const CharadesGame = () => {
     if (state.phase === 'READY') {
         const currentTeam = state.teams.find(t => t.id === state.currentTeamId);
         return (
-            <div className={`min-h-screen ${state.currentTeamId === 1 ? 'bg-blue-900/20' : 'bg-red-900/20'} flex flex-col items-center justify-center text-center p-6 space-y-8`}>
+            <div className={`min-h-screen ${state.currentTeamId === 1 ? 'bg-blue-900/20' : 'bg-red-900/20'} flex flex-col items-center justify-center text-center p-6 space-y-8 safe-area-pb`}>
                 <h2 className="text-2xl font-bold text-gray-400">دور فريق</h2>
                 <h1 className="text-6xl font-black text-white mb-4">{currentTeam?.name}</h1>
                 <div className="bg-black/30 p-6 rounded-2xl border border-white/10 max-w-xs">
@@ -112,12 +113,13 @@ const CharadesGame = () => {
 
     if (state.phase === 'PLAYING') {
         return (
-            <div className="min-h-screen bg-black text-white flex flex-col relative overflow-hidden">
+            <div className="min-h-screen bg-black text-white flex flex-col relative overflow-hidden safe-area-pb">
                 {/* Timer Bar */}
                 <div className="absolute top-0 left-0 h-2 bg-yellow-500 z-50 transition-all duration-1000 ease-linear" style={{ width: `${(state.timer / 60) * 100}%` }} />
 
                 {/* Score & Time */}
-                <div className="flex justify-between items-center p-6 z-10">
+                <div className="flex justify-between items-center p-6 z-10 w-full relative">
+                    <ExitButton className="absolute left-6 top-6" confirmMessage="Game is in progress! Quit now?" />
                     <div className="text-4xl font-black">{state.timer}s</div>
                     <div className="text-2xl font-bold text-yellow-500">Score: {state.roundScore}</div>
                 </div>
@@ -161,7 +163,7 @@ const CharadesGame = () => {
     if (state.phase === 'ROUND_RESULT') {
         const currentTeam = state.teams.find(t => t.id === state.currentTeamId);
         return (
-            <div className="min-h-screen bg-[#070A0F] text-white flex flex-col items-center justify-center p-6 text-center space-y-8">
+            <div className="min-h-screen bg-[#070A0F] text-white p-6 flex flex-col items-center justify-center space-y-8 safe-area-pb">
                 <h2 className="text-2xl font-bold text-gray-500">وقتك خلص!</h2>
                 <h1 className="text-5xl font-black">نتيجة {currentTeam?.name}</h1>
                 <div className="text-9xl font-black text-yellow-500 my-8">{state.roundScore}</div>
@@ -222,7 +224,7 @@ const CharadesGame = () => {
         const isDraw = state.teams[0].score === state.teams[1].score;
 
         return (
-            <div className="min-h-screen bg-gradient-to-b from-yellow-900/20 to-black text-white flex flex-col items-center justify-center p-6 text-center">
+            <div className="min-h-screen bg-gradient-to-b from-yellow-900/20 to-black text-white flex flex-col items-center justify-center p-6 text-center safe-area-pb">
                 <div className="text-6xl mb-4">🏆</div>
                 <h1 className="text-6xl font-black text-yellow-500 mb-2">GAME OVER</h1>
                 <div className="text-green-400 font-bold mb-8 flex items-center gap-2 bg-green-500/10 px-4 py-2 rounded-full">
@@ -250,7 +252,7 @@ const CharadesGame = () => {
 
                 <div className="flex gap-4 w-full max-w-xs">
                     <button onClick={resetGame} className="flex-1 bg-white/10 py-4 rounded-xl font-bold hover:bg-white/20">Play Again</button>
-                    <button onClick={() => navigate('/games')} className="flex-1 bg-red-600 py-4 rounded-xl font-bold hover:bg-red-700">Exit</button>
+                    <ExitButton className="flex-1 bg-red-600 py-4 rounded-xl font-bold hover:bg-red-700 h-auto" showConfirm={false} />
                 </div>
             </div>
         );

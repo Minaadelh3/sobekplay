@@ -12,4 +12,10 @@ export interface PlayerProfile {
     // Extended properties for display
     role?: string;
     email?: string;
+
+    // Gamification
+    xp?: number;
+    level?: number;
+    badges?: string[];
+    unlockedAchievements?: string[];
 }

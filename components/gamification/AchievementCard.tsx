@@ -1,54 +1,106 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Achievement, TOKENS } from '../../lib/gamification';
+import { Achievement } from '../../types/achievements';
 
 interface AchievementCardProps {
     achievement: Achievement;
-    isUnlocked: boolean;
+    status: 'locked' | 'unlocked' | 'progress';
+    progress?: number; // 0 to 1
+    currentValue?: number;
+    targetValue?: number;
 }
 
-const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, isUnlocked }) => {
+const AchievementCard: React.FC<AchievementCardProps> = ({
+    achievement,
+    status,
+    progress = 0,
+    currentValue = 0,
+    targetValue = 0
+}) => {
+    const isLocked = status === 'locked';
+    const isCompleted = status === 'unlocked';
+
     return (
         <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className={`
-                relative overflow-hidden rounded-xl border p-4 flex items-center gap-4 transition-all
-                ${isUnlocked
-                    ? `bg-[${TOKENS.colors.bgCard}] border-[${TOKENS.colors.goldPrimary}]/30 shadow-[0_0_15px_-5px_rgba(212,175,55,0.3)]`
-                    : 'bg-white/5 border-white/5 grayscale opacity-70'}
+            layout
+            className={`relative p-4 rounded-xl border transition-all duration-300 overflow-hidden group
+                ${isCompleted
+                    ? 'bg-[#1a1f2e] border-[#D4AF37]/50 shadow-[0_0_15px_rgba(212,175,55,0.1)]'
+                    : 'bg-[#121820] border-white/5 opacity-80 hover:opacity-100 hover:border-white/10'
+                }
             `}
         >
-            {/* Icon Box */}
-            <div className={`
-                w-16 h-16 rounded-full flex items-center justify-center text-3xl shrink-0
-                ${isUnlocked ? 'bg-gradient-to-br from-gray-800 to-black border border-white/10' : 'bg-white/5'}
-            `}>
-                {isUnlocked ? achievement.icon : '🔒'}
+            {/* Background Gradient for Completed */}
+            {isCompleted && (
+                <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/5 to-transparent pointer-events-none" />
+            )}
+
+            <div className="flex items-start gap-4 relative z-10">
+                {/* Icon / Emoji */}
+                <div className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl shrink-0
+                    ${isCompleted
+                        ? 'bg-gradient-to-br from-[#D4AF37] to-[#F1C40F] text-black shadow-lg animate-pulse-slow'
+                        : 'bg-white/5 text-gray-500 grayscale'
+                    }
+                `}>
+                    {achievement.emoji}
+                </div>
+
+                {/* Content */}
+                <div className="flex-1">
+                    <div className="flex justify-between items-start mb-1">
+                        <h3 className={`font-bold text-lg ${isCompleted ? 'text-white' : 'text-gray-400'}`}>
+                            {achievement.title}
+                        </h3>
+
+                        {/* XP Badge */}
+                        <div className={`px-2 py-0.5 rounded text-xs font-bold
+                            ${isCompleted ? 'bg-[#D4AF37] text-black' : 'bg-white/10 text-gray-500'}
+                        `}>
+                            {achievement.xp} XP
+                        </div>
+                    </div>
+
+                    <p className={`text-sm mb-3 ${isCompleted ? 'text-gray-300' : 'text-gray-600'}`}>
+                        {isLocked && achievement.category === 'Special' ? '???' : achievement.description}
+                    </p>
+
+                    {/* Progress Bar (if Progressive and not completed) */}
+                    {status === 'progress' && (
+                        <div className="mt-2">
+                            <div className="flex justify-between text-xs text-gray-400 mb-1">
+                                <span>فاضلك {targetValue - currentValue}</span>
+                                <span>{Math.round(progress * 100)}%</span>
+                            </div>
+                            <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                                <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${progress * 100}%` }}
+                                    className="h-full bg-[#D4AF37]"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* How to Get Hint (if Locked) */}
+                    {isLocked && (
+                        <div className="text-xs text-gray-500 italic mt-2">
+                            🔒 {achievement.how_to_get}
+                        </div>
+                    )}
+
+                    {/* Completed Status */}
+                    {isCompleted && (
+                        <div className="text-xs text-[#D4AF37] font-bold mt-2 flex items-center gap-1">
+                            ✓ تم الإنجاز
+                        </div>
+                    )}
+                </div>
             </div>
 
-            {/* Info */}
-            <div className="flex-1 min-w-0">
-                <h3 className={`font-bold text-lg mb-1 truncate ${isUnlocked ? 'text-white' : 'text-gray-500'}`}>
-                    {achievement.title}
-                </h3>
-                <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed">
-                    {achievement.description}
-                </p>
-            </div>
-
-            {/* Points Badge (if unlocked or always visible?) usually visible to motivate */}
-            <div className={`
-                flex flex-col items-center justify-center w-12 shrink-0
-                ${isUnlocked ? 'text-[#D4AF37]' : 'text-gray-600'}
-            `}>
-                <span className="font-black text-lg">{achievement.points}</span>
-                <span className="text-[9px] uppercase tracking-wider font-bold">XP</span>
-            </div>
-
-            {/* Shine Effect if unlocked */}
-            {isUnlocked && (
-                <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-12 animate-shine pointer-events-none" />
+            {/* Shine Effect on Hover */}
+            {isCompleted && (
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
             )}
         </motion.div>
     );

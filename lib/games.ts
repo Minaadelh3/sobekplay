@@ -124,17 +124,7 @@ export const GAMES_CONFIG: GameConfig[] = [
     },
 
     // --- LEGACY / OTHER ---
-    {
-        id: 'sobek_intel',
-        title: "ذكاء سوبك",
-        description: "ألغاز للمحترفين فقط 🐊",
-        type: 'SOLO',
-        category: 'SOBEK',
-        rewards: { win: 15 },
-        icon: "🐊",
-        color: "text-green-500",
-        bgGradient: "from-green-700 to-black"
-    },
+
     {
         id: 'versus_match',
         title: "واجه لاعب",

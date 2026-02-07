@@ -65,6 +65,16 @@ const VerseOfTheDay: React.FC = () => {
                         <p className="text-white/90 font-arabic text-lg leading-loose text-right mb-6" dir="rtl">
                             {verse.reflection}
                         </p>
+
+                        {verse.dailyPrompt && (
+                            <div className="bg-white/5 rounded-lg p-4 mt-4 border-r-2 border-accent-gold">
+                                <p className="text-accent-gold text-sm font-bold mb-2 text-right dir-rtl">تأمل يومي</p>
+                                <p className="text-white/80 text-base leading-relaxed text-right dir-rtl font-arabic">
+                                    {verse.dailyPrompt}
+                                </p>
+                            </div>
+                        )}
+
                         <button
                             onClick={() => setIsReflecting(false)}
                             className="text-xs text-accent-gold/80 hover:text-accent-gold uppercase tracking-widest transition-colors"

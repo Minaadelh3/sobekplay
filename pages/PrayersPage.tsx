@@ -4,8 +4,12 @@ import { ArrowRight, ChevronRight } from 'lucide-react';
 import PrayerView from '../components/prayers/PrayerView';
 import TasbehaView from '../components/prayers/TasbehaView';
 import HymnsView from '../components/prayers/HymnsView';
+import PatronReading from '../components/prayers/PatronReading';
+import PatronQuote from '../components/prayers/PatronQuote';
+import PatronBio from '../components/prayers/PatronBio';
+import ElKhelwaView from '../components/prayers/ElKhelwaView';
 
-type ViewState = 'hub' | 'prayers' | 'tasbeha' | 'hymns';
+type ViewState = 'hub' | 'prayers' | 'tasbeha' | 'hymns' | 'reading' | 'quote' | 'bio' | 'elkhelwa';
 
 const HubCard = ({ title, subtitle, icon, onClick, color, delay }: any) => (
   <motion.button
@@ -111,6 +115,38 @@ const PrayersPage = () => {
                 onClick={() => setView('hymns')}
                 delay={0.3}
               />
+              <HubCard
+                title="تأملات روحية"
+                subtitle="سفر يشوع بن سيراخ"
+                icon="📜"
+                color="from-indigo-600/30 to-blue-600/30"
+                onClick={() => setView('reading')}
+                delay={0.4}
+              />
+              <HubCard
+                title="أقوال الآباء"
+                subtitle="القديس أغسطينوس"
+                icon="💬"
+                color="from-emerald-600/30 to-teal-600/30"
+                onClick={() => setView('quote')}
+                delay={0.5}
+              />
+              <HubCard
+                title="سيرة شفيع الرحلة"
+                subtitle="القديس الأنبا هدرا"
+                icon="✝️"
+                color="from-slate-600/30 to-gray-600/30"
+                onClick={() => setView('bio')}
+                delay={0.6}
+              />
+              <HubCard
+                title="الخلوة الفردية"
+                subtitle="وقت خاص مع الله"
+                icon="✨"
+                color="from-indigo-600/30 to-purple-600/30"
+                onClick={() => setView('elkhelwa')}
+                delay={0.7}
+              />
             </div>
           </motion.div>
         ) : (
@@ -126,6 +162,10 @@ const PrayersPage = () => {
             {view === 'prayers' && <PrayerView />}
             {view === 'tasbeha' && <TasbehaView />}
             {view === 'hymns' && <HymnsView />}
+            {view === 'reading' && <PatronReading />}
+            {view === 'quote' && <PatronQuote />}
+            {view === 'bio' && <PatronBio />}
+            {view === 'elkhelwa' && <ElKhelwaView />}
           </motion.div>
         )}
       </AnimatePresence>

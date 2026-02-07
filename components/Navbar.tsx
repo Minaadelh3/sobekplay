@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import BrandLogo from './BrandLogo';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
+import { getAvatarUrl } from '../lib/getAvatarUrl';
 
 interface NavbarProps {
   onSearchOpen: () => void;
@@ -35,6 +36,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
     { name: '🎈 Kids', path: '/app/kids' },
     { name: '🔑 Rooms', path: '/app/rooms' },
     { name: '💬 Community', path: '/app/community' },
+    { name: 'ℹ️ City Info', path: '/app/informations' },
     { name: '🗣️ شات الفريق', path: '/app/team-chat' },
     { name: '🏆 الإنجازات', path: '/app/achievements' },
   ];
@@ -56,6 +58,13 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
   }, [isMobileMenuOpen]);
 
   const allNavItems = [...navLinks];
+
+  // Helper to get consistent avatar
+  const avatarUrl = user && selectedTeam ? getAvatarUrl({
+    ...user,
+    teamId: selectedTeam.id,
+    // explicit overrides if needed, but getAvatarUrl handles user.profile priority
+  }) : '';
 
   return (
     <>
@@ -187,7 +196,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
                   </div>
 
                   <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${selectedTeam.color} p-0.5 shadow-lg ring-2 ring-transparent transition-all hover:ring-white/20 overflow-hidden`}>
-                    <img src={selectedTeam.avatar} alt={selectedTeam.name} className="w-full h-full object-cover" />
+                    <img src={avatarUrl} alt={selectedTeam.name} className="w-full h-full object-cover" />
                   </div>
                 </button>
 
@@ -270,7 +279,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
                   <div className="px-6 mb-8 border-b border-white/5 pb-6">
                     <div className="flex items-center gap-4 mb-6 p-4 bg-white/5 rounded-2xl border border-white/5">
                       <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${selectedTeam.color} p-0.5 overflow-hidden shadow-lg`}>
-                        <img src={selectedTeam.avatar} alt={selectedTeam.name} className="w-full h-full object-cover rounded-lg" />
+                        <img src={avatarUrl} alt={selectedTeam.name} className="w-full h-full object-cover rounded-lg" />
                       </div>
                       <div className="flex-1">
                         <div className="text-gray-400 text-xs uppercase font-bold tracking-wider mb-1">{user.name}</div>

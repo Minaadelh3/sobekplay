@@ -2,26 +2,17 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../hooks/useSettings';
 import { usePushNotifications } from '../hooks/usePushNotifications';
-import { useAppConfig } from '../hooks/useAppConfig';
-import SettingsLayout from '../components/settings/SettingsLayout';
 import { Section, SettingsInput } from '../components/settings/SettingsComponents';
 import Toast from '../components/Toast';
 import { AvatarManager } from '../components/settings/AvatarManager';
-import { SecuritySection } from '../components/settings/SecuritySection';
-import { app } from '../lib/firebase';
-import { sendPasswordResetEmail, getAuth } from 'firebase/auth';
-
-const auth = getAuth(app);
+import MobileBackHeader from '../components/MobileBackHeader';
 
 export default function SettingsPage() {
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const {
         updateProfile,
-        updatePreferences, // Need this for app config persistence if we keep Theme/Language
+        deleteAccountStart
     } = useSettings();
-
-    // Global App Config
-    const { config, updateConfig } = useAppConfig();
 
     // Notifications Hook
     const {
@@ -33,226 +24,207 @@ export default function SettingsPage() {
         isSupported: pushSupported
     } = usePushNotifications();
 
-    const [activeTab, setActiveTab] = useState('profile');
-
     // UI State
     const [toast, setToast] = useState<{ msg: string, type: 'success' | 'error', visible: boolean }>({ msg: '', type: 'success', visible: false });
     const showToast = (msg: string, type: 'success' | 'error') => setToast({ msg, type, visible: true });
 
     // Local State
-    const [name, setName] = useState(user?.name || user?.profile?.displayName || '');
-    // Simple dirty check for Name
-    const [originalName, setOriginalName] = useState('');
+    const [name, setName] = useState('');
+    const [nickname, setNickname] = useState('');
+    const [mobile, setMobile] = useState('');
+
+    // Dirty Check State
+    const [initialState, setInitialState] = useState({ name: '', nickname: '', mobile: '' });
 
     // Sync local state when user updates (e.g. initial load)
     useEffect(() => {
         if (user) {
-            const currentName = user.name || user.profile?.displayName || '';
+            const currentName = user.profile?.fullName || user.name || '';
+            const currentNickname = user.profile?.nickname || user.profile?.displayName || '';
+            const currentMobile = user.profile?.mobile || user.mobile || '';
+
             setName(currentName);
-            setOriginalName(currentName);
+            setNickname(currentNickname);
+            setMobile(currentMobile);
+
+            setInitialState({
+                name: currentName,
+                nickname: currentNickname,
+                mobile: currentMobile
+            });
         }
     }, [user]);
 
+    const hasChanges = name !== initialState.name || nickname !== initialState.nickname || mobile !== initialState.mobile;
+
     // --- Handlers ---
-    const handleNameSave = async () => {
+    const handleProfileSave = async () => {
         if (!name.trim()) {
-            showToast("display name cannot be empty", 'error');
+            showToast("يرجى إدخال الاسم بالكامل", 'error');
             return;
         }
-        if (name === originalName) return;
 
-        const success = await updateProfile({ displayName: name });
+        const success = await updateProfile({
+            fullName: name,
+            displayName: nickname || name, // Fallback to name if nickname is empty for display purposes
+            nickname: nickname,
+            mobile: mobile
+        });
+
         if (success) {
-            showToast("Name Updated!", 'success');
-            setOriginalName(name); // Reset dirty state
+            showToast("تم تحديث البيانات بنجاح ✅", 'success');
+            setInitialState({ name, nickname, mobile });
         } else {
-            showToast("Failed to update name.", 'error');
+            showToast("حدث خطأ أثناء التحديث", 'error');
         }
     };
-
-    const handlePasswordReset = async () => {
-        if (user?.email) {
-            try {
-                await sendPasswordResetEmail(auth, user.email);
-                showToast(`Reset email sent to ${user.email}`, 'success');
-            } catch (e: any) {
-                showToast(e.message || "Error sending reset email", 'error');
-            }
-        }
-    };
-
-    // --- Renderers ---
-
-    const renderProfile = () => (
-        <>
-            <AvatarManager
-                userProfile={user?.profile}
-                onUpdate={updateProfile}
-                showToast={showToast}
-            />
-
-            <Section title="Display Name">
-                <div className="flex flex-col gap-4">
-                    <SettingsInput
-                        label="Your Name"
-                        value={name}
-                        onChange={setName}
-                        placeholder="Public display name"
-                        icon="👤"
-                    />
-
-                    {name !== originalName && (
-                        <div className="animate-fade-in">
-                            <button
-                                onClick={handleNameSave}
-                                className="bg-accent-gold text-black px-6 py-3 rounded-lg font-bold hover:bg-yellow-500 transition shadow-[0_0_15px_rgba(255,215,0,0.2)]"
-                            >
-                                Save New Name
-                            </button>
-                        </div>
-                    )}
-                </div>
-            </Section>
-        </>
-    );
-
-    const renderNotifications = () => (
-        <Section title="Push Notifications" icon="🔔">
-            {!pushSupported ? (
-                <div className="bg-red-500/10 p-4 rounded-xl border border-red-500/20 text-red-300 text-sm">
-                    ⚠️ Push Notifications aren't supported on this browser.
-                </div>
-            ) : (
-                <div className="bg-blue-500/10 border border-blue-500/20 p-5 rounded-xl">
-                    <div className="flex justify-between items-center mb-4">
-                        <div>
-                            <h4 className="font-bold text-blue-200">Device Status</h4>
-                            <p className="text-xs text-blue-300/60 mt-1">
-                                {fcmToken ? 'Receiving alerts on this device' : 'Notifications disabled'}
-                            </p>
-                        </div>
-                        <span className={`text-xs px-2 py-1 rounded border font-bold ${fcmToken ? 'border-green-500 text-green-400 bg-green-500/10' : 'border-gray-500 text-gray-500'}`}>
-                            {fcmToken ? 'ACTIVE' : 'OFF'}
-                        </span>
-                    </div>
-
-                    {!fcmToken ? (
-                        <button
-                            onClick={registerToken}
-                            disabled={pushLoading}
-                            className="bg-blue-600 text-white px-4 py-3 rounded-lg text-sm w-full font-bold hover:bg-blue-500 transition disabled:opacity-50 shadow-lg shadow-blue-900/20"
-                        >
-                            {pushLoading ? 'Activating...' : 'Enable Notifications'}
-                        </button>
-                    ) : (
-                        <button
-                            onClick={unregisterToken}
-                            disabled={pushLoading}
-                            className="bg-transparent border border-red-500/30 text-red-300 px-4 py-3 rounded-lg text-sm w-full hover:bg-red-900/20 transition disabled:opacity-50"
-                        >
-                            Disable on this Device
-                        </button>
-                    )}
-
-                    {permission === 'denied' && (
-                        <p className="text-xs text-red-400 mt-3 bg-red-500/10 p-2 rounded">
-                            ⚠️ Permission blocked. You must enable notifications in your browser settings manually.
-                        </p>
-                    )}
-                </div>
-            )}
-        </Section>
-    );
-
-    const renderAccount = () => (
-        <SecuritySection
-            email={user?.email || ''}
-            onResetPassword={handlePasswordReset}
-        />
-    );
-
-    const renderApp = () => (
-        <>
-            <Section title="Appearance" icon="🎨">
-                <div className="grid grid-cols-3 gap-2">
-                    {['dark', 'light', 'system'].map((t) => (
-                        <button
-                            key={t}
-                            onClick={() => {
-                                updateConfig({ theme: t as any });
-                                updatePreferences({ theme: t as any });
-                            }}
-                            className={`p-3 rounded-lg border text-center capitalize transition-all ${config.theme === t
-                                ? 'bg-accent-gold text-black border-accent-gold font-bold transform scale-105'
-                                : 'bg-black/30 border-white/10 text-gray-400 hover:bg-white/5'
-                                }`}
-                        >
-                            {t}
-                        </button>
-                    ))}
-                </div>
-            </Section>
-
-            <Section title="Language" icon="🌐">
-                <div className="flex gap-2">
-                    <button
-                        onClick={() => {
-                            updateConfig({ language: 'ar' });
-                            updatePreferences({ language: 'ar' });
-                        }}
-                        className={`flex-1 p-3 rounded-lg border text-center font-bold transition-all ${config.language === 'ar'
-                            ? 'bg-accent-gold text-black border-accent-gold transform scale-105'
-                            : 'bg-black/30 border-white/10 text-gray-400 hover:bg-white/5'
-                            }`}
-                    >
-                        العربية
-                    </button>
-                    <button
-                        onClick={() => {
-                            updateConfig({ language: 'en' });
-                            updatePreferences({ language: 'en' });
-                        }}
-                        className={`flex-1 p-3 rounded-lg border text-center font-bold transition-all ${config.language === 'en'
-                            ? 'bg-accent-gold text-black border-accent-gold transform scale-105'
-                            : 'bg-black/30 border-white/10 text-gray-400 hover:bg-white/5'
-                            }`}
-                    >
-                        English
-                    </button>
-                </div>
-            </Section>
-        </>
-    );
 
     return (
-        <SettingsLayout activeTab={activeTab} onTabChange={setActiveTab}>
-            <Toast
-                message={toast.msg}
-                type={toast.type}
-                isVisible={toast.visible}
-                onClose={() => setToast({ ...toast, visible: false })}
-            />
+        <div className="min-h-screen bg-[#070A0F] pb-24 md:pb-12 text-white font-sans" dir="rtl">
+            <MobileBackHeader title="الإعدادات" />
 
-            {/* In a simplified layout, we might just want a vertical stack if there are few items. 
-                But keeping tabs allows for future expansion without clutter. 
-                Let's ensure the tabs provided to SettingsLayout match what we have here.
-                Assuming SettingsLayout determines tabs based on props or internal logic.
-                If SettingsLayout hardcodes tabs, we might need to adjust it. 
-                For now we assume standard tabs: Profile, Account, App. 
-            */}
+            {/* Desktop Header spacer */}
+            <div className="hidden md:block h-24" />
+            <div className="md:hidden h-16" />
 
-            {activeTab === 'profile' && (
-                <>
-                    {renderProfile()}
-                    {renderNotifications()}
-                </>
-            )}
+            <div className="max-w-2xl mx-auto px-4 space-y-8">
+                <Toast
+                    message={toast.msg}
+                    type={toast.type}
+                    isVisible={toast.visible}
+                    onClose={() => setToast({ ...toast, visible: false })}
+                />
 
-            {activeTab === 'account' && renderAccount()}
+                {/* --- Profile Section --- */}
+                <Section title="الملف الشخصي" icon="👤">
+                    <AvatarManager
+                        userProfile={user?.profile}
+                        onUpdate={updateProfile}
+                        showToast={showToast}
+                    />
 
-            {activeTab === 'app' && renderApp()}
+                    <div className="mt-8 grid gap-5">
+                        <SettingsInput
+                            label="الاسم بالكامل"
+                            value={name}
+                            onChange={setName}
+                            placeholder="الاسم الثلاثي"
+                            icon="📝"
+                        />
 
-            {/* If Privacy is removed, we don't render it */}
-        </SettingsLayout>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <SettingsInput
+                                label="اسم الشهرة (Nickname)"
+                                value={nickname}
+                                onChange={setNickname}
+                                placeholder="الاسم المفضل للعرض"
+                                icon="🌟"
+                            />
+                            <SettingsInput
+                                label="رقم الموبايل"
+                                value={mobile}
+                                onChange={setMobile}
+                                placeholder="01xxxxxxxxx"
+                                icon="📱"
+                                type="tel"
+                            />
+                        </div>
+
+                        {/* Read Only Email */}
+                        <div className="opacity-60 pointer-events-none">
+                            <SettingsInput
+                                label="البريد الإلكتروني"
+                                value={user?.email || ''}
+                                onChange={() => { }}
+                                icon="📧"
+                                disabled
+                            />
+                        </div>
+
+                        {hasChanges && (
+                            <div className="animate-fade-in pt-2">
+                                <button
+                                    onClick={handleProfileSave}
+                                    className="w-full bg-accent-gold text-black px-6 py-4 rounded-xl font-bold hover:bg-yellow-500 transition shadow-lg shadow-yellow-900/20 flex items-center justify-center gap-2"
+                                >
+                                    <span>💾</span> حفظ التغييرات
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </Section>
+
+                {/* --- Notifications Section --- */}
+                <Section title="إدارة التنبيهات" icon="🔔">
+                    {!pushSupported ? (
+                        <div className="bg-red-500/10 p-4 rounded-xl border border-red-500/20 text-red-300 text-sm">
+                            ⚠️ المتصفح الحالي لا يدعم التنبيهات.
+                        </div>
+                    ) : (
+                        <div className="bg-blue-500/5 border border-blue-500/10 p-5 rounded-xl">
+                            <div className="flex justify-between items-center mb-4">
+                                <div>
+                                    <h4 className="font-bold text-blue-100">حالة الإشعارات</h4>
+                                    <p className="text-xs text-blue-300/60 mt-1">
+                                        {fcmToken ? 'التنبيهات مفعلة وتعمل بنجاح' : 'لم يتم تفعيل التنبيهات بعد'}
+                                    </p>
+                                </div>
+                                <span className={`text-xs px-2 py-1 rounded border font-bold ${fcmToken ? 'border-green-500 text-green-400 bg-green-500/10' : 'border-gray-500 text-gray-400'}`}>
+                                    {fcmToken ? 'نشط ✅' : 'غير نشط ⛔'}
+                                </span>
+                            </div>
+
+                            {!fcmToken ? (
+                                <button
+                                    onClick={registerToken}
+                                    disabled={pushLoading}
+                                    className="bg-blue-600 text-white px-4 py-3 rounded-lg text-sm w-full font-bold hover:bg-blue-500 transition disabled:opacity-50 shadow-lg shadow-blue-900/20"
+                                >
+                                    {pushLoading ? 'جاري التفعيل...' : 'تفعيل التنبيهات'}
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={unregisterToken}
+                                    disabled={pushLoading}
+                                    className="bg-transparent border border-red-500/30 text-red-300 px-4 py-3 rounded-lg text-sm w-full hover:bg-red-900/10 transition disabled:opacity-50"
+                                >
+                                    إيقاف التنبيهات
+                                </button>
+                            )}
+
+                            {permission === 'denied' && (
+                                <p className="text-xs text-red-400 mt-3 bg-red-500/10 p-2 rounded">
+                                    ⚠️ تم حظر التنبيهات من إعدادات المتصفح. يرجى السماح بها من الإعدادات لتفعيلها.
+                                </p>
+                            )}
+                        </div>
+                    )}
+                </Section>
+
+                <div className="mt-8 px-4 flex flex-col gap-4">
+                    <button
+                        onClick={logout}
+                        className="w-full py-4 text-center text-gray-400 font-bold bg-[#121212] rounded-xl border border-white/5 hover:bg-white/5 transition hover:text-white"
+                    >
+                        تسجيل الخروج
+                    </button>
+                    <button
+                        onClick={() => {
+                            if (window.confirm('هل أنت متأكد من حذف الحساب نهائياً؟ لا يمكن التراجع عن هذا الإجراء.')) {
+                                deleteAccountStart();
+                            }
+                        }}
+                        className="text-xs text-red-500/50 hover:text-red-500 transition self-center"
+                    >
+                        حذف الحساب نهائياً
+                    </button>
+
+                    <div className="text-center text-[10px] text-gray-600 mt-4">
+                        Sobek Play v2.0 - Made with Love & Magic
+                    </div>
+                </div>
+
+            </div>
+        </div>
     );
 }

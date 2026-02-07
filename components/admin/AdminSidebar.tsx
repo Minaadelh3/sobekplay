@@ -27,6 +27,9 @@ export default function AdminSidebar({ mobile = false, onClose }: { mobile?: boo
             title: "System",
             items: [
                 { path: '/admin/games', label: 'Games Config', icon: 'video_game' },
+                { path: '/admin/news', label: 'News Feed', icon: 'newspaper' },
+                { path: '/admin/prayers', label: 'Prayers & Agpeya', icon: 'praying_hands' },
+                { path: '/admin/media', label: 'Media Library', icon: 'film_frames' },
                 { path: '/admin/notifications', label: 'Push Notifications', icon: 'bell' },
                 { path: '/admin/flags', label: 'Feature Flags', icon: 'test_tube' },
                 { path: '/admin/logs', label: 'Audit Logs', icon: 'scroll' },
@@ -96,7 +99,10 @@ export default function AdminSidebar({ mobile = false, onClose }: { mobile?: boo
                                                                     item.icon === 'gear' ? '⚙️' :
                                                                         item.icon === 'bell' ? '🔔' :
                                                                             item.icon === 'bust_in_silhouette' ? '👤' :
-                                                                                item.icon}
+                                                                                item.icon === 'newspaper' ? '📰' :
+                                                                                    item.icon === 'praying_hands' ? '🙏' :
+                                                                                        item.icon === 'film_frames' ? '🎬' :
+                                                                                            item.icon}
                                     </span>
                                     <span className="font-medium">{item.label}</span>
                                 </NavLink>

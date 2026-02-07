@@ -179,7 +179,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         preferences: userData.preferences || {},
                         privacy: userData.privacy || {},
                         notifications: userData.notifications || {},
-                        createdAt: userData.createdAt
+                        createdAt: userData.createdAt,
+
+                        // Gamification Mapping
+                        xp: userData.xp || 0,
+                        level: userData.level || 1,
+                        unlockedAchievements: userData.unlockedAchievements || [],
+                        achievementProgress: userData.achievementProgress || {},
+                        lastDailyAction: userData.lastDailyAction || {}
                     };
 
                     // Backwards Compat / Priority Logic for Display Fields

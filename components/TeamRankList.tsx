@@ -21,7 +21,90 @@ const TeamRankList = () => {
 
     return (
         <section className="relative z-20 max-w-7xl mx-auto px-4 -mt-8 md:-mt-12 mb-16">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {/* Mobile View (Compact List) */}
+            <div className="flex flex-col gap-2 md:hidden">
+                <AnimatePresence>
+                    {sortedTeams.map((team, index) => {
+                        const isNonScorable = team.rank === null;
+
+                        // Row Styles
+                        let borderColor = "border-white/5";
+                        let bgColor = "bg-[#121212]/90";
+                        let rankColor = "text-gray-400";
+
+                        if (team.rank === 1) {
+                            borderColor = "border-yellow-500/30";
+                            bgColor = "bg-gradient-to-r from-[#222] to-[#1a1a0d]";
+                            rankColor = "text-yellow-400";
+                        } else if (team.rank === 2) {
+                            borderColor = "border-gray-400/20";
+                            bgColor = "bg-gradient-to-r from-[#222] to-[#1a1a1a]";
+                            rankColor = "text-gray-300";
+                        } else if (team.rank === 3) {
+                            borderColor = "border-amber-700/30";
+                            bgColor = "bg-gradient-to-r from-[#222] to-[#1a100a]";
+                            rankColor = "text-amber-500";
+                        }
+
+                        return (
+                            <motion.div
+                                key={team.id}
+                                layout
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className={`
+                                    relative flex items-center justify-between p-3 rounded-xl border backdrop-blur-md overflow-hidden
+                                    ${borderColor} ${bgColor}
+                                `}
+                            >
+                                <div className="flex items-center gap-3 relative z-10">
+                                    {/* Rank & Logo */}
+                                    <div className="relative">
+                                        <div className="w-10 h-10 rounded-lg bg-black/20 p-1 border border-white/10 shadow-sm">
+                                            <img
+                                                src={team.avatar || '/assets/brand/logo.png'}
+                                                alt={team.name}
+                                                className="w-full h-full object-contain"
+                                            />
+                                        </div>
+                                        {!isNonScorable && (
+                                            <div className="absolute -top-2 -left-2 w-5 h-5 rounded-full bg-black border border-white/10 flex items-center justify-center shadow-lg">
+                                                <span className={`text-[10px] font-black font-mono ${rankColor}`}>
+                                                    {team.displayRank}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Name */}
+                                    <h3 className="text-base font-bold text-white leading-tight">
+                                        {team.name}
+                                    </h3>
+                                </div>
+
+                                {/* Points */}
+                                <div className="flex items-baseline gap-1 relative z-10">
+                                    {isNonScorable ? (
+                                        <span className="text-[10px] text-gray-500 uppercase font-bold">
+                                            Non-Scoring
+                                        </span>
+                                    ) : (
+                                        <>
+                                            <span className="text-lg font-black text-accent-gold font-mono">
+                                                {(team.points || 0).toLocaleString()}
+                                            </span>
+                                            <span className="text-[9px] text-gray-500 font-bold uppercase">PTS</span>
+                                        </>
+                                    )}
+                                </div>
+                            </motion.div>
+                        );
+                    })}
+                </AnimatePresence>
+            </div>
+
+            {/* Desktop View (Cards) */}
+            <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 <AnimatePresence>
                     {sortedTeams.map((team, index) => {
                         const isNonScorable = team.rank === null;

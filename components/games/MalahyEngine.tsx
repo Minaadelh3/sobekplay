@@ -11,6 +11,7 @@ import { db } from '../../lib/firebase';
 import { performTransaction } from '../../lib/ledger';
 import Navbar from '../../components/Navbar';
 import UserAvatar from '../../components/UserAvatar';
+import ExitButton from './ExitButton';
 
 interface MalahyEngineProps {
     gameConfig: GameConfig;
@@ -258,13 +259,13 @@ const MalahyEngine: React.FC<MalahyEngineProps> = ({ gameConfig, questions, onEx
 
     if (gameState === 'INTRO') {
         return (
-            <div className="fixed inset-0 z-50 bg-[#0B0F14] flex flex-col items-center justify-center p-6 text-center">
+            <div className="fixed inset-0 z-50 bg-[#0B0F14] flex flex-col items-center justify-center p-6 text-center safe-area-pb">
                 <div className="text-6xl mb-6 animate-bounce">{gameConfig.icon}</div>
                 <h1 className={`text-4xl font-black text-white mb-4`}>{gameConfig.title}</h1>
                 <p className="text-xl text-gray-300 mb-8 max-w-md">{gameConfig.description}</p>
 
                 <div className="flex gap-4">
-                    <button onClick={onExit} className="px-6 py-3 rounded-full text-gray-400 font-bold hover:bg-white/5">خروج 🏃</button>
+                    <ExitButton onConfirm={onExit} showConfirm={false} className="hover:bg-white/5" />
                     <button
                         onClick={() => isSobekLogic ? startGame('medium') : setGameState('LEVEL_SELECT')}
                         className="px-10 py-3 rounded-full bg-accent-gold text-black font-black text-lg hover:scale-105 transition-transform"
@@ -278,7 +279,7 @@ const MalahyEngine: React.FC<MalahyEngineProps> = ({ gameConfig, questions, onEx
 
     if (gameState === 'LEVEL_SELECT') {
         return (
-            <div className="fixed inset-0 z-50 bg-[#0B0F14] flex flex-col items-center justify-center p-6 text-center">
+            <div className="fixed inset-0 z-50 bg-[#0B0F14] flex flex-col items-center justify-center p-6 text-center safe-area-pb">
                 <h2 className="text-3xl font-black text-white mb-8">اختار مستوى الصعوبة</h2>
 
                 <div className="grid gap-4 w-full max-w-md">
@@ -306,7 +307,7 @@ const MalahyEngine: React.FC<MalahyEngineProps> = ({ gameConfig, questions, onEx
 
     if (gameState === 'RESULT') {
         return (
-            <div className="fixed inset-0 z-50 bg-[#0B0F14] flex flex-col items-center justify-center p-6 text-center">
+            <div className="fixed inset-0 z-50 bg-[#0B0F14] flex flex-col items-center justify-center p-6 text-center safe-area-pb">
                 <div className="text-6xl mb-4">{score > 0 ? '🏆' : '😅'}</div>
                 <h2 className="text-3xl font-black text-white mb-2">
                     {score > 0 ? 'عاش يا بطل!' : 'حظ أوفر المرة الجاية'}
@@ -317,9 +318,7 @@ const MalahyEngine: React.FC<MalahyEngineProps> = ({ gameConfig, questions, onEx
                 </div>
 
                 <div className="flex gap-4">
-                    <button onClick={onExit} className="px-8 py-3 rounded-xl bg-white/10 text-white font-bold hover:bg-white/20">
-                        القائمة الرئيسية 🏠
-                    </button>
+                    <ExitButton onConfirm={onExit} showConfirm={false} className="px-8 py-3 rounded-xl bg-white/10 text-white font-bold hover:bg-white/20" />
                     <button onClick={() => setGameState('INTRO')} className="px-8 py-3 rounded-xl bg-accent-gold text-black font-bold hover:scale-105 transition-transform">
                         العب تاني 🔄
                     </button>
@@ -332,10 +331,14 @@ const MalahyEngine: React.FC<MalahyEngineProps> = ({ gameConfig, questions, onEx
     if (!currentQ) return <div>Loading...</div>;
 
     return (
-        <div className="min-h-screen bg-[#0B0F14] flex flex-col">
+        <div className="min-h-screen bg-[#0B0F14] flex flex-col safe-area-pb">
             {/* Top Bar */}
             <div className="px-4 py-6 flex items-center justify-between mx-auto w-full max-w-2xl">
-                <button onClick={onExit} className="text-gray-500 hover:text-white transition-colors">✕ خروج</button>
+                <ExitButton
+                    onConfirm={onExit}
+                    confirmMessage="Are you sure you want to quit? Current progress will be lost."
+                    className="text-gray-500 hover:text-white transition-colors"
+                />
                 <div className="flex flex-col items-center">
                     <span className="text-xs text-gray-500 font-bold uppercase tracking-widest">{gameConfig.title} - {DIFFICULTY_RULES[difficulty].label}</span>
                     <div className="flex gap-1 mt-1">

@@ -51,9 +51,11 @@ export default function GameContainer({ gameId, children }: GameContainerProps) 
 
     return (
         <>
-            <React.Fragment key={gameId}>
-                {children(game)}
-            </React.Fragment>
+            <div className="safe-area-pb">
+                <React.Fragment key={gameId}>
+                    {children(game)}
+                </React.Fragment>
+            </div>
         </>
     );
 }

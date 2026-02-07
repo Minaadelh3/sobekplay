@@ -16,9 +16,13 @@ export interface User {
     isDisabled?: boolean;
     // Gamification
     points?: number;
+    xp?: number;
+    level?: number;
     badges?: string[];
     rankIdentifier?: string;
     unlockedAchievements?: string[]; // IDs of unlocked achievements
+    achievementProgress?: Record<string, number>;
+    lastDailyAction?: Record<string, string>;
 
     // settings architecture
     profile?: UserProfile;
@@ -33,10 +37,11 @@ export interface User {
 export interface UserProfile {
     displayName?: string;
     fullName?: string;
-    bio?: string; // new
+    nickname?: string; // Added for Profile Enhancement
+    bio?: string;
     mobile?: string;
     photoURL?: string;
-    avatarPublicId?: string; // Cloudinary public_id
+    avatarPublicId?: string;
 }
 
 export interface UserPreferences {

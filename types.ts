@@ -19,13 +19,21 @@ export interface PosterItem {
   isComingSoon?: boolean;
   isClassic?: boolean;
   type?: 'movie' | 'series';
+  // Admin Overrides
+  isHidden?: boolean;
+  customTitle?: string;
+  customDescription?: string;
+  isFeatured?: boolean;
+  tags?: string[];
 }
 
 export interface NewsItem {
   id: string;
   title: string;
-  date: string;
-  body: string;
+  content: string; // Changed from body to content to match hook
+  icon: string;    // Added icon
+  date?: any;      // Made optional/any for Firestore timestamp
+  order?: number;  // Added order
   image?: string;
 }
 

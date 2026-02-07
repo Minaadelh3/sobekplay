@@ -5,7 +5,7 @@ import { TEAMS } from '../../types/auth';
 import PointsControlPanel from '../../components/admin/PointsControlPanel';
 import UserDetailDrawer from '../../components/admin/UserDetailDrawer';
 import CreateUserDialog from '../../components/admin/CreateUserDialog';
-import BulkPointsDialog from '../../components/admin/BulkPointsDialog';
+import BulkActionsDialog from '../../components/admin/BulkActionsDialog'; // Updated Import
 import TableHeadFilter from '../../components/admin/TableHeadFilter';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -23,7 +23,7 @@ export default function UsersManager() {
     const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null); // For Drawer
     const [pointsUser, setPointsUser] = useState<AdminUser | null>(null); // For Points Modal
     const [showCreateDialog, setShowCreateDialog] = useState(false);
-    const [showBulkPoints, setShowBulkPoints] = useState(false);
+    const [showBulkActions, setShowBulkActions] = useState(false); // Renamed
 
     // Advanced State
     const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
@@ -99,17 +99,6 @@ export default function UsersManager() {
         );
     };
 
-    const handleBulkDelete = async () => {
-        if (!confirm(`Are you sure you want to delete ${selectedUsers.length} users PERMANENTLY?`)) return;
-
-        // Sequential delete to avoid overwhelming Firestore (or batch if implemented)
-        for (const uid of selectedUsers) {
-            await deleteUser(uid);
-        }
-        setSelectedUsers([]);
-        alert("Bulk delete complete.");
-    };
-
     return (
         <div className="space-y-6">
 
@@ -140,12 +129,12 @@ export default function UsersManager() {
                         </motion.div>
                     </div>
                 )}
-                {showBulkPoints && (
-                    <BulkPointsDialog
+                {showBulkActions && (
+                    <BulkActionsDialog
                         data={users} // Pass all users so we can find names
                         selectedIds={selectedUsers}
-                        onClose={() => setShowBulkPoints(false)}
-                        onSuccess={() => { setShowBulkPoints(false); fetchUsers(); setSelectedUsers([]); }}
+                        onClose={() => setShowBulkActions(false)}
+                        onSuccess={() => { setShowBulkActions(false); fetchUsers(); setSelectedUsers([]); }}
                     />
                 )}
             </AnimatePresence>
@@ -168,10 +157,10 @@ export default function UsersManager() {
                         <span className="font-bold text-white text-sm">{selectedUsers.length} Selected</span>
                         <div className="h-4 w-px bg-white/10" />
                         <button
-                            onClick={handleBulkDelete}
-                            className="flex items-center gap-2 text-red-400 hover:text-red-300 font-bold text-sm"
+                            onClick={() => setShowBulkActions(true)}
+                            className="flex items-center gap-2 text-accent-gold hover:text-white font-bold text-sm bg-accent-gold/10 hover:bg-accent-gold/20 px-4 py-2 rounded-lg transition-all"
                         >
-                            <span>🗑️</span> Delete All
+                            <span>⚡</span> Bulk Actions
                         </button>
                         <button
                             onClick={() => setSelectedUsers([])}
@@ -195,6 +184,9 @@ export default function UsersManager() {
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full md:w-64 bg-black/40 border border-white/10 rounded-lg pl-9 pr-4 py-2.5 text-sm text-white focus:border-accent-gold outline-none"
                         />
+                        <div className="text-[10px] text-gray-500 mt-1 pl-1">
+                            Search by Name, Email, or Nickname
+                        </div>
                     </div>
                 </div>
 
@@ -202,7 +194,7 @@ export default function UsersManager() {
                     <span className="text-xs font-mono text-gray-500">
                         Showing {processedUsers.length} / {users.length}
                     </span>
-                    <button onClick={() => fetchUsers()} className="p-2 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition-colors">
+                    <button onClick={() => fetchUsers()} className="p-2 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition-colors" title="Refresh User List">
                         🔄
                     </button>
                     <button onClick={() => setShowCreateDialog(true)} className="bg-accent-gold text-black px-4 py-2 rounded-lg text-sm font-bold hover:bg-yellow-400 transition-colors shadow-lg shadow-accent-gold/20">

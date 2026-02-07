@@ -47,8 +47,7 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
     try {
       const q = query(
         collection(db, 'comments'),
-        where('movieId', '==', movieId),
-        orderBy('timestamp', 'asc')
+        where('movieId', '==', movieId)
       );
 
       const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -56,6 +55,14 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
           id: doc.id,
           ...doc.data()
         })) as Comment[];
+
+        // Sort client-side to avoid index requirement
+        loadedComments.sort((a, b) => {
+          const timeA = a.timestamp?.seconds || 0;
+          const timeB = b.timestamp?.seconds || 0;
+          return timeA - timeB;
+        });
+
         setComments(loadedComments);
       }, (err) => {
         console.error("Firebase error:", err);
@@ -166,8 +173,8 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ movieId }) => {
             type="submit"
             disabled={isSubmitting}
             className={`px-8 py-2 rounded-lg font-bold transition-all flex items-center gap-2 ${isSubmitting
-                ? 'bg-white/10 text-white/50 cursor-not-allowed'
-                : 'bg-accent-green text-white hover:bg-opacity-90'
+              ? 'bg-white/10 text-white/50 cursor-not-allowed'
+              : 'bg-accent-green text-white hover:bg-opacity-90'
               }`}
           >
             {isSubmitting ? 'Posting...' : 'Post Comment'}

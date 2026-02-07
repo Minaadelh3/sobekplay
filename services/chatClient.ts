@@ -1,80 +1,93 @@
 
 /**
- * Sobek Chat Client (Production)
- * Connects to local API (via proxy) or Vercel Serverless.
+ * Sobek Chat Client – Hardened Production Version
  */
 
 export interface ChatResponse {
     reply: string;
-    suggestions?: any[];
+    suggestions: any[];
     meta?: any;
     error?: boolean;
 }
 
-export async function sendMessageToApi(message: string): Promise<ChatResponse> {
-    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+const CHAT_TIMEOUT = 12_000; // 12 seconds
 
-    // Debug Log
-    console.log(`[ChatClient] Sending ${requestId}:`, message);
+export async function sendMessageToApi(message: string): Promise<ChatResponse> {
+    const requestId = `req_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+
+    console.log(`[ChatClient] ➜ ${requestId}`, message);
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), CHAT_TIMEOUT);
 
     try {
-        // Use relative path so Vite proxy (dev) or Vercel (prod) handles it
         const res = await fetch("/api/chat", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Accept": "application/json"
             },
-            body: JSON.stringify({
-                message,
-                requestId
-            }),
+            body: JSON.stringify({ message, requestId }),
+            signal: controller.signal
         });
 
-        // 1. HTTP Error Check
+        clearTimeout(timeout);
+
+        // HTTP-level failure
         if (!res.ok) {
-            const errText = await res.text();
-            console.error(`[ChatClient] HTTP Error ${res.status}:`, errText);
-
-            // Return failure object instead of throwing (keep UI alive)
-            return {
-                reply: "معلش السيرفر زعلان شوية.. جرب تاني كمان دقيقة! 🐊",
-                error: true
-            };
+            console.error(`[ChatClient] HTTP ${res.status}`);
+            return fail("السيرفر مش راضي يرد دلوقتي.. جرّب كمان شوية 🐊");
         }
 
-        // 2. Safe JSON Parsing
-        const text = await res.text();
-        let data;
+        const raw = await res.text();
+        if (!raw) {
+            return fail("السيرفر رد فاضي.. حاجة غريبة حصلت 🤔");
+        }
+
+        let data: any;
         try {
-            data = JSON.parse(text);
-        } catch (e) {
-            console.error(`[ChatClient] Bad JSON:`, text);
-            return {
-                reply: "معلش البيانات وصلت غلط.. جرب تاني!",
-                error: true
-            };
+            data = JSON.parse(raw);
+        } catch {
+            console.error("[ChatClient] Invalid JSON:", raw);
+            return fail("رد السيرفر بايظ شوية.. جرّب تاني");
         }
 
-        console.log(`[ChatClient] Success ${requestId}:`, data);
+        console.log(`[ChatClient] ✓ ${requestId}`, data);
 
-        // 3. Return Clean Data
-        // Prioritize 'reply' field. If empty, fallback DYNAMICALLY here (with timestamp).
-        const finalReply = data.reply && data.reply.trim()
-            ? data.reply
-            : `معلش مسمعتش.. قول تاني؟ (${new Date().toLocaleTimeString('en-EG')})`;
+        // Validate response shape
+        if (typeof data.reply !== "string") {
+            console.warn("[ChatClient] Missing reply field");
+            return fail("مفيش رد واضح.. قولها تاني بطريقة تانية؟");
+        }
 
         return {
-            reply: finalReply,
-            suggestions: data.suggestions || [],
+            reply: data.reply.trim() || fallback(),
+            suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
             meta: data.meta
         };
 
-    } catch (e: any) {
-        console.error(`[ChatClient] Network Fail:`, e);
-        return {
-            reply: "النت فاصل أو السيرفر واقع.. اتأكد من النت! 📶",
-            error: true
-        };
+    } catch (err: any) {
+        clearTimeout(timeout);
+
+        if (err.name === "AbortError") {
+            return fail("السيرفر اتأخر قوي.. جرّب تاني 📡");
+        }
+
+        console.error("[ChatClient] Network error:", err);
+        return fail("مشكلة نت أو السيرفر وقع.. اتأكد من الاتصال 📶");
     }
+}
+
+/* ---------------- helpers ---------------- */
+
+function fail(reply: string): ChatResponse {
+    return {
+        reply,
+        suggestions: [],
+        error: true
+    };
+}
+
+function fallback() {
+    return `معلش مسمعتش كويس.. قول تاني؟ (${new Date().toLocaleTimeString("en-EG")})`;
 }

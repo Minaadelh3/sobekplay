@@ -31,14 +31,18 @@ import AdminTeamDetails from './pages/admin/AdminTeamDetails';
 import AdminAchievements from './pages/admin/AdminAchievements';
 import AdminJourney from './pages/admin/AdminJourney';
 import PushNotifications from './pages/admin/PushNotifications';
+import NewsManager from './pages/admin/NewsManager';
+import PrayersManager from './pages/admin/PrayersManager';
+import MediaManager from './pages/admin/MediaManager';
 import AchievementsPage from './pages/AchievementsPage';
 import AchievementNotification from './components/gamification/AchievementNotification';
 
 import GlobalErrorBoundary from './components/GlobalErrorBoundary';
 import ScrollToTop from './components/ScrollToTop';
 import OneSignalManager from './components/OneSignalManager';
+import { useMedia } from './hooks/useMedia';
 import { usePosterMetrics } from './hooks/usePosterMetrics';
-import { posters } from './data/posters';
+// import { posters } from './data/posters'; // Replaced by useMedia
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -67,6 +71,7 @@ import SeriesPage from './pages/SeriesPage';
 import KidsPage from './pages/KidsPage';
 import MyListPage from './pages/MyListPage';
 import TripAnthem from './pages/TripAnthem';
+import InformationsPage from './pages/InformationsPage';
 import MenuPage from './pages/MenuPage';
 import NewsPage from './pages/NewsPage';
 import ShopPage from './pages/ShopPage';
@@ -87,6 +92,7 @@ import TeamBroadcastListener from './components/TeamBroadcastListener';
 
 const App: React.FC = () => {
   // Data Fetching at Root Level
+  const { posters } = useMedia();
   const { analyzedPosters, isAnalyzing } = usePosterMetrics(posters);
 
   return (
@@ -147,7 +153,11 @@ const App: React.FC = () => {
                       <Route path="logs" element={<AuditLog />} />
                       <Route path="analytics" element={<AnalyticsDashboard />} />
                       <Route path="balancing" element={<GameBalancing />} />
+                      <Route path="balancing" element={<GameBalancing />} />
                       <Route path="notifications" element={<PushNotifications />} />
+                      <Route path="news" element={<NewsManager />} />
+                      <Route path="prayers" element={<PrayersManager />} />
+                      <Route path="media" element={<MediaManager />} />
                     </Route>
 
                     {/* Profile Selection (Intermediate Step) */}
@@ -197,6 +207,7 @@ const App: React.FC = () => {
                       <Route path="she3ar-al-re7la" element={<TripAnthem />} />
 
                       <Route path="prayers" element={<PrayersPage />} />
+                      <Route path="informations" element={<InformationsPage />} />
                       <Route path="policy" element={<PolicyPage />} />
                       <Route path="subscription" element={<SubscriptionPage />} />
                       <Route path="news" element={<NewsPage />} />

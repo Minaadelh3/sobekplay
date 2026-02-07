@@ -33,18 +33,18 @@ interface MainLayoutProps {
 
 const MainLayout: React.FC<MainLayoutProps> = ({ analyzedPosters, isAnalyzing }) => {
     const { user, selectedTeam } = useAuth();
-    const { unlockAchievement } = useAchievements();
+    const { trackEvent } = useAchievements();
 
     // Check for Achievements
     useEffect(() => {
         if (user) {
-            unlockAchievement('first_login');
+            trackEvent('user_first_login');
 
             if (user.teamId) {
-                unlockAchievement('team_player');
+                trackEvent('team_joined');
             }
         }
-    }, [user, unlockAchievement]);
+    }, [user, trackEvent]);
 
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // Used implicitly by MobileNav?
@@ -122,7 +122,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ analyzedPosters, isAnalyzing })
                     - Mobile Deep Level: pt-0 (for sticky BackHeader which handles its own padding)
                     - Desktop: md:pt-24 (Fixed 6rem/5rem safe)
                 */}
-                <main className={`${!isWatchPage ? (isTopLevel ? "pt-[calc(4rem+env(safe-area-inset-top))]" : "md:pt-24") : ""} pb-24 md:pb-0`}>
+                <main className={`${!isWatchPage ? (isTopLevel ? "pt-[calc(4rem+env(safe-area-inset-top))]" : "md:pt-24") : ""} pb-32 md:pb-0`}>
                     <Outlet />
                 </main>
             </PullToRefresh>

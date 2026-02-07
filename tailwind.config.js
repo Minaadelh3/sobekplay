@@ -19,6 +19,7 @@ export default {
             },
             fontFamily: {
                 sans: ['Inter', 'sans-serif'],
+                arabic: ['Cairo', 'sans-serif'],
             },
         },
     },

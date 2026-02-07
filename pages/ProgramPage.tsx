@@ -60,61 +60,68 @@ export const EPISODES: Episode[] = [
         id: 2,
         title: "عروس النيل",
         subtitle: "The Nile Bride Season",
-        date: "أسوان – معبد فيلة – جزيرة هيسا – البيت النوبي",
+        date: "الثلاثاء 10 فبراير",
         gradient: "from-teal-800 to-cyan-900",
         intro: "النيل مش مية… النيل روح.",
         details: [
-            { time: "9:00 ص", event: "الوصول لأسوان واستلام الغرف" },
-            { time: "11:00 ص", event: "التحرك إلى معبد فيلة" },
-            { time: "5:00 م", event: "غذاء في البيت النوبي + صلاة الغروب + خلوة فردية" },
-            { time: "7:00 م", event: "عرض الصوت والضوء في فيلة" },
-            { time: "9:30 م", event: "جولة حرة وعشاء" }
+            { time: "9:00 ص", event: "وصول أسوان – التحرك إلى الفندق واستلام الغرف" },
+            { time: "11:00 ص", event: "التحرك إلى معبد فيلة – جزيرة هيسا وتنجار – بوابة إيزيس وأوزوريس" },
+            { time: "4:30 ظ", event: "غذاء في البيت النوبي – نحضر الغروب على جزيرة الأحلام" },
+            { time: "7:00 م", event: "عرض الصوت والضوء – معبد فيلة" },
+            { time: "9:30 م", event: "جولة حرة + عشاء" },
+            { time: "11:30 م", event: "ألعاب ومسابقات" }
         ]
     },
     {
         id: 3,
         title: "أطياب الجنوب",
         subtitle: "White Sensation Adventure",
-        date: "القرية النوبية – غرب سهيل – النيل",
+        date: "الأربعاء 11 فبراير",
         gradient: "from-orange-700 to-amber-900",
         intro: "الأبيض هنا مش لون… الأبيض حالة.",
         details: [
-            { time: "7:00 ص", event: "نوبة صحيان والكل يرتدي الأبيض" },
-            { time: "8:00 ص", event: "الفطار" },
-            { time: "10:00 ص", event: "يوم كامل في القرية النوبية" },
-            { time: "3:00 م", event: "الغذاء (فطير مشلتت – جبنة – عسل)" },
-            { time: "7:30 م", event: "فترة روحية عن العلاقة الشخصية مع الله" },
-            { time: "9:00 م", event: "جولة حرة" }
+            { time: "7:00 ص", event: "نوبة صحيان" },
+            { time: "8:00 ص", event: "الفطار في الفندق" },
+            { time: "10:00 ص", event: "التحرك للقرية النوبية وقضاء اليوم في النيل – جزيرة النباتات – ضريح أغاخان – قهوة في بيت فيلم مافيا – زيارة البيت النوبي" },
+            { time: "3:00 ظ", event: "الغذاء في القرية النوبية غرب سهيل" },
+            { time: "5:00 م", event: "عودة للفندق" },
+            { time: "7:30 م", event: "زيارة المطرانية + فترة روحية" },
+            { time: "9:00 م", event: "جولة حرة" },
+            { time: "11:00 م", event: "استعداد للتحرك إلى أبو سمبل" }
         ]
     },
     {
         id: 4,
         title: "مملكة التماسيح",
         subtitle: "Curse of Sobek",
-        date: "أبو سمبل – معبد كلابشة – السد العالي",
+        date: "الخميس 12 فبراير",
         gradient: "from-emerald-800 to-green-950",
         intro: "اللي هيعدي من هنا… مش زي اللي دخل.",
         details: [
             { time: "1:00 ص", event: "التحرك إلى أبو سمبل" },
-            { time: "5:00 ص", event: "زيارة معبد أبو سمبل" },
-            { time: "8:00 ص", event: "التحرك للعودة" },
-            { time: "3:00 م", event: "الغذاء في مطعم عموري" },
-            { time: "7:30 م", event: "جولة حرة" }
+            { time: "5:00 ص", event: "وصول أبو سمبل وزيارة المعبد" },
+            { time: "8:00 ص", event: "التحرك للعودة – زيارة معبد كلابشة + السد العالي" },
+            { time: "3:00 ظ", event: "غذاء في مطعم عموري" },
+            { time: "5:00 م", event: "عودة للفندق" },
+            { time: "7:30 م", event: "جولة حرة" },
+            { time: "11:30 م", event: "حفلة السمر" }
         ]
     },
     {
         id: 5,
         title: "المشهد الأخير",
         subtitle: "The Final Judgment – محكمة الآلهة",
-        date: "متحف النوبة – النيل – قطار العودة",
+        date: "الجمعة 13 فبراير",
         gradient: "from-indigo-900 to-slate-900",
         intro: "هنا… كل حاجة بتقف وتبص وراها.",
         details: [
-            { time: "7:00 ص", event: "جمع الشنط وتركها في الاستقبال" },
-            { time: "10:00 ص", event: "زيارة متحف النوبة وجولة بالحنطور" },
-            { time: "12:00 ظ", event: "مراكب شراعية في النيل" },
+            { time: "7:00 ص", event: "نوبة صحيان" },
+            { time: "8:00 ص", event: "الفطار في الفندق" },
+            { time: "10:00 ص", event: "زيارة متحف النوبة + جولة بالحنطور" },
+            { time: "12:00 ظ", event: "فسحة مراكب شراعية في النيل" },
             { time: "1:30 ظ", event: "الغذاء في مطعم الدوكا" },
-            { time: "4:00 ع", event: "تحرك القطار إلى القاهرة" }
+            { time: "3:00 ظ", event: "التحرك للقطار" },
+            { time: "4:00 ع", event: "تحرك القطار الي القاهرة" }
         ]
     },
 ];
@@ -316,91 +323,109 @@ export const ProgramPage: React.FC = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 bg-[#050505] flex flex-col overflow-y-auto"
+                        className="fixed inset-0 z-50 bg-[#050505] flex flex-col"
                     >
-                        {/* Custom Nav for Episode */}
-                        <div className="absolute top-0 left-0 right-0 z-30 p-6 flex justify-between items-start bg-gradient-to-b from-black/80 to-transparent">
-                            <button
-                                onClick={closeModal}
-                                className="flex items-center gap-2 bg-black/30 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 text-white hover:bg-black/50 transition-colors"
-                            >
-                                <BackIcon />
-                                <span className="font-bold text-sm">خروج</span>
-                            </button>
+                        {/* Custom Nav for Episode - Fixed at top */}
+                        <div className="absolute top-0 left-0 right-0 z-[60] p-6 flex justify-between items-start pointer-events-none">
+                            <div className="pointer-events-auto">
+                                <button
+                                    onClick={closeModal}
+                                    className="flex items-center gap-2 bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 text-white hover:bg-black/60 transition-colors shadow-lg"
+                                >
+                                    <BackIcon />
+                                    <span className="font-bold text-sm">رجوع</span>
+                                </button>
+                            </div>
 
                             {isAdmin && (
-                                <button
-                                    onClick={() => {
-                                        closeModal();
-                                        setEditingEpisodeId(selectedEpisode.id);
-                                    }}
-                                    className="flex items-center gap-2 bg-accent-gold/20 backdrop-blur-md px-4 py-2 rounded-full border border-accent-gold/30 text-accent-gold hover:bg-accent-gold/30 transition-colors"
-                                >
-                                    <EditIcon />
-                                    <span className="font-bold text-sm">تعديل</span>
-                                </button>
+                                <div className="pointer-events-auto">
+                                    <button
+                                        onClick={() => {
+                                            closeModal();
+                                            setEditingEpisodeId(selectedEpisode.id);
+                                        }}
+                                        className="flex items-center gap-2 bg-accent-gold/20 backdrop-blur-md px-4 py-2 rounded-full border border-accent-gold/30 text-accent-gold hover:bg-accent-gold/30 transition-colors shadow-lg"
+                                    >
+                                        <EditIcon />
+                                        <span className="font-bold text-sm">تعديل</span>
+                                    </button>
+                                </div>
                             )}
                         </div>
 
-                        {/* Cinematic Header */}
-                        <motion.div
-                            layoutId={`ep-bg-${selectedEpisode.id}`}
-                            className={`relative min-h-[45vh] bg-gradient-to-b ${selectedEpisode.gradient} flex items-end`}
-                        >
-                            <div className="absolute inset-0 bg-black/20" />
-                            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-30 mix-blend-overlay" />
+                        {/* Scrollable Content Container */}
+                        <div className="flex-1 overflow-y-auto custom-scrollbar relative">
+                            {/* Cinematic Header */}
+                            <motion.div
+                                layoutId={`ep-bg-${selectedEpisode.id}`}
+                                className={`relative min-h-[45vh] bg-gradient-to-b ${selectedEpisode.gradient} flex items-end`}
+                            >
+                                <div className="absolute inset-0 bg-black/20" />
+                                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-30 mix-blend-overlay" />
 
-                            <div className="w-full p-8 pb-12 bg-gradient-to-t from-[#050505] via-[#050505]/60 to-transparent z-10">
-                                <span className="inline-block px-3 py-1 bg-white/10 backdrop-blur-md rounded border border-white/10 text-[10px] font-bold text-white/80 mb-4 tracking-widest">
-                                    {selectedEpisode.date}
-                                </span>
-                                <h1 className="text-4xl md:text-6xl font-black text-white leading-tight mb-4 drop-shadow-2xl">
-                                    {selectedEpisode.title}
-                                </h1>
-                                <p className="text-xl text-white/80 font-medium leading-relaxed max-w-lg border-r-4 border-white/20 pr-4">
-                                    {selectedEpisode.subtitle}
-                                </p>
+                                <div className="w-full p-8 pb-12 bg-gradient-to-t from-[#050505] via-[#050505]/60 to-transparent z-10 pt-32">
+                                    <span className="inline-block px-3 py-1 bg-white/10 backdrop-blur-md rounded border border-white/10 text-[10px] font-bold text-white/80 mb-4 tracking-widest">
+                                        {selectedEpisode.date}
+                                    </span>
+                                    <h1 className="text-4xl md:text-6xl font-black text-white leading-tight mb-4 drop-shadow-2xl">
+                                        {selectedEpisode.title}
+                                    </h1>
+                                    <p className="text-xl text-white/80 font-medium leading-relaxed max-w-lg border-r-4 border-white/20 pr-4">
+                                        {selectedEpisode.subtitle}
+                                    </p>
+                                </div>
+                            </motion.div>
+
+                            {/* Content Body */}
+                            <div className="flex-1 px-6 py-8 max-w-2xl mx-auto w-full bg-[#050505]">
+
+                                {/* Intro Mood */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+                                    className="mb-12"
+                                >
+                                    <p className="text-lg md:text-xl text-white/70 leading-loose mx-auto">
+                                        {selectedEpisode.intro}
+                                    </p>
+                                </motion.div>
+
+                                {/* Timeline Flow */}
+                                <motion.div
+                                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
+                                    className="space-y-10 relative pl-4"
+                                >
+                                    {/* Vertical Line */}
+                                    <div className="absolute top-2 bottom-2 right-[7px] w-[1px] bg-gradient-to-b from-white/20 to-transparent" />
+
+                                    {selectedEpisode.details.map((detail, i) => (
+                                        <div key={i} className="relative pr-8 group">
+                                            {/* Dot */}
+                                            <div className="absolute top-2 right-0 w-4 h-4 rounded-full bg-[#050505] border-2 border-white/20 group-hover:border-white/60 group-hover:bg-white/10 transition-colors shadow-[0_0_10px_rgba(255,255,255,0.1)]" />
+
+                                            <p className="text-xs font-bold text-blue-400 mb-1 tracking-widest opacity-80 uppercase">
+                                                {detail.time}
+                                            </p>
+                                            <h3 className="text-xl text-white font-bold group-hover:text-blue-200 transition-colors">
+                                                {detail.event}
+                                            </h3>
+                                        </div>
+                                    ))}
+                                </motion.div>
+
+                                {/* Bottom Back Button */}
+                                <div className="mt-16 mb-8 flex justify-center">
+                                    <button
+                                        onClick={closeModal}
+                                        className="w-full md:w-auto px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl flex items-center justify-center gap-3 text-white transition-all active:scale-95"
+                                    >
+                                        <BackIcon />
+                                        <span className="font-bold text-lg">العودة للبرنامج</span>
+                                    </button>
+                                </div>
+
+                                {/* Footer Space */}
+                                <div className="h-32" />
                             </div>
-                        </motion.div>
-
-                        {/* Content Body */}
-                        <div className="flex-1 px-6 py-8 max-w-2xl mx-auto w-full bg-[#050505]">
-
-                            {/* Intro Mood */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                                className="mb-12"
-                            >
-                                <p className="text-lg md:text-xl text-white/70 leading-loose mx-auto">
-                                    {selectedEpisode.intro}
-                                </p>
-                            </motion.div>
-
-                            {/* Timeline Flow */}
-                            <motion.div
-                                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
-                                className="space-y-10 relative pl-4"
-                            >
-                                {/* Vertical Line */}
-                                <div className="absolute top-2 bottom-2 right-[7px] w-[1px] bg-gradient-to-b from-white/20 to-transparent" />
-
-                                {selectedEpisode.details.map((detail, i) => (
-                                    <div key={i} className="relative pr-8 group">
-                                        {/* Dot */}
-                                        <div className="absolute top-2 right-0 w-4 h-4 rounded-full bg-[#050505] border-2 border-white/20 group-hover:border-white/60 group-hover:bg-white/10 transition-colors shadow-[0_0_10px_rgba(255,255,255,0.1)]" />
-
-                                        <p className="text-xs font-bold text-blue-400 mb-1 tracking-widest opacity-80 uppercase">
-                                            {detail.time}
-                                        </p>
-                                        <h3 className="text-xl text-white font-bold group-hover:text-blue-200 transition-colors">
-                                            {detail.event}
-                                        </h3>
-                                    </div>
-                                ))}
-                            </motion.div>
-
-                            {/* Footer Space */}
-                            <div className="h-32" />
                         </div>
                     </motion.div>
                 )}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { collection, doc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, serverTimestamp, query, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { Achievement, UserAchievement, INITIAL_ACHIEVEMENTS } from '../types/achievements';
+import { Achievement, ACHIEVEMENTS_LIST } from '../types/achievements';
 import { performTransaction } from '../lib/ledger';
 import { useAuth } from '../context/AuthContext';
 
@@ -26,9 +26,9 @@ export function useAchievements() {
     const seedAchievements = async () => {
         if (!confirm("⚠️ This will add default achievements if they don't exist. Continue?")) return;
 
-        for (const item of INITIAL_ACHIEVEMENTS) {
-            // Check if exists by name to avoid duplicates
-            const exists = achievements.find(a => a.name === item.name);
+        for (const item of ACHIEVEMENTS_LIST) {
+            // Check if exists by title to avoid duplicates
+            const exists = achievements.find(a => a.title === item.title);
             if (!exists) {
                 await addDoc(collection(db, 'achievements'), {
                     ...item,
@@ -55,7 +55,7 @@ export function useAchievements() {
 
     const toggleAchievementStatus = async (achievement: Achievement) => {
         await updateDoc(doc(db, 'achievements', achievement.id), {
-            isActive: !achievement.isActive
+            visible: !achievement.visible
         });
         fetchAchievements();
     };
@@ -82,14 +82,14 @@ export function useAchievements() {
         await addDoc(collection(db, 'user_achievements'), {
             userId,
             achievementId,
-            achievementName: achievement.name,
-            pointsSnapshot: achievement.points,
+            achievementName: achievement.title,
+            pointsSnapshot: achievement.xp,
             earnedAt: serverTimestamp(),
             grantedBy: adminId || 'system'
         });
 
-        // 2. Add Points (if points > 0)
-        if (achievement.points > 0) {
+        // 2. Add Points (if xp > 0)
+        if (achievement.xp > 0) {
             // Fetch User Name for Ledger
             const userSnap = await import('firebase/firestore').then(mod => mod.getDoc(mod.doc(db, 'users', userId)));
             const userData = userSnap.data();
@@ -97,12 +97,49 @@ export function useAchievements() {
 
             await performTransaction({
                 type: 'ACHIEVEMENT_REWARD',
-                amount: achievement.points,
+                amount: achievement.xp,
                 from: { type: 'SYSTEM', id: 'achievements_engine', name: 'Sobek Achievements' },
                 to: { type: 'USER', id: userId, name: userName },
-                reason: `[ACHIEVEMENT] ${achievement.name}`,
+                reason: `[ACHIEVEMENT] ${achievement.title}`,
                 adminId: adminId
             });
+        }
+    };
+
+    const resetAllAchievements = async () => {
+        if (!confirm("☢️ DANGER: This will LOCK all achievements for ALL users. They will have to earn them again. Points they already earned will NOT be deducted. Are you sure?")) return;
+
+        setLoading(true);
+        try {
+            // 1. Delete all 'user_achievements' logs
+            // Ideally we'd use a cloud function for this, but client-side batching works for small-scale
+            const q = query(collection(db, 'user_achievements'));
+            const snap = await getDocs(q);
+
+            // Delete in batches of 500
+            const chunks = [];
+            let batch = import('firebase/firestore').then(mod => mod.writeBatch(db));
+            let counter = 0;
+
+            // Actually, for simplicity in client-side without batch complexity import mess:
+            // sequential delete is safer to write here, or map.
+            // Let's just use simple parallel delete for now or batch if possible.
+            // We'll update the 'users' collection 'unlockedAchievements' field as well.
+
+            const usersSnap = await getDocs(collection(db, 'users'));
+            const userUpdates = usersSnap.docs.map(d => updateDoc(d.ref, { unlockedAchievements: [] }));
+
+            const logDeletes = snap.docs.map(d => deleteDoc(d.ref));
+
+            await Promise.all([...userUpdates, ...logDeletes]);
+
+            alert("All achievements have been reset!");
+            fetchAchievements();
+        } catch (e) {
+            console.error("Reset Failed", e);
+            alert("Errors occurred during reset.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -119,6 +156,7 @@ export function useAchievements() {
         toggleAchievementStatus,
         deleteAchievement,
         grantAchievement,
+        resetAllAchievements,
         refresh: fetchAchievements
     };
 }

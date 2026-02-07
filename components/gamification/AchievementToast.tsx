@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Achievement, TOKENS } from '../../lib/gamification';
+import { Achievement } from '../../types/achievements';
 // import useSound from 'use-sound'; // Skipped for now
 
 interface AchievementToastProps {
@@ -33,7 +33,7 @@ const AchievementToast: React.FC<AchievementToastProps> = ({ achievement, onClos
 
                         {/* Icon */}
                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#F1C40F] flex items-center justify-center text-2xl shadow-lg shrink-0 relative z-10">
-                            {achievement.icon}
+                            {achievement.emoji}
                         </div>
 
                         {/* Content */}
@@ -45,7 +45,7 @@ const AchievementToast: React.FC<AchievementToastProps> = ({ achievement, onClos
                                 {achievement.title}
                             </div>
                             <div className="text-gray-400 text-xs">
-                                +{achievement.points} XP
+                                +{achievement.xp} XP
                             </div>
                         </div>
                     </div>

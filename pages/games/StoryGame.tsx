@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { GAMES_CONFIG } from '../../lib/games';
 import { performTransaction } from '../../lib/ledger';
+import ExitButton from '../../components/games/ExitButton';
 
 const StoryGame = () => {
     const navigate = useNavigate();
@@ -44,7 +45,7 @@ const StoryGame = () => {
 
     if (state.phase === 'SETUP') {
         return (
-            <div className="min-h-screen bg-[#0f0716] text-white p-6 flex flex-col items-center justify-center space-y-8">
+            <div className="min-h-screen bg-[#0f0716] text-white p-6 flex flex-col items-center justify-center space-y-8 safe-area-pb">
                 <div className="text-center space-y-2">
                     <h1 className="text-5xl font-black text-fuchsia-500 drop-shadow-md">حكاية جماعية 🧩</h1>
                     <p className="text-gray-400">تأليف عالحلو.. قصة واحدة، ومؤلفين كتير.</p>
@@ -73,7 +74,7 @@ const StoryGame = () => {
                         START STORY 📖
                     </button>
                 </div>
-                <button onClick={() => navigate('/games')} className="absolute top-4 left-4 text-white/30 hover:text-white">✕</button>
+                <ExitButton className="absolute top-4 left-4" showConfirm={false} />
             </div>
         );
     }
@@ -81,7 +82,7 @@ const StoryGame = () => {
     if (state.phase === 'READY') {
         const currentPlayer = state.players[state.currentPlayerIndex];
         return (
-            <div className="min-h-screen bg-fuchsia-950 flex flex-col items-center justify-center text-center p-6 space-y-8">
+            <div className="min-h-screen bg-fuchsia-950 flex flex-col items-center justify-center text-center p-6 space-y-8 safe-area-pb">
                 {state.round === 1 ? (
                     <div className="mb-8 p-6 bg-black/40 rounded-2xl border border-fuchsia-500/30 max-w-sm">
                         <p className="text-sm text-fuchsia-300 uppercase tracking-widest mb-2">بداية القصة</p>
@@ -112,7 +113,8 @@ const StoryGame = () => {
 
     if (state.phase === 'PLAYING') {
         return (
-            <div className="min-h-screen bg-[#0f0716] text-white flex flex-col items-center justify-center p-6 text-center space-y-12">
+            <div className="min-h-screen bg-[#0f0716] text-white flex flex-col items-center justify-center p-6 text-center space-y-12 safe-area-pb relative">
+                <ExitButton className="absolute left-6 top-6" confirmMessage="Quit Story Mode?" />
                 <div className="w-full max-w-sm">
                     <div className="flex justify-between items-center text-fuchsia-500/50 mb-4 px-4">
                         <span className="font-bold">Turn {state.round}/{state.maxRounds}</span>
@@ -149,7 +151,7 @@ const StoryGame = () => {
 
     if (state.phase === 'GAME_OVER') {
         return (
-            <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center space-y-8">
+            <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center space-y-8 safe-area-pb">
                 <div className="text-6xl">📚</div>
                 <h1 className="text-5xl font-black">تمت القصة!</h1>
                 <div className="text-fuchsia-400 font-bold flex items-center gap-2 bg-fuchsia-900/20 px-4 py-2 rounded-full border border-fuchsia-900/50 justify-center">
@@ -163,7 +165,7 @@ const StoryGame = () => {
                 </p>
                 <div className="flex gap-4 w-full max-w-xs mt-8">
                     <button onClick={resetGame} className="flex-1 bg-white/10 py-4 rounded-xl font-bold hover:bg-white/20">تأليف تاني</button>
-                    <button onClick={() => navigate('/games')} className="flex-1 bg-fuchsia-900 py-4 rounded-xl font-bold hover:bg-fuchsia-800">خروج</button>
+                    <ExitButton className="flex-1 bg-fuchsia-900 py-4 rounded-xl font-bold hover:bg-fuchsia-800 h-auto" showConfirm={false} />
                 </div>
             </div>
         );

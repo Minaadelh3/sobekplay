@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { GAMES_CONFIG } from '../../lib/games';
 import { performTransaction } from '../../lib/ledger';
+import ExitButton from '../../components/games/ExitButton';
 
 const MafiaGame = () => {
     const navigate = useNavigate();
@@ -134,7 +135,7 @@ const MafiaGame = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#070A0F] text-white overflow-hidden relative font-sans">
+        <div className="min-h-screen bg-[#070A0F] text-white overflow-hidden relative font-sans safe-area-pb">
             {/* Background Ambience */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/10 via-[#070A0F] to-[#070A0F] pointer-events-none" />
 
@@ -143,12 +144,7 @@ const MafiaGame = () => {
             </div>
 
             {/* Quit Button (Top Left) */}
-            <button
-                onClick={() => navigate('/games')}
-                className="absolute top-4 left-4 z-50 text-white/50 hover:text-white p-2"
-            >
-                ✕
-            </button>
+            <ExitButton className="absolute top-4 left-4 z-50" confirmMessage="Are you sure you want to quit the game? The game will end for everyone." />
         </div>
     );
 };

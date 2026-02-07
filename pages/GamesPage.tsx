@@ -105,7 +105,15 @@ const GamesPage: React.FC = () => {
 
             {/* Header */}
             <div className="pt-20 pb-10 px-6 text-center relative">
-                <BackButton fallbackPath="/" />
+                <div className="flex items-center justify-end pointer-events-auto w-full">
+                    <button
+                        onClick={() => navigate('/')}
+                        className="bg-white/10 p-3 px-6 rounded-full hover:bg-white/20 transition-all backdrop-blur-sm flex items-center gap-2 text-white font-bold"
+                    >
+                        <span>الرئيسية</span>
+                        <span>🏠</span>
+                    </button>
+                </div>
 
                 {/* Ambient Glow */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-64 bg-indigo-600/20 blur-[100px] pointer-events-none" />
