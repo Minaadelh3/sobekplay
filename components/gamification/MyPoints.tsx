@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { RANK_TIERS, calculateRank, getNextRank, calculateProgress, TOKENS } from '../../lib/gamification';
+import { TEAMS } from '../../types/auth';
 
 const MyPoints: React.FC = () => {
     const { user } = useAuth();
@@ -35,6 +36,13 @@ const MyPoints: React.FC = () => {
 
     if (!user) return null;
 
+    // Resolve Avatar
+    let displayAvatar = user.profile?.photoURL || user.avatar;
+    if ((!displayAvatar || displayAvatar === "") && user.teamId) {
+        const team = TEAMS.find(t => t.id === user.teamId);
+        if (team) displayAvatar = team.avatar;
+    }
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -54,7 +62,7 @@ const MyPoints: React.FC = () => {
                 <div className="relative mb-4">
                     <div className={`absolute inset-0 rounded-full blur-md opacity-40 ${rank.color.replace('text-', 'bg-')}`} />
                     <img
-                        src={user.avatar || '/assets/brand/logo.png'}
+                        src={displayAvatar || '/assets/brand/logo.png'}
                         alt={user.name}
                         className="w-20 h-20 rounded-full border-2 border-[#333] object-cover relative z-10"
                     />

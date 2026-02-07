@@ -1,8 +1,16 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { db } from '../lib/firebase';
+import { db, auth } from '../lib/firebase';
 import { doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
-import { UserProfile, UserPreferences, UserPrivacy, UserNotifications } from '../types/auth'; // Ensure these are exported from types/auth
+import {
+    updateEmail,
+    updatePassword,
+    reauthenticateWithCredential,
+    EmailAuthProvider,
+    deleteUser,
+    signOut
+} from 'firebase/auth';
+import { UserProfile, UserPreferences, UserPrivacy, UserNotifications } from '../types/auth';
 
 export function useSettings() {
     const { user, firebaseUser } = useAuth();
@@ -111,17 +119,76 @@ export function useSettings() {
         document.body.removeChild(link);
     };
 
-    // Danger Zone
+    // --- Security Functions (Re-auth required usually) ---
+
+    // Helper for re-auth (simplified for this context - ideally passed via UI modal)
+    // We will assume the UI handles the credential gathering and passes it here, or we just fail if requires recent login.
+    // For this 'product-level' requirement, we really should have a proper re-auth flow. 
+    // BUT since that requires UI interaction (modal), let's implement the core logic here that throws 'requires-recent-login'
+
+    const changeEmail = async (newEmail: string) => {
+        setLoading(true);
+        setError(null);
+        try {
+            if (!firebaseUser) throw new Error("No user");
+            await updateEmail(firebaseUser, newEmail);
+            // Update Firestore email as well if stored there
+            const { uid } = checkAuth();
+            await updateDoc(doc(db, 'users', uid), { email: newEmail });
+            return { success: true };
+        } catch (e: any) {
+            console.error("Change Email Failed", e);
+            return { success: false, error: e.code || e.message };
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const changePassword = async (newPassword: string) => {
+        setLoading(true);
+        setError(null);
+        try {
+            if (!firebaseUser) throw new Error("No user");
+            await updatePassword(firebaseUser, newPassword);
+            return { success: true };
+        } catch (e: any) {
+            console.error("Change Password Failed", e);
+            return { success: false, error: e.code || e.message };
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const logOutAllSessions = async () => {
+        // Firebase doesn't have a direct "revoke all tokens" on client SDK easily without Cloud Functions.
+        // We can just sign out here.
+        try {
+            await signOut(auth);
+            return true;
+        } catch (e) { return false; }
+    };
+
     const deleteAccountStart = async () => {
-        // Soft delete or just flag
-        // Real deletion requires re-auth usually.
-        // For this scope, we might just set 'isDisabled: true'
-        const { uid } = checkAuth();
-        await updateDoc(doc(db, 'users', uid), {
-            isDisabled: true,
-            'meta.deletedAt': serverTimestamp()
-        });
-        // In a real app we'd call deleteUser(auth.currentUser) but that requires precise error handling
+        setLoading(true);
+        try {
+            const { uid } = checkAuth();
+            // 1. Soft Delete in Firestore
+            await updateDoc(doc(db, 'users', uid), {
+                isDisabled: true,
+                'meta.deletedAt': serverTimestamp()
+            });
+
+            // 2. Delete Auth User (Critical)
+            if (firebaseUser) {
+                await deleteUser(firebaseUser);
+            }
+            return { success: true };
+        } catch (e: any) {
+            console.error("Delete Account Failed", e);
+            return { success: false, error: e.code || e.message };
+        } finally {
+            setLoading(false);
+        }
     };
 
     return {
@@ -131,6 +198,9 @@ export function useSettings() {
         updateNotifications,
         exportUserData,
         deleteAccountStart,
+        changeEmail,
+        changePassword,
+        logOutAllSessions,
         loading,
         error
     };

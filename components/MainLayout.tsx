@@ -75,16 +75,40 @@ const MainLayout: React.FC<MainLayoutProps> = ({ analyzedPosters, isAnalyzing })
 
     const isWatchPage = location.pathname.startsWith('/app/watch/');
 
+    // Define top-level paths where the main Navbar should be shown on mobile
+    const topLevelPaths = [
+        '/app/home',
+        '/app/rankings',
+        '/app/games',
+        '/app/program',
+        '/app/reminders',
+        '/app/prayers',
+        '/app/she3ar-al-re7la',
+        '/app/kids',
+        '/app/rooms',
+        '/app/community',
+        '/app/team-chat',
+        '/app/achievements',
+        '/app/notifications', // Also top level typically
+        '/app/settings'       // Settings is usually a destination
+    ];
+
+    // Check if current path is top level (exact match)
+    const isTopLevel = topLevelPaths.includes(location.pathname);
+
     return (
         <div className="min-h-screen selection:bg-accent-green selection:text-white">
 
-            <MobileBackHeader />
+            {!isTopLevel && !isWatchPage && <MobileBackHeader />}
 
+            {/* Navbar: Always show on desktop (hidden md:flex handles internal). 
+                On Mobile: Hide if NOT top level (because we show BackHeader instead).
+             */}
             {!isWatchPage && (
-                <Navbar onSearchOpen={() => setIsSearchOpen(true)} />
+                <div className={`${!isTopLevel ? 'hidden md:block' : ''}`}>
+                    <Navbar onSearchOpen={() => setIsSearchOpen(true)} />
+                </div>
             )}
-
-
 
             <SearchModal
                 isOpen={isSearchOpen}
@@ -93,13 +117,20 @@ const MainLayout: React.FC<MainLayoutProps> = ({ analyzedPosters, isAnalyzing })
             />
 
             <PullToRefresh>
-                <main className={`${!isWatchPage ? "pt-20" : ""} pb-24 md:pb-0`}>
+                {/* Adjust padding based on header visibility 
+                    - Mobile Top Level: pt-[calc(4rem+env(safe-area-inset-top))] (Dynamic for Notch)
+                    - Mobile Deep Level: pt-0 (for sticky BackHeader which handles its own padding)
+                    - Desktop: md:pt-24 (Fixed 6rem/5rem safe)
+                */}
+                <main className={`${!isWatchPage ? (isTopLevel ? "pt-[calc(4rem+env(safe-area-inset-top))]" : "md:pt-24") : ""} pb-24 md:pb-0`}>
                     <Outlet />
                 </main>
             </PullToRefresh>
 
-            <SobekChatbot />
+            {location.pathname === '/app/home' && <SobekChatbot />}
             <MobileBottomNav />
+            {/* Show footer only on top level pages or desktop, to avoid clutter on deep pages? 
+                Actually default behavior was show everywhere except watch. showing footer on deep pages usually fine if content pushes it down. */}
             {!isWatchPage && <Footer />}
         </div>
     );

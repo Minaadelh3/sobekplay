@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { collection, onSnapshot, query } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { TeamProfile } from '../types/auth';
+import { TeamProfile, TEAMS } from '../types/auth';
 
 export interface RankingMember {
     id: string;
@@ -19,7 +19,7 @@ export interface RankedTeam extends TeamProfile {
 
 export function useTeamRanking() {
     // DEBUG: Verify HMR
-    console.log("🚀 useTeamRanking v3 (Clean) loaded");
+    console.log("🚀 useTeamRanking v3.1 (Avatars) loaded");
 
     const [sortedTeams, setSortedTeams] = useState<RankedTeam[]>([]);
     const [teamMembers, setTeamMembers] = useState<Record<string, RankingMember[]>>({});
@@ -54,10 +54,18 @@ export function useTeamRanking() {
             const users: RankingMember[] = [];
             snap.forEach((doc) => {
                 const d = doc.data();
+
+                // Resolve Avatar
+                let finalAvatar = d.profile?.photoURL || d.avatar || d.photoURL;
+                if (!finalAvatar && d.teamId) {
+                    const team = TEAMS.find(t => t.id === d.teamId);
+                    if (team) finalAvatar = team.avatar;
+                }
+
                 users.push({
                     id: doc.id,
                     name: d.name || d.displayName || "Unknown",
-                    avatar: d.avatar || d.photoURL,
+                    avatar: finalAvatar,
                     role: d.role,
                     points: d.points || 0,
                     ...d // Include other fields if needed temporarily

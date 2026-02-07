@@ -1,18 +1,16 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { VERSES } from '../../lib/questionBank';
-import MalahyEngine from '../../components/games/MalahyEngine';
+import VerseCompletionEngine from '../../components/games/VerseCompletionEngine';
 import GameContainer from '../../components/games/GameContainer';
 
 const SoloGameVerse = () => {
     const navigate = useNavigate();
 
     return (
-        <GameContainer gameId="verse">
+        <GameContainer gameId="kamel-elayah">
             {(config) => (
-                <MalahyEngine
+                <VerseCompletionEngine
                     gameConfig={config}
-                    questions={VERSES}
                     onExit={() => navigate('/app/games')}
                 />
             )}

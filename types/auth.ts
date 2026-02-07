@@ -36,6 +36,7 @@ export interface UserProfile {
     bio?: string; // new
     mobile?: string;
     photoURL?: string;
+    avatarPublicId?: string; // Cloudinary public_id
 }
 
 export interface UserPreferences {
@@ -58,6 +59,11 @@ export interface UserPrivacy {
     isPublic?: boolean;
     shareData?: boolean;
     allowAnalytics?: boolean;
+    consentHistory?: {
+        agreedAt: any;
+        ip?: string;
+        userAgent?: string;
+    }[];
 }
 
 export interface UserNotifications {

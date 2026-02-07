@@ -113,7 +113,7 @@ const SobekChatbot: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-[9999] font-sans">
+    <div className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] md:bottom-6 right-6 z-[9999] font-sans">
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -176,8 +176,8 @@ const SobekChatbot: React.FC = () => {
                   ) : (
                     /* Text Bubble */
                     <div className={`px-4 py-2.5 max-w-[85%] text-[14px] leading-6 rounded-2xl shadow-sm ${msg.sender === 'user'
-                        ? 'bg-[#EAB308] text-black font-medium rounded-br-none'
-                        : 'bg-[#1A1A1A] text-gray-200 rounded-bl-none border border-white/5'
+                      ? 'bg-[#EAB308] text-black font-medium rounded-br-none'
+                      : 'bg-[#1A1A1A] text-gray-200 rounded-bl-none border border-white/5'
                       }`}>
                       {msg.text}
                     </div>

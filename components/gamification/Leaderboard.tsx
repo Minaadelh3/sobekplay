@@ -3,13 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { useAuth } from '../../context/AuthContext';
-import { User } from '../../types/auth'; // Ensure this has the new fields
+import { User, TEAMS } from '../../types/auth'; // Ensure this has the new fields
 import TeamRankList from '../TeamRankList';
 import { TOKENS } from '../../lib/gamification';
 
 const Leaderboard: React.FC = () => {
     // DEBUG: Verify HMR
-    console.log("🚀 Leaderboard v4 (Tokens) loaded");
+    console.log("🚀 Leaderboard v4.1 (Team Fallback) loaded");
     const { user } = useAuth();
     const [activeTab, setActiveTab] = useState<'individuals' | 'teams'>('individuals');
     const [topUsers, setTopUsers] = useState<User[]>([]);
@@ -35,11 +35,23 @@ const Leaderboard: React.FC = () => {
                 // Filter Admins client-side (CRITICAL RULE)
                 if (data.role === 'ADMIN' || data.role === 'admin') return;
 
+                // Resolve Avatar Priorities:
+                // 1. Uploaded Profile Photo (profile.photoURL)
+                // 2. Auth Photo (photoURL)
+                // 3. Legacy Avatar (avatar)
+                // 4. Team Avatar (based on teamId)
+                // 5. Default Logo
+                let finalAvatar = data.profile?.photoURL || data.photoURL || data.avatar;
+                if (!finalAvatar && data.teamId) {
+                    const team = TEAMS.find(t => t.id === data.teamId);
+                    if (team) finalAvatar = team.avatar;
+                }
+
                 // Map to User type safely
                 users.push({
                     id: doc.id,
                     name: data.displayName || data.name || "Unknown",
-                    avatar: data.photoURL || data.avatar || "",
+                    avatar: finalAvatar || "",
                     points: data.points || 0,
                     role: 'USER',
                     teamId: data.teamId

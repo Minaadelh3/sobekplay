@@ -8,7 +8,7 @@ interface NavItem {
     icon: string;
 }
 
-interface AgpeyaQuickNavProps {
+interface PrayerQuickNavProps {
     prayerId: string;
 }
 
@@ -21,7 +21,7 @@ const NAV_ITEMS: NavItem[] = [
     { idSuffix: '-request', label: 'الطلبة', icon: '🤲' },
 ];
 
-const AgpeyaQuickNav: React.FC<AgpeyaQuickNavProps> = ({ prayerId }) => {
+const PrayerQuickNav: React.FC<PrayerQuickNavProps> = ({ prayerId }) => {
     const [activeId, setActiveId] = useState<string>('');
 
     const scrollToSection = (suffix: string) => {
@@ -86,4 +86,4 @@ const AgpeyaQuickNav: React.FC<AgpeyaQuickNavProps> = ({ prayerId }) => {
     );
 };
 
-export default AgpeyaQuickNav;
+export default PrayerQuickNav;

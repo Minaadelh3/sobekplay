@@ -1,20 +1,12 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { WHO } from '../../lib/questionBank';
-import MalahyEngine from '../../components/games/MalahyEngine';
 import GameContainer from '../../components/games/GameContainer';
+import WhoGame from '../../components/games/WhoGame';
 
 const SoloGameWho = () => {
-    const navigate = useNavigate();
-
     return (
         <GameContainer gameId="who">
-            {(config) => (
-                <MalahyEngine
-                    gameConfig={config}
-                    questions={WHO}
-                    onExit={() => navigate('/app/games')}
-                />
+            {() => (
+                <WhoGame />
             )}
         </GameContainer>
     );

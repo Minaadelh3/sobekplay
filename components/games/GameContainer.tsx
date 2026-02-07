@@ -31,7 +31,7 @@ export default function GameContainer({ gameId, children }: GameContainerProps) 
         );
     }
 
-    if (!game.isEnabled) {
+    if (!game.isEnabled && gameId !== 'kamel-elayah') {
         return (
             <div className="min-h-screen bg-black flex flex-col items-center justify-center text-white p-6 text-center">
                 <div className="text-6xl mb-4">🚧</div>
@@ -51,7 +51,9 @@ export default function GameContainer({ gameId, children }: GameContainerProps) 
 
     return (
         <>
-            {children(game)}
+            <React.Fragment key={gameId}>
+                {children(game)}
+            </React.Fragment>
         </>
     );
 }

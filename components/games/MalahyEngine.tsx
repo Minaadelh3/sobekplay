@@ -62,6 +62,19 @@ const MalahyEngine: React.FC<MalahyEngineProps> = ({ gameConfig, questions, onEx
         return () => clearInterval(timer);
     }, [gameState, isAnswered, qIndex]);
 
+    // 🔄 FORCE RESET when switching games (Fix for "Games opening other games")
+    useEffect(() => {
+        setGameState('INTRO');
+        setScore(0);
+        setXp(0);
+        setCorrectCount(0);
+        setStreak(0);
+        setQIndex(0);
+        setFilteredQuestions([]);
+        setIsAnswered(false);
+        setSelectedOption(null);
+    }, [gameConfig.id]);
+
     const startGame = (diff: Difficulty) => {
         setDifficulty(diff);
         let gameQs = questions;

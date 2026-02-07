@@ -1,122 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../context/AuthContext';
-import { db } from '../lib/firebase';
-import { collection, query, orderBy, limit, getDocs, where, Timestamp, doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
-
-interface NotificationItem {
-    id: string;
-    title: string;
-    message: string;
-    targetType: 'ALL' | 'TEAM' | 'SPECIFIC_USER';
-    targetIds?: string[];
-    createdAt: Timestamp;
-    icon?: string;
-    isRead?: boolean; // Local state
-}
+import { useNotification, NotificationItem } from '../context/NotificationContext';
 
 export default function NotificationsPage() {
-    const { user } = useAuth();
-    const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [readIds, setReadIds] = useState<Set<string>>(new Set());
-
-    // Fetch Read Receipts & Notifications
-    useEffect(() => {
-        if (!user) return;
-
-        const fetchData = async () => {
-            try {
-                // 1. Fetch Read Receipts first (to map status immediately)
-                const receiptsRef = collection(db, `users/${user.id}/read_receipts`);
-                const receiptsSnap = await getDocs(receiptsRef);
-                const reads = new Set(receiptsSnap.docs.map(d => d.id));
-                setReadIds(reads);
-
-                // 2. Fetch Notifications
-                const notifRef = collection(db, 'notifications');
-
-                // Parallel Queries for efficiency
-                const queries = [
-                    // Global
-                    query(notifRef, where('targetType', '==', 'ALL'), orderBy('createdAt', 'desc'), limit(50)),
-                    // Personal
-                    query(notifRef, where('targetType', '==', 'SPECIFIC_USER'), where('targetIds', 'array-contains', user.id), limit(50))
-                ];
-
-                if (user.teamId) {
-                    // Team
-                    queries.push(query(notifRef, where('targetType', '==', 'TEAM'), where('targetId', '==', user.teamId), limit(50)));
-                }
-
-                const results = await Promise.all(queries.map(q => getDocs(q)));
-
-                let allItems: NotificationItem[] = [];
-                results.forEach(snap => {
-                    snap.docs.forEach(d => {
-                        allItems.push({ id: d.id, ...d.data() } as NotificationItem);
-                    });
-                });
-
-                // Dedup
-                const unique = Array.from(new Map(allItems.map(item => [item.id, item])).values());
-
-                // Sort by Date Desc
-                unique.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-
-                setNotifications(unique);
-            } catch (err) {
-                console.error("Failed to fetch notifications", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, [user]);
-
-    const markAsRead = async (notification: NotificationItem) => {
-        if (!user || readIds.has(notification.id)) return;
-
-        // Optimistic UI Update
-        setReadIds(prev => new Set(prev).add(notification.id));
-
-        try {
-            await setDoc(doc(db, `users/${user.id}/read_receipts`, notification.id), {
-                readAt: serverTimestamp(),
-                notificationId: notification.id // redundant but useful
-            });
-        } catch (err) {
-            console.error("Failed to mark as read", err);
-            // Revert on failure not strictly necessary for read receipts, but good practice
-        }
-    };
-
-    const markAllRead = async () => {
-        if (!user || notifications.length === 0) return;
-
-        // Filter unread
-        const unread = notifications.filter(n => !readIds.has(n.id));
-        if (unread.length === 0) return;
-
-        // Optimistic
-        const newSet = new Set(readIds);
-        unread.forEach(n => newSet.add(n.id));
-        setReadIds(newSet);
-
-        // Batch write? Or simple loop for now (Batch limit 500)
-        // For < 50 items, loop is fine or batch. implementing batch for correctness.
-        // Actually, let's just do it in UI first to feel responsive.
-
-        // Note: In a real app with many items, a batch write is better.
-        unread.forEach(n => {
-            setDoc(doc(db, `users/${user.id}/read_receipts`, n.id), { readAt: serverTimestamp() });
-        });
-    };
-
-    const unreadCount = notifications.filter(n => !readIds.has(n.id)).length;
+    const { notifications, unreadCount, loading, markAsRead, markAllRead } = useNotification();
 
     return (
         <div className="min-h-screen bg-[#070A0F] text-white pb-24 pt-20 px-4">
@@ -151,8 +40,8 @@ export default function NotificationsPage() {
             ) : (
                 <div className="space-y-4">
                     <AnimatePresence>
-                        {notifications.map((note, idx) => {
-                            const isRead = readIds.has(note.id);
+                        {notifications.map((note: NotificationItem, idx) => {
+                            const isRead = note.isRead;
                             return (
                                 <motion.div
                                     key={note.id}

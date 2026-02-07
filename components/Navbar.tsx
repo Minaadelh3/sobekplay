@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import BrandLogo from './BrandLogo';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 
 interface NavbarProps {
   onSearchOpen: () => void;
@@ -12,6 +13,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const location = useLocation();
   const { user, logout, selectedTeam, isAdmin, roleLoading } = useAuth();
+  const { unreadCount } = useNotification();
 
   // Close dropdowns on route change
   useEffect(() => {
@@ -28,7 +30,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
     { name: '🎮 Games', path: '/app/games' },
     { name: '🧭 Program', path: '/app/program' },
     { name: '🔔 Reminders', path: '/app/reminders' },
-    { name: '🕯️ Agpeya', path: '/app/prayers' },
+    { name: '🕯️ Prayer', path: '/app/prayers' },
     { name: '🎶 El-She3ar', path: '/app/she3ar-al-re7la' },
     { name: '🎈 Kids', path: '/app/kids' },
     { name: '🔑 Rooms', path: '/app/rooms' },
@@ -79,6 +81,20 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
 
           {/* Mobile Burger Trigger */}
           <div className="md:hidden z-[102] flex items-center gap-2">
+            {/* Mobile Alerts Icon */}
+            <Link
+              to="/app/notifications"
+              className="relative text-white/80 p-3 hover:bg-white/5 rounded-full transition-colors"
+              aria-label="Notifications"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+              {unreadCount > 0 && (
+                <span className="absolute top-2 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[9px] font-bold text-white ring-2 ring-nearblack">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </Link>
+
             <button
               onClick={onSearchOpen}
               className="text-white/80 p-3 hover:bg-white/5 rounded-full transition-colors"
@@ -249,28 +265,9 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className="fixed right-0 top-0 bottom-0 w-[80%] max-w-sm bg-[#121212] z-[101] shadow-2xl border-l border-white/10 md:hidden flex flex-col pt-24 pb-8 overflow-y-auto"
             >
-              <div className="px-6 mb-8">
-                <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-4">القائمة</h3>
-                <div className="space-y-2">
-                  {allNavItems.map(item => (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={`flex items-center gap-3 py-3 px-4 rounded-xl transition-colors
-                                            ${isLinkActive(item.path) ? 'bg-white/10 text-white font-bold' : 'text-white/60 hover:text-white hover:bg-white/5'}
-                                        `}
-                    >
-                      <span>{item.name}</span>
-                      {isLinkActive(item.path) && <span className="ml-auto text-accent-green">●</span>}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-auto px-6 pt-6 border-t border-white/10 pb-10">
+              <div className="flex-1 overflow-y-auto pt-8 pb-8">
                 {user && selectedTeam && (
-                  <>
+                  <div className="px-6 mb-8 border-b border-white/5 pb-6">
                     <div className="flex items-center gap-4 mb-6 p-4 bg-white/5 rounded-2xl border border-white/5">
                       <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${selectedTeam.color} p-0.5 overflow-hidden shadow-lg`}>
                         <img src={selectedTeam.avatar} alt={selectedTeam.name} className="w-full h-full object-cover rounded-lg" />
@@ -305,7 +302,6 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
                       </Link>
                     </div>
 
-
                     {roleLoading ? (
                       <div className="w-full bg-white/5 rounded-xl border border-white/5 p-3 flex items-center justify-center gap-2 mb-3">
                         <div className="w-4 h-4 rounded-full bg-white/10 animate-pulse" />
@@ -327,8 +323,27 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
                     >
                       تسجيل الخروج
                     </button>
-                  </>
+                  </div>
                 )}
+
+                <div className="px-6">
+                  <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-4">القائمة</h3>
+                  <div className="space-y-2">
+                    {allNavItems.map(item => (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 py-3 px-4 rounded-xl transition-colors
+                                              ${isLinkActive(item.path) ? 'bg-white/10 text-white font-bold' : 'text-white/60 hover:text-white hover:bg-white/5'}
+                                          `}
+                      >
+                        <span>{item.name}</span>
+                        {isLinkActive(item.path) && <span className="ml-auto text-accent-green">●</span>}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
               </div>
             </motion.div>
           </>

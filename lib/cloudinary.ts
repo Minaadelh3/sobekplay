@@ -7,7 +7,7 @@ export const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_P
  * @returns The secure URL of the uploaded image.
  * @throws Error if upload fails.
  */
-export async function uploadToCloudinary(file: File): Promise<string> {
+export async function uploadToCloudinary(file: File): Promise<{ secure_url: string; public_id: string }> {
     // 1. Validate File Type
     const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!validTypes.includes(file.type)) {
@@ -42,7 +42,10 @@ export async function uploadToCloudinary(file: File): Promise<string> {
         }
 
         const data = await response.json();
-        return data.secure_url;
+        return {
+            secure_url: data.secure_url,
+            public_id: data.public_id
+        };
     } catch (error: any) {
         console.error('Cloudinary upload error:', error);
         throw new Error(error.message || 'Failed to upload image to Cloudinary.');

@@ -13,7 +13,6 @@ const TABS = [
     { id: 'profile', label: 'Profile', icon: '👤' },
     { id: 'account', label: 'Account', icon: '🔒' },
     { id: 'app', label: 'App', icon: '📱' },
-    { id: 'privacy', label: 'Privacy', icon: '🛡️' },
 ] as const;
 
 export default function SettingsLayout({ children, activeTab, onTabChange }: SettingsLayoutProps) {
@@ -35,8 +34,8 @@ export default function SettingsLayout({ children, activeTab, onTabChange }: Set
                                 key={tab.id}
                                 onClick={() => onTabChange(tab.id)}
                                 className={`w-full text-right px-4 py-3 rounded-xl mb-1 flex items-center justify-end gap-3 transition-all duration-200 ${activeTab === tab.id
-                                        ? 'bg-accent-gold text-black font-bold shadow-lg shadow-accent-gold/20'
-                                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                    ? 'bg-accent-gold text-black font-bold shadow-lg shadow-accent-gold/20'
+                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
                                     }`}
                             >
                                 <span className="text-sm md:text-base">{tab.label}</span>

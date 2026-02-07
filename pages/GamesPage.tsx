@@ -1,114 +1,185 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GAMES_CONFIG, GameConfig } from '../lib/games';
-import Navbar from '../components/Navbar';
-import MobileBottomNav from '../components/MobileBottomNav';
-import { useAuth } from '../context/AuthContext';
+import { motion } from 'framer-motion';
+import BackButton from '../components/BackButton';
 
-const GamesPage = () => {
+import { GAMES_CONFIG } from '../lib/games';
+
+interface GameItem {
+    id: string;
+    title: string;
+    path: string;
+    icon: string;
+    color: string;
+    description: string;
+    isMultiplayer?: boolean;
+    isSmart?: boolean;
+}
+
+// EXISTING SOLO/GROUP GAMES
+const CLASSIC_GAMES: GameItem[] = [
+    {
+        id: 'proverb',
+        title: 'أمثال',
+        path: '/games/proverb',
+        icon: '📜',
+        color: 'from-amber-500 to-orange-600',
+        description: 'كمل المثل الشعبي',
+    },
+    {
+        id: 'kamel-elayah',
+        title: 'كمل الآية',
+        path: '/games/kamel-elayah',
+        icon: '✝️',
+        color: 'from-blue-500 to-cyan-600',
+        description: 'اختبر حفظك للكتاب المقدس',
+    },
+    {
+        id: 'who',
+        title: 'مين قال؟',
+        path: '/games/who',
+        icon: '🗣️',
+        color: 'from-purple-500 to-pink-600',
+        description: 'مين قال العبارة دي؟',
+    },
+    {
+        id: 'sobek_intel',
+        title: 'استجواب',
+        path: '/games/sobek_intel',
+        icon: '🕵️',
+        color: 'from-emerald-500 to-teal-600',
+        description: 'جاوب أسئلة سوبِك',
+    },
+    {
+        id: 'mafia',
+        title: 'مافيا',
+        path: '/games/mafia',
+        icon: '🕶️',
+        color: 'from-red-600 to-rose-700',
+        description: 'اللعبة الجماعية الشهيرة',
+        isMultiplayer: true,
+    },
+    {
+        id: 'matlha_law_adak',
+        title: 'مطلها لو قدك',
+        path: '/games/matlha_law_adak',
+        icon: '🎭',
+        color: 'from-yellow-400 to-amber-500',
+        description: 'لعبة التمثيل الصامت',
+        isMultiplayer: true,
+    },
+    {
+        id: 'oul_besor3a',
+        title: 'قول بسرعة',
+        path: '/games/oul_besor3a',
+        icon: '⏱️',
+        color: 'from-indigo-500 to-violet-600',
+        description: 'جاوب قبل الوقت ما يخلص',
+        isMultiplayer: true,
+    },
+    {
+        id: 'mamno3at',
+        title: 'ممنوعات',
+        path: '/games/mamno3at',
+        icon: '🚫',
+        color: 'from-rose-500 to-red-600',
+        description: 'وصف من غير الكلمات الممنوعة',
+        isMultiplayer: true,
+    },
+    {
+        id: 'hekaya_gama3eya',
+        title: 'حكاية جماعية',
+        path: '/games/hekaya_gama3eya',
+        icon: '📖',
+        color: 'from-fuchsia-500 to-pink-600',
+        description: 'ألفوا قصة سوا',
+        isMultiplayer: true,
+    },
+];
+
+const GamesPage: React.FC = () => {
     const navigate = useNavigate();
-    const { user } = useAuth();
-    const [activeTab, setActiveTab] = useState<'SOLO' | 'VERSUS'>('SOLO');
-
-    const filteredGames = GAMES_CONFIG.filter(g => g.type === activeTab);
 
     return (
-        <div className="min-h-screen bg-[#0B0F14] pb-24">
-            <Navbar onSearchOpen={() => { }} />
+        <div className="min-h-screen bg-[#050505] text-white font-arabic safe-area-pb selection:bg-purple-500/30 overflow-x-hidden" dir="rtl">
 
-            <main className="max-w-4xl mx-auto px-4 pt-24 md:pt-32">
+            {/* Header */}
+            <div className="pt-20 pb-10 px-6 text-center relative">
+                <BackButton fallbackPath="/" />
 
-                {/* Header */}
-                <div className="text-center mb-8">
-                    <h1 className="text-4xl md:text-5xl font-black text-white mb-2 drop-shadow-lg flex justify-center items-center gap-3">
-                        <span className="text-5xl">🎡</span> ملاهي سوبك
+                {/* Ambient Glow */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-64 bg-indigo-600/20 blur-[100px] pointer-events-none" />
+
+                <motion.div
+                    initial={{ y: -30, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                >
+                    <h1 className="text-4xl md:text-6xl font-black mb-4 tracking-tighter drop-shadow-2xl">
+                        <span className="text-white">ملاهي</span>
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500 mx-2">سوبِك</span>
+                        <span className="inline-block animate-bounce">🎡</span>
                     </h1>
-                    <p className="text-gray-400 text-lg">العب.. نافس.. اكسب نقط!</p>
-                </div>
-
-                {/* Tabs */}
-                <div className="flex justify-center mb-10">
-                    <div className="bg-white/5 p-1 rounded-2xl flex gap-1 border border-white/10">
-                        <button
-                            onClick={() => setActiveTab('SOLO')}
-                            className={`
-                                px-6 py-2 rounded-xl text-sm font-bold transition-all
-                                ${activeTab === 'SOLO' ? 'bg-accent-gold text-black shadow-lg scale-105' : 'text-gray-400 hover:text-white'}
-                            `}
-                        >
-                            🧸 العب لوحدك
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('VERSUS')}
-                            className={`
-                                px-6 py-2 rounded-xl text-sm font-bold transition-all
-                                ${activeTab === 'VERSUS' ? 'bg-red-500 text-white shadow-lg scale-105' : 'text-gray-400 hover:text-white'}
-                            `}
-                        >
-                            ⚔️ واجه لاعب
-                        </button>
-                    </div>
-                </div>
-
-                {/* Games Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <AnimatePresence>
-                        {filteredGames.map((game) => (
-                            <GameCard key={game.id} game={game} onClick={() => navigate(`/games/${game.id}`)} />
-                        ))}
-                    </AnimatePresence>
-                </div>
-
-                {filteredGames.length === 0 && (
-                    <div className="text-center py-20 text-gray-500">
-                        قريباً.. ⏳
-                    </div>
-                )}
-
-            </main>
-
-            <MobileBottomNav />
-        </div>
-    );
-};
-
-const GameCard = ({ game, onClick }: { game: GameConfig; onClick: () => void }) => {
-    return (
-        <motion.div
-            layout
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            onClick={onClick}
-            className={`
-                relative overflow-hidden rounded-3xl p-6 cursor-pointer group border border-white/5
-                bg-gradient-to-br ${game.bgGradient}
-                hover:border-white/20 hover:shadow-2xl transition-all duration-300
-            `}
-        >
-            <div className="relative z-10 flex items-start justify-between">
-                <div>
-                    <div className="text-4xl mb-3">{game.icon}</div>
-                    <h3 className={`text-2xl font-black mb-1 ${game.color}`}>{game.title}</h3>
-                    <p className="text-gray-300 text-sm font-medium leading-relaxed opacity-90">
-                        {game.description}
+                    <p className="text-white/70 text-lg font-bold">
+                        ألعاب، مناقشات، وفرهدة!
                     </p>
-                </div>
-
-                <div className="bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 flex flex-col items-center min-w-[60px]">
-                    <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">WIN</span>
-                    <span className="text-accent-gold font-black text-lg">+{game.rewards.win}</span>
-                </div>
+                </motion.div>
             </div>
 
-            {/* Play Button Overlay */}
-            <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[2px]">
-                <button className="bg-white text-black font-black px-8 py-3 rounded-full transform scale-90 group-hover:scale-100 transition-transform duration-300 shadow-xl flex items-center gap-2">
-                    <span>▶️</span> ابدأ اللعب
-                </button>
+            <div className="max-w-6xl mx-auto px-6 pb-24 space-y-16">
+
+                {/* SECTION: MALAHY SOBEK (CHALLENGES) */}
+                <section>
+                    <div className="flex items-center gap-3 mb-6">
+                        <span className="text-2xl">🔥</span>
+                        <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-l from-white to-white/50">
+                            التحديات
+                        </h2>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                        {GAMES_CONFIG.filter(g => g.id !== 'versus_match').map((game, index) => (
+                            <motion.button
+                                key={game.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.1 }}
+                                whileHover={{ scale: 1.05, translateY: -5 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => navigate(`/games/${game.id}`)}
+                                className="relative aspect-square rounded-2xl overflow-hidden group border border-white/5 bg-white/5 hover:border-white/20 transition-all duration-300"
+                            >
+                                {/* Background Gradient */}
+                                <div className={`absolute inset-0 bg-gradient-to-br ${game.bgGradient} opacity-20 group-hover:opacity-30 transition-opacity duration-300`} />
+
+                                {/* Icon & Text */}
+                                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center z-10">
+                                    <span className="text-4xl mb-4 filter drop-shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                        {game.icon}
+                                    </span>
+                                    <h3 className="text-xl font-bold mb-1 leading-tight text-white group-hover:text-accent-gold transition-colors">
+                                        {game.title}
+                                    </h3>
+                                    <p className="text-[10px] md:text-xs text-white/60 line-clamp-2">
+                                        {game.description}
+                                    </p>
+                                </div>
+
+                                {/* Multiplayer Badge */}
+                                {game.type === 'VERSUS' && (
+                                    <div className="absolute top-2 right-2 bg-purple-600/80 backdrop-blur-sm text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-lg">
+                                        جماعية
+                                    </div>
+                                )}
+                            </motion.button>
+                        ))}
+                    </div>
+                </section>
+
+
+
             </div>
-        </motion.div>
+
+        </div>
     );
 };
 

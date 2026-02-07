@@ -71,6 +71,7 @@ const PushNotifications = () => {
                     title,
                     message,
                     targetType,
+                    targetId: targetType === 'TEAM' ? selectedTeamId : undefined,
                     externalUserId: externalIds.length > 0 ? externalIds[0] : undefined, // Legacy backend prop
                     include_external_user_ids: externalIds // New prop we'll add to backend
                 })
@@ -88,28 +89,6 @@ const PushNotifications = () => {
 
             setStatus({ type: 'success', msg: `Sent to ${data.recipients || 'users'}!` });
 
-            // --- PERSISTENCE START ---
-            try {
-                // Determine Target ID based on Type
-                let targetId = null;
-                if (targetType === 'TEAM') targetId = selectedTeamId;
-                if (targetType === 'SPECIFIC_USER') targetId = externalIds[0]; // For now single user
-
-                await addDoc(collection(db, 'notifications'), {
-                    title,
-                    message,
-                    targetType, // 'ALL', 'TEAM', 'SPECIFIC_USER'
-                    targetId,   // null, teamId, or userId
-                    createdAt: serverTimestamp(),
-                    isRead: {}, // Map of userId -> boolean (optional for later)
-                    icon: '🔔'
-                });
-                console.log("📝 Notification Logged to Firestore");
-            } catch (loggingErr) {
-                console.warn("Failed to log notification to history:", loggingErr);
-                // Don't block the success UI
-            }
-            // --- PERSISTENCE END ---
 
             if (targetType === 'ALL') setMessage('');
 

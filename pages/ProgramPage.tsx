@@ -1,11 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import BackButton from '../components/BackButton';
+import { useProgramOverrides, EpisodeOverride } from '../hooks/useProgramOverrides';
+import { useAuth } from '../context/AuthContext';
+import { ProgramEpisodeEditor } from '../components/admin/ProgramEpisodeEditor';
 
 // --- ICONS ---
 const PlayIcon = () => (
     <svg className="w-8 h-8 opacity-80" fill="currentColor" viewBox="0 0 24 24">
         <path d="M8 5v14l11-7z" />
+    </svg>
+);
+
+const EditIcon = () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
     </svg>
 );
 
@@ -23,7 +32,7 @@ const BackIcon = () => (
 
 // --- DATA: EPISODES ---
 
-interface Episode {
+export interface Episode {
     id: number;
     title: string;
     subtitle: string;
@@ -37,110 +46,130 @@ export const EPISODES: Episode[] = [
     {
         id: 1,
         title: "ليلة الخروج",
-        subtitle: "كلنا بنهرب من حاجة... عشان نلاقي حاجة.",
-        date: "ليلة ٩ فبراير - فجر ١٠ فبراير",
-        gradient: "from-slate-900 to-blue-900", // Night / Departure
-        intro: "الشنط جاهزة، والوشوش بتضحك، بس القلوب بتدق. الليلة دي مش مجرد سفر.. دي بداية فصل جديد في الحكاية.",
+        subtitle: "Night of Awakening – ليلة البعث", // Subtitle (small) – mapped to subtitle
+        date: "محطة مصر → قطار أبو الهول → أسوان", // Location Line – mapped to date badge at top
+        gradient: "from-slate-900 to-blue-900", // Keep existing gradient
+        intro: "في اللحظة اللي القطار بيتحرك فيها… العالم القديم بيقفل، والجديد بيبدأ.", // Tagline – mapped to intro
         details: [
-            { time: "09:00 PM", event: "التجمع في محطة مصر (رمسيس)" },
-            { time: "10:00 PM", event: "تحرك قطار Vip" },
-            { time: "11:00 PM", event: "سهرة في القطر" },
+            { time: "7:30 م", event: "التجمع في محطة مصر وترتيب العبور" },
+            { time: "9:00 م", event: "تحرك القطار وصلاة الشكر" },
+            { time: "10:00 م", event: "تسبحة داخل القطار" },
         ]
     },
     {
         id: 2,
         title: "عروس النيل",
-        subtitle: "أول مرة تشوف النيل... كأنك بتشوفه لأول مرة.",
-        date: "١٠ فبراير - الاثنين",
-        gradient: "from-teal-800 to-cyan-900", // Nile / Water
-        intro: "الهوا هنا ليه ريحة تانية. النيل فاتح دراعاته وبيقولك: نورت بيتك. هنا الزمن بيبطأ، والروح بتهدى.",
+        subtitle: "The Nile Bride Season",
+        date: "أسوان – معبد فيلة – جزيرة هيسا – البيت النوبي",
+        gradient: "from-teal-800 to-cyan-900",
+        intro: "النيل مش مية… النيل روح.",
         details: [
-            { time: "11:00 AM", event: "الوصول لمحطة أسوان" },
-            { time: "12:00 PM", event: "التسكين في الفندق (إطلالة نيلية)" },
-            { time: "02:00 PM", event: "غداء نوبي" },
-            { time: "05:00 PM", event: "جولة حرة في السوق" },
-            { time: "08:00 PM", event: "قعدة سمر" }
+            { time: "9:00 ص", event: "الوصول لأسوان واستلام الغرف" },
+            { time: "11:00 ص", event: "التحرك إلى معبد فيلة" },
+            { time: "5:00 م", event: "غذاء في البيت النوبي + صلاة الغروب + خلوة فردية" },
+            { time: "7:00 م", event: "عرض الصوت والضوء في فيلة" },
+            { time: "9:30 م", event: "جولة حرة وعشاء" }
         ]
     },
     {
         id: 3,
-        title: "أطياف الجنوب",
-        subtitle: "الزمن هنا واقف... والقلوب لسه خضرة.",
-        date: "١١ فبراير - الثلاثاء",
-        gradient: "from-orange-700 to-amber-900", // Nostalgia / Warmth
-        intro: "بين البيوت الملونة والوشوش السمرا الطيبة، بنرجع أطفال تاني. ذكريات بنعيشها لأول مرة، بس كأننا عارفينها من زمان.",
+        title: "أطياب الجنوب",
+        subtitle: "White Sensation Adventure",
+        date: "القرية النوبية – غرب سهيل – النيل",
+        gradient: "from-orange-700 to-amber-900",
+        intro: "الأبيض هنا مش لون… الأبيض حالة.",
         details: [
-            { time: "09:00 AM", event: "زيارة القرية النوبية" },
-            { time: "12:00 PM", event: "لعب وتصوير مع التمساح" },
-            { time: "03:00 PM", event: "جولة بالمراكب" },
-            { time: "07:00 PM", event: "حفلة نوبية" }
+            { time: "7:00 ص", event: "نوبة صحيان والكل يرتدي الأبيض" },
+            { time: "8:00 ص", event: "الفطار" },
+            { time: "10:00 ص", event: "يوم كامل في القرية النوبية" },
+            { time: "3:00 م", event: "الغذاء (فطير مشلتت – جبنة – عسل)" },
+            { time: "7:30 م", event: "فترة روحية عن العلاقة الشخصية مع الله" },
+            { time: "9:00 م", event: "جولة حرة" }
         ]
     },
     {
         id: 4,
-        title: "مملكة التمساح",
-        subtitle: "القوة... الهدوء... والجمال اللي يخوف.",
-        date: "١٢ فبراير - الأربعاء",
-        gradient: "from-emerald-800 to-green-950", // Nature / Strength
-        intro: "في حضرة الطبيعة، كل الأصوات بتسكت. عظمة الخالق بتشوفها عينك، وبتحس إنك صغير أوي قدام الجمال ده.",
+        title: "مملكة التماسيح",
+        subtitle: "Curse of Sobek",
+        date: "أبو سمبل – معبد كلابشة – السد العالي",
+        gradient: "from-emerald-800 to-green-950",
+        intro: "اللي هيعدي من هنا… مش زي اللي دخل.",
         details: [
-            { time: "08:00 AM", event: "زيارة معبد فيلة" },
-            { time: "01:00 PM", event: "الحديقة النباتية" },
-            { time: "04:00 PM", event: "غروب الشمس من الجزيرة" },
-            { time: "08:00 PM", event: "العشا الأخير" }
+            { time: "1:00 ص", event: "التحرك إلى أبو سمبل" },
+            { time: "5:00 ص", event: "زيارة معبد أبو سمبل" },
+            { time: "8:00 ص", event: "التحرك للعودة" },
+            { time: "3:00 م", event: "الغذاء في مطعم عموري" },
+            { time: "7:30 م", event: "جولة حرة" }
         ]
     },
     {
         id: 5,
         title: "المشهد الأخير",
-        subtitle: "مش كل وداع نهاية... فيه وداع بداية.",
-        date: "١٣ فبراير - الخميس",
-        gradient: "from-indigo-900 to-slate-900", // Closure
-        intro: "الستارة بتنزل، بس المسرحية لسه مخلصتش. بنقفل الشنط، بس بناخد معانا حاجات متتشالش في شنط.. بناخد روح.",
+        subtitle: "The Final Judgment – محكمة الآلهة",
+        date: "متحف النوبة – النيل – قطار العودة",
+        gradient: "from-indigo-900 to-slate-900",
+        intro: "هنا… كل حاجة بتقف وتبص وراها.",
         details: [
-            { time: "10:00 AM", event: "شراء الهدايا والتذكارات" },
-            { time: "02:00 PM", event: "التحرك للمحطة" },
-            { time: "04:00 PM", event: "قطار العودة للقاهرة" },
-            { time: "Next Day", event: "الوصول بالسلامة" }
+            { time: "7:00 ص", event: "جمع الشنط وتركها في الاستقبال" },
+            { time: "10:00 ص", event: "زيارة متحف النوبة وجولة بالحنطور" },
+            { time: "12:00 ظ", event: "مراكب شراعية في النيل" },
+            { time: "1:30 ظ", event: "الغذاء في مطعم الدوكا" },
+            { time: "4:00 ع", event: "تحرك القطار إلى القاهرة" }
         ]
     },
 ];
 
 // --- COMPONENTS ---
 
-const EpisodeCard: React.FC<{ episode: Episode; onClick: () => void; index: number }> = ({ episode, onClick, index }) => {
+const EpisodeCard: React.FC<{ episode: Episode; onClick: () => void; onEdit?: () => void; index: number; isAdmin?: boolean }> = ({ episode, onClick, onEdit, index, isAdmin }) => {
     return (
         <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: index * 0.1, duration: 0.6 }}
-            onClick={onClick}
-            className="group relative h-52 w-full rounded-2xl overflow-hidden cursor-pointer shadow-xl mb-6 border border-white/5 active:scale-[0.98] transition-transform"
+            className="group relative h-52 w-full rounded-2xl overflow-hidden shadow-xl mb-6 border border-white/5 bg-[#121820]"
         >
-            {/* Background Gradient */}
-            <div className={`absolute inset-0 bg-gradient-to-r ${episode.gradient} opacity-90 transition-all duration-700 group-hover:scale-105`} />
+            {/* Clickable Area for Detail View */}
+            <div onClick={onClick} className="absolute inset-0 cursor-pointer z-10">
+                {/* Background Gradient */}
+                <div className={`absolute inset-0 bg-gradient-to-r ${episode.gradient} opacity-90 transition-all duration-700 group-hover:scale-105`} />
 
-            {/* Texture Overlay */}
-            <div className="absolute inset-0 opacity-30 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay" />
+                {/* Texture Overlay */}
+                <div className="absolute inset-0 opacity-30 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay" />
 
-            {/* Cinematic Vignette */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+                {/* Cinematic Vignette */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+            </div>
+
+            {/* Admin Edit Button - Above Clickable Area */}
+            {isAdmin && onEdit && (
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit();
+                    }}
+                    className="absolute top-4 left-4 z-30 p-2 bg-black/60 hover:bg-black/90 text-white/70 hover:text-white rounded-full backdrop-blur-md border border-white/10 transition-all active:scale-95"
+                    title="Edit Episode"
+                >
+                    <EditIcon />
+                </button>
+            )}
 
             {/* Labels */}
-            <div className="absolute top-4 right-4 flex items-center gap-2">
+            <div className="absolute top-4 right-4 z-20 flex items-center gap-2 pointer-events-none">
                 <span className="text-[10px] font-bold text-white/60 tracking-widest uppercase bg-black/20 px-2 py-1 rounded border border-white/5">
                     EPISODE 0{episode.id}
                 </span>
             </div>
 
             {/* Content Bottom */}
-            <div className="absolute bottom-0 w-full p-6 flex justify-between items-end">
-                <div className="flex-1 pl-4">
+            <div className="absolute bottom-0 w-full p-6 flex justify-between items-end z-20 pointer-events-none">
+                <div className="flex-1 pl-4 rtl:pl-0 rtl:pr-4">
                     <h2 className="text-2xl md:text-3xl font-black text-white mb-2 leading-tight drop-shadow-md font-arabic">
                         {episode.title}
                     </h2>
-                    <p className="text-white/70 font-medium text-sm md:text-base italic leading-relaxed">
+                    <p className="text-white/70 font-medium text-sm md:text-base italic leading-relaxed line-clamp-2">
                         {episode.subtitle}
                     </p>
                 </div>
@@ -174,15 +203,66 @@ const TopNav: React.FC<{ title: string; onBack: () => void }> = ({ title, onBack
 import { useTabReset } from '../hooks/useTabReset';
 
 export const ProgramPage: React.FC = () => {
-    const [selectedEpisode, setSelectedEpisode] = useState<Episode | null>(null);
+    const { user, isAdmin } = useAuth();
+    const [selectedEpisodeId, setSelectedEpisodeId] = useState<number | null>(null);
+    const [editingEpisodeId, setEditingEpisodeId] = useState<number | null>(null);
+
+    const { overrides, loading, saveOverride, resetOverride } = useProgramOverrides();
+
+    const mergedEpisodes = useMemo(() => {
+        if (loading) return EPISODES;
+        return EPISODES.map(ep => {
+            const override = overrides[ep.id];
+            if (override && override.enabled) {
+                return {
+                    ...ep,
+                    title: override.title || ep.title,
+                    subtitle: override.subtitle || ep.subtitle,
+                    intro: override.intro || ep.intro,
+                    date: override.date || ep.date,
+                    details: override.details && override.details.length > 0 ? override.details : ep.details
+                };
+            }
+            return ep;
+        });
+    }, [overrides, loading]);
+
+    const selectedEpisode = useMemo(() =>
+        selectedEpisodeId ? mergedEpisodes.find(e => e.id === selectedEpisodeId) || null : null,
+        [selectedEpisodeId, mergedEpisodes]);
+
+    const editingEpisode = useMemo(() =>
+        editingEpisodeId ? EPISODES.find(e => e.id === editingEpisodeId) || null : null,
+        [editingEpisodeId]);
 
     const handleTabReset = React.useCallback(() => {
-        setSelectedEpisode(null);
+        setSelectedEpisodeId(null);
+        setEditingEpisodeId(null);
     }, []);
 
     useTabReset('/program', handleTabReset);
 
-    const closeModal = () => setSelectedEpisode(null);
+    const closeModal = () => setSelectedEpisodeId(null);
+    const closeEditor = () => setEditingEpisodeId(null);
+
+    const handleSaveOverride = async (episodeId: number, data: EpisodeOverride) => {
+        const success = await saveOverride(episodeId, data);
+        if (success) {
+            closeEditor();
+            // Optional: Show toast
+        } else {
+            alert("Failed to save override");
+        }
+    };
+
+    const handleResetOverride = async (episodeId: number) => {
+        if (window.confirm("Are you sure you want to reset to default content?")) {
+            const success = await resetOverride(episodeId);
+            if (success) {
+                closeEditor();
+            }
+        }
+    };
 
     return (
         <div className="min-h-screen bg-[#050505] font-arabic text-white safe-area-pb" dir="rtl">
@@ -202,12 +282,25 @@ export const ProgramPage: React.FC = () => {
                     <p className="text-white/40 text-lg font-medium relative z-10">
                         مش برنامج... دي حدوتة ماشية مع النيل.
                     </p>
+
+                    {isAdmin && (
+                        <div className="mt-4 inline-block bg-accent-gold/10 text-accent-gold border border-accent-gold/20 px-3 py-1 rounded-full text-xs font-bold tracking-wider">
+                            🛡️ ADMIN MODE ACTIVE
+                        </div>
+                    )}
                 </div>
 
                 {/* Episodes List */}
                 <div className="space-y-6">
-                    {EPISODES.map((ep, idx) => (
-                        <EpisodeCard key={ep.id} episode={ep} index={idx} onClick={() => setSelectedEpisode(ep)} />
+                    {mergedEpisodes.map((ep, idx) => (
+                        <EpisodeCard
+                            key={ep.id}
+                            episode={ep}
+                            index={idx}
+                            onClick={() => setSelectedEpisodeId(ep.id)}
+                            onEdit={() => setEditingEpisodeId(ep.id)}
+                            isAdmin={isAdmin}
+                        />
                     ))}
                 </div>
 
@@ -234,6 +327,19 @@ export const ProgramPage: React.FC = () => {
                                 <BackIcon />
                                 <span className="font-bold text-sm">خروج</span>
                             </button>
+
+                            {isAdmin && (
+                                <button
+                                    onClick={() => {
+                                        closeModal();
+                                        setEditingEpisodeId(selectedEpisode.id);
+                                    }}
+                                    className="flex items-center gap-2 bg-accent-gold/20 backdrop-blur-md px-4 py-2 rounded-full border border-accent-gold/30 text-accent-gold hover:bg-accent-gold/30 transition-colors"
+                                >
+                                    <EditIcon />
+                                    <span className="font-bold text-sm">تعديل</span>
+                                </button>
+                            )}
                         </div>
 
                         {/* Cinematic Header */}
@@ -299,8 +405,42 @@ export const ProgramPage: React.FC = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* --- ADMIN EDITOR MODAL --- */}
+            <AnimatePresence>
+                {editingEpisode && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto"
+                    >
+                        <div className="w-full max-w-3xl bg-[#0F1218] border border-white/10 rounded-2xl shadow-2xl relative overflow-hidden">
+                            <div className="flex justify-between items-center p-6 border-b border-white/5 bg-[#141A23]">
+                                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                    <EditIcon />
+                                    تعديل الحلقة: {editingEpisode.title}
+                                </h2>
+                                <button onClick={closeEditor} className="text-gray-400 hover:text-white transition-colors">
+                                    <CloseIcon />
+                                </button>
+                            </div>
+
+                            <div className="p-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
+                                <ProgramEpisodeEditor
+                                    episode={editingEpisode}
+                                    overrides={overrides[editingEpisode.id]}
+                                    onSave={handleSaveOverride}
+                                    onReset={handleResetOverride}
+                                />
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
+
 
 export default ProgramPage;

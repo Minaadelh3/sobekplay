@@ -1,25 +1,23 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../hooks/useSettings';
 import { usePushNotifications } from '../hooks/usePushNotifications';
 import { useAppConfig } from '../hooks/useAppConfig';
 import SettingsLayout from '../components/settings/SettingsLayout';
-import { Section, Toggle, SettingsInput, DangerButton } from '../components/settings/SettingsComponents';
+import { Section, SettingsInput } from '../components/settings/SettingsComponents';
 import Toast from '../components/Toast';
+import { AvatarManager } from '../components/settings/AvatarManager';
+import { SecuritySection } from '../components/settings/SecuritySection';
 import { app } from '../lib/firebase';
 import { sendPasswordResetEmail, getAuth } from 'firebase/auth';
-import { uploadToCloudinary } from '../lib/cloudinary';
 
 const auth = getAuth(app);
 
 export default function SettingsPage() {
-    const { user, firebaseUser } = useAuth();
+    const { user } = useAuth();
     const {
         updateProfile,
-        updatePrivacy,
-        exportUserData,
-        deleteAccountStart,
-        updateNotifications
+        updatePreferences, // Need this for app config persistence if we keep Theme/Language
     } = useSettings();
 
     // Global App Config
@@ -43,51 +41,42 @@ export default function SettingsPage() {
 
     // Local State
     const [name, setName] = useState(user?.name || user?.profile?.displayName || '');
-    const [bio, setBio] = useState(user?.profile?.bio || '');
-    const [mobile, setMobile] = useState(user?.mobile || '');
-    const [uploading, setUploading] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    // Simple dirty check for Name
+    const [originalName, setOriginalName] = useState('');
 
     // Sync local state when user updates (e.g. initial load)
     useEffect(() => {
         if (user) {
-            setName(user.name || user.profile?.displayName || '');
-            setBio(user.profile?.bio || '');
-            setMobile(user.mobile || '');
+            const currentName = user.name || user.profile?.displayName || '';
+            setName(currentName);
+            setOriginalName(currentName);
         }
     }, [user]);
 
     // --- Handlers ---
-
-    const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file || !firebaseUser) return;
-        setUploading(true);
-        try {
-            const downloadURL = await uploadToCloudinary(file);
-            await updateProfile({ photoURL: downloadURL });
-            showToast('Avatar updated successfully!', 'success');
-        } catch (error) {
-            console.error("Upload failed", error);
-            showToast("Failed to upload image.", 'error');
-        } finally {
-            setUploading(false);
+    const handleNameSave = async () => {
+        if (!name.trim()) {
+            showToast("display name cannot be empty", 'error');
+            return;
         }
-    };
+        if (name === originalName) return;
 
-    const handleProfileSave = async () => {
-        const success = await updateProfile({ displayName: name, bio: bio, mobile: mobile });
-        if (success) showToast("Profile Updated!", 'success');
-        else showToast("Failed to update profile.", 'error');
+        const success = await updateProfile({ displayName: name });
+        if (success) {
+            showToast("Name Updated!", 'success');
+            setOriginalName(name); // Reset dirty state
+        } else {
+            showToast("Failed to update name.", 'error');
+        }
     };
 
     const handlePasswordReset = async () => {
         if (user?.email) {
             try {
                 await sendPasswordResetEmail(auth, user.email);
-                showToast(`Password reset email sent to ${user.email}`, 'success');
-            } catch (e) {
-                showToast("Error sending reset email", 'error');
+                showToast(`Reset email sent to ${user.email}`, 'success');
+            } catch (e: any) {
+                showToast(e.message || "Error sending reset email", 'error');
             }
         }
     };
@@ -95,91 +84,91 @@ export default function SettingsPage() {
     // --- Renderers ---
 
     const renderProfile = () => (
-        <Section title="Identity" description="How you appear to others">
-            <div className="flex items-center gap-6 mb-8 bg-black/20 p-4 rounded-xl">
-                <div
-                    className="relative group cursor-pointer w-24 h-24 flex-shrink-0"
-                    onClick={() => fileInputRef.current?.click()}
-                >
-                    <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-accent-gold relative">
-                        <img
-                            src={user?.avatar || 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png'}
-                            alt="Profile"
-                            className={`w-full h-full object-cover transition-opacity ${uploading ? 'opacity-50' : ''}`}
-                        />
-                        {uploading && (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            </div>
-                        )}
-                    </div>
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        className="hidden"
-                        accept="image/*"
-                        onChange={handleAvatarUpload}
+        <>
+            <AvatarManager
+                userProfile={user?.profile}
+                onUpdate={updateProfile}
+                showToast={showToast}
+            />
+
+            <Section title="Display Name">
+                <div className="flex flex-col gap-4">
+                    <SettingsInput
+                        label="Your Name"
+                        value={name}
+                        onChange={setName}
+                        placeholder="Public display name"
+                        icon="👤"
                     />
-                </div>
-                <div>
-                    <h3 className="text-xl font-bold text-white">{user?.name}</h3>
-                    <p className="text-gray-500 text-sm">
-                        Member since {user?.createdAt?.toDate ? user.createdAt.toDate().toLocaleDateString() : 'Recently'}
-                    </p>
-                </div>
-            </div>
 
-            <SettingsInput label="Display Name" value={name} onChange={setName} placeholder="Your public name" icon="👤" />
-            <SettingsInput label="Bio" value={bio} onChange={setBio} placeholder="Short bio..." icon="📝" />
-            <SettingsInput label="Mobile Number" value={mobile} onChange={setMobile} placeholder="+20 123 456 7890" icon="📱" />
+                    {name !== originalName && (
+                        <div className="animate-fade-in">
+                            <button
+                                onClick={handleNameSave}
+                                className="bg-accent-gold text-black px-6 py-3 rounded-lg font-bold hover:bg-yellow-500 transition shadow-[0_0_15px_rgba(255,215,0,0.2)]"
+                            >
+                                Save New Name
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </Section>
+        </>
+    );
 
-            <div className="pt-2">
-                <button
-                    onClick={handleProfileSave}
-                    className="bg-accent-gold text-black px-6 py-2 rounded-lg font-bold hover:bg-yellow-500 transition shadow-[0_0_15px_rgba(255,215,0,0.2)]"
-                >
-                    Save Changes
-                </button>
-            </div>
+    const renderNotifications = () => (
+        <Section title="Push Notifications" icon="🔔">
+            {!pushSupported ? (
+                <div className="bg-red-500/10 p-4 rounded-xl border border-red-500/20 text-red-300 text-sm">
+                    ⚠️ Push Notifications aren't supported on this browser.
+                </div>
+            ) : (
+                <div className="bg-blue-500/10 border border-blue-500/20 p-5 rounded-xl">
+                    <div className="flex justify-between items-center mb-4">
+                        <div>
+                            <h4 className="font-bold text-blue-200">Device Status</h4>
+                            <p className="text-xs text-blue-300/60 mt-1">
+                                {fcmToken ? 'Receiving alerts on this device' : 'Notifications disabled'}
+                            </p>
+                        </div>
+                        <span className={`text-xs px-2 py-1 rounded border font-bold ${fcmToken ? 'border-green-500 text-green-400 bg-green-500/10' : 'border-gray-500 text-gray-500'}`}>
+                            {fcmToken ? 'ACTIVE' : 'OFF'}
+                        </span>
+                    </div>
+
+                    {!fcmToken ? (
+                        <button
+                            onClick={registerToken}
+                            disabled={pushLoading}
+                            className="bg-blue-600 text-white px-4 py-3 rounded-lg text-sm w-full font-bold hover:bg-blue-500 transition disabled:opacity-50 shadow-lg shadow-blue-900/20"
+                        >
+                            {pushLoading ? 'Activating...' : 'Enable Notifications'}
+                        </button>
+                    ) : (
+                        <button
+                            onClick={unregisterToken}
+                            disabled={pushLoading}
+                            className="bg-transparent border border-red-500/30 text-red-300 px-4 py-3 rounded-lg text-sm w-full hover:bg-red-900/20 transition disabled:opacity-50"
+                        >
+                            Disable on this Device
+                        </button>
+                    )}
+
+                    {permission === 'denied' && (
+                        <p className="text-xs text-red-400 mt-3 bg-red-500/10 p-2 rounded">
+                            ⚠️ Permission blocked. You must enable notifications in your browser settings manually.
+                        </p>
+                    )}
+                </div>
+            )}
         </Section>
     );
 
     const renderAccount = () => (
-        <>
-            <Section title="Security" icon="🔐">
-                <SettingsInput
-                    label="Email Address"
-                    value={user?.email || ''}
-                    onChange={() => { }}
-                    disabled={true}
-                    icon="📧"
-                />
-                <button
-                    onClick={handlePasswordReset}
-                    className="text-accent-gold underline text-sm mt-2 block"
-                >
-                    Send Password Reset Email
-                </button>
-            </Section>
-
-            <Section title="Data & Privacy" icon="💾">
-                <button
-                    onClick={exportUserData}
-                    className="w-full bg-white/5 border border-white/10 text-white px-4 py-3 rounded-xl flex items-center justify-between hover:bg-white/10 transition"
-                >
-                    <span className="font-bold">📤 Export My Data (JSON)</span>
-                    <span className="text-gray-500 text-xs">Download a copy of your data</span>
-                </button>
-            </Section>
-
-            <Section title="Danger Zone" icon="☢️">
-                <DangerButton
-                    label="Delete Account"
-                    confirmationText="This will permanently delete your account & data."
-                    onClick={deleteAccountStart}
-                />
-            </Section>
-        </>
+        <SecuritySection
+            email={user?.email || ''}
+            onResetPassword={handlePasswordReset}
+        />
     );
 
     const renderApp = () => (
@@ -189,7 +178,10 @@ export default function SettingsPage() {
                     {['dark', 'light', 'system'].map((t) => (
                         <button
                             key={t}
-                            onClick={() => updateConfig({ theme: t as any })}
+                            onClick={() => {
+                                updateConfig({ theme: t as any });
+                                updatePreferences({ theme: t as any });
+                            }}
                             className={`p-3 rounded-lg border text-center capitalize transition-all ${config.theme === t
                                 ? 'bg-accent-gold text-black border-accent-gold font-bold transform scale-105'
                                 : 'bg-black/30 border-white/10 text-gray-400 hover:bg-white/5'
@@ -204,7 +196,10 @@ export default function SettingsPage() {
             <Section title="Language" icon="🌐">
                 <div className="flex gap-2">
                     <button
-                        onClick={() => updateConfig({ language: 'ar' })}
+                        onClick={() => {
+                            updateConfig({ language: 'ar' });
+                            updatePreferences({ language: 'ar' });
+                        }}
                         className={`flex-1 p-3 rounded-lg border text-center font-bold transition-all ${config.language === 'ar'
                             ? 'bg-accent-gold text-black border-accent-gold transform scale-105'
                             : 'bg-black/30 border-white/10 text-gray-400 hover:bg-white/5'
@@ -213,7 +208,10 @@ export default function SettingsPage() {
                         العربية
                     </button>
                     <button
-                        onClick={() => updateConfig({ language: 'en' })}
+                        onClick={() => {
+                            updateConfig({ language: 'en' });
+                            updatePreferences({ language: 'en' });
+                        }}
                         className={`flex-1 p-3 rounded-lg border text-center font-bold transition-all ${config.language === 'en'
                             ? 'bg-accent-gold text-black border-accent-gold transform scale-105'
                             : 'bg-black/30 border-white/10 text-gray-400 hover:bg-white/5'
@@ -223,153 +221,7 @@ export default function SettingsPage() {
                     </button>
                 </div>
             </Section>
-
-            <Section title="Push Notifications" icon="🔔">
-                {!pushSupported ? (
-                    <div className="bg-red-500/10 p-4 rounded-xl border border-red-500/20 text-red-300 text-sm">
-                        ⚠️ Push Notifications aren't supported on this device/browser.
-                    </div>
-                ) : (
-                    <>
-                        <div className="mb-6 bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl">
-                            <div className="flex justify-between items-center mb-2">
-                                <span className="font-bold text-blue-200">Device Status</span>
-                                <span className={`text-xs px-2 py-1 rounded border ${fcmToken ? 'border-green-500 text-green-400' : 'border-gray-500 text-gray-500'}`}>
-                                    {fcmToken ? 'Active' : 'Inactive'}
-                                </span>
-                            </div>
-
-                            {!fcmToken ? (
-                                <button
-                                    onClick={registerToken}
-                                    disabled={pushLoading}
-                                    className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm w-full font-bold hover:bg-blue-500 transition disabled:opacity-50"
-                                >
-                                    {pushLoading ? 'Registering...' : 'Enable Notifications on this Device'}
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={unregisterToken}
-                                    disabled={pushLoading}
-                                    className="bg-red-900/50 border border-red-500/30 text-red-300 px-4 py-2 rounded-lg text-sm w-full hover:bg-red-900/80 transition disabled:opacity-50"
-                                >
-                                    Disable on this Device
-                                </button>
-                            )}
-
-                            {permission === 'denied' && (
-                                <p className="text-xs text-red-400 mt-2">
-                                    ⚠️ Permission denied. Please enable notifications in browser settings.
-                                </p>
-                            )}
-                        </div>
-
-                        {/* Notification Categories */}
-                        <div className="space-y-4 mb-6 pt-6 border-t border-white/5">
-                            <h4 className="font-bold text-white mb-2">Categories</h4>
-                            <Toggle
-                                label="Game Updates"
-                                description="Match alerts, score updates, and team news"
-                                checked={user?.notifications?.games ?? true}
-                                onChange={(v) => updateNotifications({ games: v })}
-                                icon="🎮"
-                            />
-                            <Toggle
-                                label="Marketing & Promos"
-                                description="Offers, new features, and events"
-                                checked={user?.notifications?.marketing ?? true}
-                                onChange={(v) => updateNotifications({ marketing: v })}
-                                icon="🎁"
-                            />
-                            <Toggle
-                                label="System Alerts"
-                                description="Security alerts and maintenance"
-                                checked={user?.notifications?.system ?? true}
-                                onChange={(v) => updateNotifications({ system: v })}
-                                icon="🔧"
-                            />
-                        </div>
-
-                        {/* Quiet Hours UI */}
-                        <div className="mt-6 pt-6 border-t border-white/5">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xl">🌙</span>
-                                    <div>
-                                        <h4 className="font-bold text-white">Quiet Hours</h4>
-                                        <p className="text-xs text-gray-400">Suspend notifications during these times</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs text-gray-500 font-bold mb-1 uppercase">Start Time</label>
-                                    <input
-                                        type="time"
-                                        className="w-full bg-black/30 border border-white/10 p-3 rounded-lg text-white focus:border-accent-gold outline-none"
-                                        value={user?.notifications?.quietHours?.start || "22:00"}
-                                        onChange={(e) => {
-                                            const newStart = e.target.value;
-                                            const currentEnd = user?.notifications?.quietHours?.end || "08:00";
-                                            updateNotifications({
-                                                quietHours: {
-                                                    start: newStart,
-                                                    end: currentEnd,
-                                                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-                                                }
-                                            });
-                                        }}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs text-gray-500 font-bold mb-1 uppercase">End Time</label>
-                                    <input
-                                        type="time"
-                                        className="w-full bg-black/30 border border-white/10 p-3 rounded-lg text-white focus:border-accent-gold outline-none"
-                                        value={user?.notifications?.quietHours?.end || "08:00"}
-                                        onChange={(e) => {
-                                            const newEnd = e.target.value;
-                                            const currentStart = user?.notifications?.quietHours?.start || "22:00";
-                                            updateNotifications({
-                                                quietHours: {
-                                                    start: currentStart,
-                                                    end: newEnd,
-                                                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-                                                }
-                                            });
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                            <p className="text-[10px] text-gray-600 mt-2">
-                                * Times use your local device timezone ({Intl.DateTimeFormat().resolvedOptions().timeZone}).
-                            </p>
-                        </div>
-                    </>
-                )}
-            </Section>
         </>
-    );
-
-    const renderPrivacy = () => (
-        <Section title="Privacy Controls" icon="🛡️">
-            <Toggle
-                label="Public Profile"
-                description="Allow others to see your stats"
-                checked={user?.privacy?.isPublic ?? true}
-                onChange={(v) => updatePrivacy({ isPublic: v })}
-                icon="👀"
-            />
-            <Toggle
-                label="Share Usage Data"
-                description="Help us improve Sobek Play"
-                checked={false} // Force off for now/example
-                onChange={() => { }} // No-op
-                icon="📊"
-                disabled={true}
-            />
-        </Section>
     );
 
     return (
@@ -381,10 +233,26 @@ export default function SettingsPage() {
                 onClose={() => setToast({ ...toast, visible: false })}
             />
 
-            {activeTab === 'profile' && renderProfile()}
+            {/* In a simplified layout, we might just want a vertical stack if there are few items. 
+                But keeping tabs allows for future expansion without clutter. 
+                Let's ensure the tabs provided to SettingsLayout match what we have here.
+                Assuming SettingsLayout determines tabs based on props or internal logic.
+                If SettingsLayout hardcodes tabs, we might need to adjust it. 
+                For now we assume standard tabs: Profile, Account, App. 
+            */}
+
+            {activeTab === 'profile' && (
+                <>
+                    {renderProfile()}
+                    {renderNotifications()}
+                </>
+            )}
+
             {activeTab === 'account' && renderAccount()}
+
             {activeTab === 'app' && renderApp()}
-            {activeTab === 'privacy' && renderPrivacy()}
+
+            {/* If Privacy is removed, we don't render it */}
         </SettingsLayout>
     );
 }

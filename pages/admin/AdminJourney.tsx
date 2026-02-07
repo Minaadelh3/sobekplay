@@ -3,12 +3,18 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { seedJourneyAchievements, checkJourneyProgress, JOURNEY_CONFIG_ID, JOURNEY_ACHIEVEMENTS_DATA } from '../../services/journeyService';
 import { useAdminData } from '../../hooks/useAdminData';
+import { EPISODES } from '../../pages/ProgramPage';
+import { useProgramOverrides, EpisodeOverride } from '../../hooks/useProgramOverrides';
+import { ProgramEpisodeEditor } from '../../components/admin/ProgramEpisodeEditor';
 
 export default function AdminJourney() {
     const { users } = useAdminData();
+    const { overrides, loading: loadingOverrides, saveOverride, resetOverride } = useProgramOverrides();
+
     const [config, setConfig] = useState<any>({ startDate: '', isActive: false });
     const [loading, setLoading] = useState(false);
     const [testUserId, setTestUserId] = useState('');
+    const [expandedEpisodeId, setExpandedEpisodeId] = useState<number | null>(null);
 
     useEffect(() => {
         loadConfig();
@@ -46,6 +52,18 @@ export default function AdminJourney() {
         await checkJourneyProgress(testUserId);
         setLoading(false);
         alert("✅ Check Ran (See Console/Toast for result)");
+    };
+
+    const handleSaveOverride = async (episodeId: number, data: EpisodeOverride) => {
+        const success = await saveOverride(episodeId, data);
+        if (success) alert(`✅ Episode ${episodeId} Updated`);
+        else alert("❌ Error updating episode");
+    };
+
+    const handleResetOverride = async (episodeId: number) => {
+        const success = await resetOverride(episodeId);
+        if (success) alert(`✅ Episode ${episodeId} Reset`);
+        else alert("❌ Error resetting episode");
     };
 
     return (
@@ -120,6 +138,42 @@ export default function AdminJourney() {
                 </div>
             </div>
 
+            {/* Program Content Overrides */}
+            <div className="bg-[#121820] p-6 rounded-2xl border border-white/5">
+                <h3 className="text-xl font-bold text-white mb-4">📝 تعديل محتوى البرنامج (Overrides)</h3>
+
+                {loadingOverrides ? (
+                    <div className="text-center py-8 text-white/50">Loading overrides...</div>
+                ) : (
+                    <div className="space-y-4">
+                        {EPISODES.map(episode => (
+                            <div key={episode.id}>
+                                <button
+                                    onClick={() => setExpandedEpisodeId(expandedEpisodeId === episode.id ? null : episode.id)}
+                                    className="w-full flex justify-between items-center p-4 bg-black/30 rounded-xl border border-white/10 hover:bg-black/40 transition-colors"
+                                >
+                                    <span className="font-bold text-white">EPISODE 0{episode.id}: {episode.title}</span>
+                                    <span className="text-xs text-gray-500">
+                                        {overrides[episode.id]?.enabled ? '🟢 OVERRIDE ACTIVE' : '⚪ DEFAULT'}
+                                    </span>
+                                </button>
+
+                                {expandedEpisodeId === episode.id && (
+                                    <div className="pt-4 animate-fadeIn">
+                                        <ProgramEpisodeEditor
+                                            episode={episode}
+                                            overrides={overrides[episode.id]} // Pass specific override for this episode
+                                            onSave={handleSaveOverride}
+                                            onReset={handleResetOverride}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
             {/* List */}
             <div className="bg-[#121820] p-6 rounded-2xl border border-white/5">
                 <h3 className="text-xl font-bold text-white mb-4">خريطة الأيام</h3>
@@ -137,3 +191,4 @@ export default function AdminJourney() {
         </div>
     );
 }
+

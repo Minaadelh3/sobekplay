@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import { AppProvider } from './context/AppProvider';
 import { AchievementsProvider } from './context/AchievementsContext';
 import { GameProvider } from './context/GameContext';
+import { NotificationProvider } from './context/NotificationContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AdminRoute } from './components/AdminRoute';
 import { GameRoute } from './components/auth/GameRoute';
@@ -46,6 +47,12 @@ import SoloGameProverb from './pages/games/SoloGameProverb';
 import SoloGameVerse from './pages/games/SoloGameVerse';
 import SoloGameWho from './pages/games/SoloGameWho';
 import SoloGameSobek from './pages/games/SoloGameSobek';
+import MafiaGame from './pages/games/MafiaGame';
+import CharadesGame from './pages/games/CharadesGame';
+import PanicGame from './pages/games/PanicGame';
+import ForbiddenGame from './pages/games/ForbiddenGame';
+import StoryGame from './pages/games/StoryGame';
+import GamePlaceholder from './pages/games/GamePlaceholder';
 import VersusPage from './pages/VersusPage';
 import ProgramPage from './pages/ProgramPage';
 import PrayersPage from './pages/PrayersPage';
@@ -90,131 +97,138 @@ const App: React.FC = () => {
             <OneSignalManager /> {/* Initialize OneSignal */}
             <AchievementsProvider>
               <GameProvider> {/* Inject Game Context */}
-                <ScrollToTop />
-                <Routes>
+                <NotificationProvider>
+                  <ScrollToTop />
+                  <Routes>
 
-                  {/* Individual Games - TOP LEVEL (GameRoute) */}
-                  <Route path="/games" element={
-                    <GameRoute>
-                      <GamesPage />
-                    </GameRoute>
-                  } />
+                    {/* Individual Games - TOP LEVEL (GameRoute) */}
+                    <Route path="/games" element={
+                      <GameRoute>
+                        <GamesPage />
+                      </GameRoute>
+                    } />
 
-                  {/* Specific Game Routes - Can add :id param based routes if needed, ensuring they are Covered by GameRoute */}
-                  {/* Note: In the original, specific games were hardcoded paths. Keeping them here but under GameRoute */}
-                  <Route path="/games/proverb" element={<GameRoute><SoloGameProverb /></GameRoute>} />
-                  <Route path="/games/verse" element={<GameRoute><SoloGameVerse /></GameRoute>} />
-                  <Route path="/games/who" element={<GameRoute><SoloGameWho /></GameRoute>} />
-                  <Route path="/games/sobek" element={<GameRoute><SoloGameSobek /></GameRoute>} />
-                  {/* Dynamic Game Route if you migrate to /games/:id */}
-                  {/* <Route path="/games/:id" element={<GameRoute><GamePlayer /></GameRoute>} /> */}
+                    {/* Specific Game Routes - Can add :id param based routes if needed, ensuring they are Covered by GameRoute */}
+                    {/* Note: In the original, specific games were hardcoded paths. Keeping them here but under GameRoute */}
+                    <Route path="/games/proverb" element={<GameRoute><SoloGameProverb /></GameRoute>} />
+                    <Route path="/games/kamel-elayah" element={<GameRoute><SoloGameVerse /></GameRoute>} />
+                    <Route path="/games/who" element={<GameRoute><SoloGameWho /></GameRoute>} />
+                    <Route path="/games/sobek_intel" element={<GameRoute><SoloGameSobek /></GameRoute>} />
+                    <Route path="/games/mafia" element={<GameRoute><MafiaGame /></GameRoute>} />
+                    <Route path="/games/matlha_law_adak" element={<GameRoute><CharadesGame /></GameRoute>} />
+                    <Route path="/games/oul_besor3a" element={<GameRoute><PanicGame /></GameRoute>} />
+                    <Route path="/games/mamno3at" element={<GameRoute><ForbiddenGame /></GameRoute>} />
+                    <Route path="/games/hekaya_gama3eya" element={<GameRoute><StoryGame /></GameRoute>} />
+                    {/* Dynamic Game Route for all other games */}
+                    <Route path="/games/:id" element={<GameRoute><GamePlaceholder /></GameRoute>} />
 
 
-                  <Route path="/login" element={<LoginPage />} />
+                    <Route path="/login" element={<LoginPage />} />
 
-                  {/* Admin Routes with Nested Layout */}
-                  <Route path="/admin" element={
-                    <AdminRoute>
-                      <AdminLayout />
-                    </AdminRoute>
-                  }>
-                    <Route index element={<AdminOverview />} />
-                    <Route path="teams" element={<TeamsManager />} />
-                    <Route path="teams/:id" element={<AdminTeamDetails />} />
-                    <Route path="activity" element={<AdminActivity />} />
-                    <Route path="users" element={<UsersManager />} />
-                    <Route path="teams" element={<TeamsManager />} />
-                    <Route path="games" element={<GamesManager />} />
-                    <Route path="achievements" element={<AdminAchievements />} />
-                    <Route path="transfers" element={<TransfersCenter />} />
-                    <Route path="roles" element={<RolesManager />} />
-                    <Route path="announcements" element={<AnnouncementsManager />} />
-                    <Route path="flags" element={<FeatureFlagsManager />} />
-                    <Route path="settings" element={<AdminSystemSettings />} />
-                    <Route path="logs" element={<AuditLog />} />
-                    <Route path="analytics" element={<AnalyticsDashboard />} />
-                    <Route path="balancing" element={<GameBalancing />} />
-                    <Route path="notifications" element={<PushNotifications />} />
-                  </Route>
+                    {/* Admin Routes with Nested Layout */}
+                    <Route path="/admin" element={
+                      <AdminRoute>
+                        <AdminLayout />
+                      </AdminRoute>
+                    }>
+                      <Route index element={<AdminOverview />} />
+                      <Route path="teams" element={<TeamsManager />} />
+                      <Route path="teams/:id" element={<AdminTeamDetails />} />
+                      <Route path="activity" element={<AdminActivity />} />
+                      <Route path="users" element={<UsersManager />} />
+                      <Route path="teams" element={<TeamsManager />} />
+                      <Route path="games" element={<GamesManager />} />
+                      <Route path="achievements" element={<AdminAchievements />} />
+                      <Route path="transfers" element={<TransfersCenter />} />
+                      <Route path="roles" element={<RolesManager />} />
+                      <Route path="announcements" element={<AnnouncementsManager />} />
+                      <Route path="flags" element={<FeatureFlagsManager />} />
+                      <Route path="settings" element={<AdminSystemSettings />} />
+                      <Route path="logs" element={<AuditLog />} />
+                      <Route path="analytics" element={<AnalyticsDashboard />} />
+                      <Route path="balancing" element={<GameBalancing />} />
+                      <Route path="notifications" element={<PushNotifications />} />
+                    </Route>
 
-                  {/* Profile Selection (Intermediate Step) */}
-                  <Route path="/onboarding" element={
-                    <ProtectedRoute>
-                      <OnboardingPage />
-                    </ProtectedRoute>
-                  } />
+                    {/* Profile Selection (Intermediate Step) */}
+                    <Route path="/onboarding" element={
+                      <ProtectedRoute>
+                        <OnboardingPage />
+                      </ProtectedRoute>
+                    } />
 
-                  <Route path="/profiles" element={
-                    <ProtectedRoute>
-                      <ProfileSelectionPage />
-                    </ProtectedRoute>
-                  } />
+                    <Route path="/profiles" element={
+                      <ProtectedRoute>
+                        <ProfileSelectionPage />
+                      </ProtectedRoute>
+                    } />
 
-                  {/* Protected User Routes (Under /app) */}
-                  <Route path="/app" element={
-                    <ProtectedRoute>
-                      <MainLayout analyzedPosters={analyzedPosters} isAnalyzing={isAnalyzing} />
-                    </ProtectedRoute>
-                  }>
-                    <Route index element={<Navigate to="home" replace />} />
-                    <Route path="home" element={<HomePage posters={analyzedPosters.filter(p => !p.isComingSoon)} />} />
-                    <Route path="movies" element={<MoviesPage posters={analyzedPosters} />} />
-                    <Route path="movies/:id" element={<TitleDetails posters={analyzedPosters} />} />
+                    {/* Protected User Routes (Under /app) */}
+                    <Route path="/app" element={
+                      <ProtectedRoute>
+                        <MainLayout analyzedPosters={analyzedPosters} isAnalyzing={isAnalyzing} />
+                      </ProtectedRoute>
+                    }>
+                      <Route index element={<Navigate to="home" replace />} />
+                      <Route path="home" element={<HomePage posters={analyzedPosters.filter(p => !p.isComingSoon)} />} />
+                      <Route path="movies" element={<MoviesPage posters={analyzedPosters} />} />
+                      <Route path="movies/:id" element={<TitleDetails posters={analyzedPosters} />} />
 
-                    {/* Moved Games out of here, but keeping link just in case of old links, redirect to /games */}
-                    <Route path="games" element={<Navigate to="/games" replace />} />
-                    <Route path="games/*" element={<Navigate to="/games" replace />} />
+                      {/* Moved Games out of here, but keeping link just in case of old links, redirect to /games */}
+                      <Route path="games" element={<Navigate to="/games" replace />} />
+                      <Route path="games/*" element={<Navigate to="/games" replace />} />
 
-                    <Route path="program" element={<ProgramPage />} />
-                    <Route path="agpeya" element={<PrayersPage />} />
-                    <Route path="rooms" element={<RoomsPage />} />
-                    <Route path="reminders" element={<RemindersPage />} />
+                      <Route path="program" element={<ProgramPage />} />
+                      <Route path="agpeya" element={<PrayersPage />} />
+                      <Route path="rooms" element={<RoomsPage />} />
+                      <Route path="reminders" element={<RemindersPage />} />
 
-                    <Route path="watch/:id" element={<WatchPlayer posters={analyzedPosters} />} />
+                      <Route path="watch/:id" element={<WatchPlayer posters={analyzedPosters} />} />
 
-                    <Route path="smart-games" element={<SmartGamesPage />} />
-                    <Route path="smart-games/:id" element={<SmartGameLevel />} />
+                      <Route path="smart-games" element={<SmartGamesPage />} />
+                      <Route path="smart-games/:id" element={<SmartGameLevel />} />
 
-                    <Route path="series" element={<SeriesPage posters={analyzedPosters} />} />
-                    <Route path="kids" element={<KidsPage />} />
-                    <Route path="my-list" element={<MyListPage posters={analyzedPosters} />} />
-                    <Route path="coming-soon" element={<HomePage posters={analyzedPosters.filter(p => p.isComingSoon)} />} />
-                    <Route path="title/:id" element={<TitleDetails posters={analyzedPosters} />} />
+                      <Route path="series" element={<SeriesPage posters={analyzedPosters} />} />
+                      <Route path="kids" element={<KidsPage />} />
+                      <Route path="my-list" element={<MyListPage posters={analyzedPosters} />} />
+                      <Route path="coming-soon" element={<HomePage posters={analyzedPosters.filter(p => p.isComingSoon)} />} />
+                      <Route path="title/:id" element={<TitleDetails posters={analyzedPosters} />} />
 
-                    <Route path="she3ar-al-re7la" element={<TripAnthem />} />
+                      <Route path="she3ar-al-re7la" element={<TripAnthem />} />
 
-                    <Route path="prayers" element={<PrayersPage />} />
-                    <Route path="policy" element={<PolicyPage />} />
-                    <Route path="subscription" element={<SubscriptionPage />} />
-                    <Route path="news" element={<NewsPage />} />
-                    <Route path="shop" element={<ShopPage />} />
-                    <Route path="about" element={<AboutPage />} />
-                    <Route path="community" element={<CommunityPage />} />
-                    <Route path="help" element={<HelpPage />} />
-                    <Route path="gallery" element={<PhotosPage />} />
-                    <Route path="art" element={<ImageGenPage />} />
-                    <Route path="veo" element={<VeoPage />} />
-                    <Route path="menu" element={<MenuPage />} />
-                    <Route path="notifications" element={<NotificationsPage />} />
-                    <Route path="settings" element={<SettingsPage />} />
-                    <Route path="team-chat" element={<TeamChatPage />} />
-                    <Route path="achievements" element={<AchievementsPage />} />
-                    <Route path="rankings" element={<RankingsPage />} />
-                  </Route>
+                      <Route path="prayers" element={<PrayersPage />} />
+                      <Route path="policy" element={<PolicyPage />} />
+                      <Route path="subscription" element={<SubscriptionPage />} />
+                      <Route path="news" element={<NewsPage />} />
+                      <Route path="shop" element={<ShopPage />} />
+                      <Route path="about" element={<AboutPage />} />
+                      <Route path="community" element={<CommunityPage />} />
+                      <Route path="help" element={<HelpPage />} />
+                      <Route path="gallery" element={<PhotosPage />} />
+                      <Route path="art" element={<ImageGenPage />} />
+                      <Route path="veo" element={<VeoPage />} />
+                      <Route path="menu" element={<MenuPage />} />
+                      <Route path="notifications" element={<NotificationsPage />} />
+                      <Route path="settings" element={<SettingsPage />} />
+                      <Route path="team-chat" element={<TeamChatPage />} />
+                      <Route path="achievements" element={<AchievementsPage />} />
+                      <Route path="rankings" element={<RankingsPage />} />
+                    </Route>
 
-                  {/* Root Redirect */}
-                  <Route path="/" element={
-                    <ProtectedRoute>
-                      <Navigate to="/app/home" replace />
-                    </ProtectedRoute>
-                  } />
+                    {/* Root Redirect */}
+                    <Route path="/" element={
+                      <ProtectedRoute>
+                        <Navigate to="/app/home" replace />
+                      </ProtectedRoute>
+                    } />
 
-                  {/* Catch-all Redirect */}
-                  <Route path="*" element={<Navigate to="/login" replace />} />
+                    {/* Catch-all Redirect */}
+                    <Route path="*" element={<Navigate to="/login" replace />} />
 
-                </Routes>
-                <TeamChatPopup />
-                <TeamBroadcastListener />
+                  </Routes>
+                  <TeamChatPopup />
+                  <TeamBroadcastListener />
+                </NotificationProvider>
               </GameProvider>
             </AchievementsProvider>
           </AppProvider>

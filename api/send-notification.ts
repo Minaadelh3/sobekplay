@@ -33,7 +33,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     try {
-        const { title, message, targetType, externalUserId, include_external_user_ids, metadata } = req.body;
+        const { title, message, targetType, targetId, externalUserId, include_external_user_ids, metadata } = req.body;
 
         // 4. Validation
         if (!title || !message) {
@@ -72,7 +72,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             title,
             message,
             targetType: targetType || 'ALL',
-            // If SPECIFIC_USER, store array of IDs. If null/undefined, it's global/segment.
+            // Store targetId for TEAM targeting (singular ID)
+            targetId: targetType === 'TEAM' ? targetId : null,
+            // Store targetIds array for SPECIFIC_USER (multiple IDs possible)
             targetIds: targetType === 'SPECIFIC_USER' ? targetIds : null,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             metadata: metadata || {},
