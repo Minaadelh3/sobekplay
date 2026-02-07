@@ -1,6 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { db } from '../lib/firebaseAdmin';
-import * as admin from 'firebase-admin';
+import { getDb, getFieldValue } from '../lib/firebaseAdmin';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 1. CORS Headers (Security)
@@ -23,16 +22,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    // 3. Environment Variables Check
-    const API_KEY = process.env.ONESIGNAL_REST_API_KEY;
-    const APP_ID = process.env.ONESIGNAL_APP_ID;
-
-    if (!API_KEY || !APP_ID) {
-        console.error("Missing OneSignal Config", { API_KEY: !!API_KEY, APP_ID: !!APP_ID });
-        return res.status(500).json({ error: 'Server Misconfiguration' });
-    }
-
     try {
+        // 3. Environment Variables Check
+        const API_KEY = process.env.ONESIGNAL_REST_API_KEY;
+        const APP_ID = process.env.ONESIGNAL_APP_ID;
+
+        if (!API_KEY || !APP_ID) {
+            console.error("Missing OneSignal Config", { API_KEY: !!API_KEY, APP_ID: !!APP_ID });
+            return res.status(500).json({ error: 'Server Misconfiguration: OneSignal Keys Missing' });
+        }
+
         const { title, message, targetType, targetId, externalUserId, include_external_user_ids, metadata } = req.body;
 
         // 4. Validation
@@ -68,6 +67,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         // 6. PERSISTENCE FIRST (Source of Truth)
         // We create the document in Firestore first.
+        // Initialize DB lazily here to catch errors if Firebase Admin fails
+        const db = getDb();
+        const FieldValue = getFieldValue();
+
         const notificationDoc = {
             title,
             message,
@@ -76,7 +79,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             targetId: targetType === 'TEAM' ? targetId : null,
             // Store targetIds array for SPECIFIC_USER (multiple IDs possible)
             targetIds: targetType === 'SPECIFIC_USER' ? targetIds : null,
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            createdAt: FieldValue.serverTimestamp(),
             metadata: metadata || {},
             sentViaOneSignal: false, // Default false, updated after send
             oneSignalId: null
@@ -103,8 +106,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (response.ok) {
             await docRef.update({
                 sentViaOneSignal: true,
-                oneSignalId: data.id,
-                recipientsCount: data.recipients
+                oneSignalId: data.id || null,
+                recipientsCount: data.recipients || 0
             });
             console.log(`✅ OneSignal Sent: ${data.id}`);
             return res.status(200).json({ success: true, id: data.id, firestoreId: docRef.id });
@@ -121,6 +124,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     } catch (error: any) {
         console.error("Send Notification Error:", error);
-        return res.status(500).json({ error: error.message || 'Internal Server Error' });
+        // This will now catch Firebase Init errors too
+        return res.status(500).json({
+            error: error.message || 'Internal Server Error',
+            type: error.code || 'UNKNOWN'
+        });
     }
 }

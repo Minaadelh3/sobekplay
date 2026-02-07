@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "api": "tsx scripts/local-api.ts",
+    "api": "tsx watch scripts/local-api.ts",
     "dev:all": "concurrently \"npm run dev\" \"npm run api\"",
     "build": "vite build",
     "preview": "vite preview",

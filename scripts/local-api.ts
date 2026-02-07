@@ -12,7 +12,9 @@ const __dirname = path.dirname(__filename);
 // Load env vars from root .env and .env.local
 const envPath = path.resolve(__dirname, '../.env');
 const envLocalPath = path.resolve(__dirname, '../.env.local');
+const serviceAccountPath = path.resolve(__dirname, '../service-account.json');
 
+console.log(`Local API: Loading env from ${envPath}`);
 dotenv.config({ path: envPath });
 dotenv.config({ path: envLocalPath, override: true });
 
@@ -21,6 +23,25 @@ console.log("- ONESIGNAL_APP_ID:", process.env.ONESIGNAL_APP_ID ? "Found" : "MIS
 console.log("- ONESIGNAL_REST_API_KEY:", process.env.ONESIGNAL_REST_API_KEY ? "Found" : "MISSING (Required for Push)");
 console.log("- GEMINI_API_KEY:", process.env.GEMINI_API_KEY ? "Found" : "MISSING");
 console.log("- GROQ_API_KEY:", process.env.GROQ_API_KEY ? "Found" : "MISSING");
+console.log("- FIREBASE_SERVICE_ACCOUNT:", process.env.FIREBASE_SERVICE_ACCOUNT ? `Found (Length: ${process.env.FIREBASE_SERVICE_ACCOUNT.length})` : "MISSING");
+
+// Robust Credential Loading Strategy
+import fs from 'fs';
+if (fs.existsSync(serviceAccountPath)) {
+    console.log(`✅ Found service-account.json at ${serviceAccountPath}`);
+    // Set this so Firebase Admin SDK picks it up automatically
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = serviceAccountPath;
+} else if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    // Existing logic for env var...
+    try {
+        JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        console.log("✅ FIREBASE_SERVICE_ACCOUNT is valid JSON");
+    } catch (e: any) {
+        console.error("❌ FIREBASE_SERVICE_ACCOUNT is NOT valid JSON:", e.message);
+    }
+} else {
+    console.error("❌ CRITICAL: No credentials found (checked .env and service-account.json).");
+}
 
 // Import handlers
 import sendNotification from '../api/send-notification.ts';
@@ -32,6 +53,12 @@ const PORT = 3001;
 app.use(cors());
 app.use(express.json());
 
+// Request Logger
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    next();
+});
+
 // Wrapper to adapt Vercel function signature to Express
 const handleVercel = (handler: any) => async (req: any, res: any) => {
     try {
@@ -39,7 +66,7 @@ const handleVercel = (handler: any) => async (req: any, res: any) => {
     } catch (e: any) {
         console.error("API Handler Error:", e);
         if (!res.headersSent) {
-            res.status(500).json({ error: e.message });
+            res.status(500).json({ error: e.message || "Unknown API Error" });
         }
     }
 };
@@ -47,6 +74,17 @@ const handleVercel = (handler: any) => async (req: any, res: any) => {
 // Routes
 app.post('/api/send-notification', handleVercel(sendNotification));
 app.post('/api/chat', handleVercel(chatHandler));
+
+// Health Check
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', time: new Date().toISOString() });
+});
+
+// Global Error Handler
+app.use((err: any, req: any, res: any, next: any) => {
+    console.error("Global Server Error:", err);
+    res.status(500).json({ error: "Internal Server Error", details: err.message });
+});
 
 app.listen(PORT, () => {
     console.log(`
