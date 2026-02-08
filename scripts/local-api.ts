@@ -56,6 +56,9 @@ app.use(express.json());
 // Request Logger
 app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    if (req.method === 'POST' || req.method === 'PUT') {
+        console.log('📦 Body:', JSON.stringify(req.body, null, 2).substring(0, 500)); // Log first 500 chars
+    }
     next();
 });
 
@@ -93,7 +96,7 @@ app.use((err: any, req: any, res: any, next: any) => {
     }
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`
     🚀 Local API Server running at http://localhost:${PORT}
     proxied by Vite (port 3000) -> /api/* -> http://localhost:${PORT}/api/*
