@@ -44,7 +44,6 @@ if (fs.existsSync(serviceAccountPath)) {
 }
 
 // Import handlers
-import sendNotification from '../api/send-notification.ts';
 import chatHandler from '../api/chat.ts';
 
 const app = express();
@@ -75,7 +74,7 @@ const handleVercel = (handler: any) => async (req: any, res: any) => {
 };
 
 // Routes
-app.post('/api/send-notification', handleVercel(sendNotification));
+// app.post('/api/send-notification', handleVercel(sendNotification));
 app.post('/api/chat', handleVercel(chatHandler));
 
 // Health Check

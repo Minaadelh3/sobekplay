@@ -23,7 +23,7 @@ export function useOneSignal() {
         if (isInitialized) return;
 
         const initOneSignal = async () => {
-            // 1. Abort if Offline (Prevents Network Errors)
+            // 1. Abort if Offline
             if (typeof window !== 'undefined' && !navigator.onLine) {
                 console.log("📴 [OneSignal] Offline, skipping init.");
                 return;
@@ -32,22 +32,33 @@ export function useOneSignal() {
             console.log("🔔 [OneSignal] Initializing...");
 
             try {
-                // 2. Timeout Wrapper: If OneSignal script is blocked, don't wait forever
-                const initPromise = OneSignal.init({
+                // 2. Initialize with specific worker path
+                await OneSignal.init({
                     appId: ONESIGNAL_APP_ID,
                     allowLocalhostAsSecureOrigin: true,
-                    serviceWorkerPath: 'sw.js',
+                    // IMPORTANT: Point to the file created in public/
+                    serviceWorkerPath: 'OneSignalSDKWorker.js',
                     serviceWorkerParam: { scope: '/' },
                     promptOptions: {
-                        slidedown: { prompts: [] }
+                        slidedown: {
+                            prompts: [
+                                {
+                                    type: "push",
+                                    autoPrompt: false, // We will trigger manually or via specific UI flow
+                                    text: {
+                                        actionMessage: "Get notified about new games and updates!",
+                                        acceptButton: "Allow",
+                                        cancelButton: "Later"
+                                    },
+                                    delay: {
+                                        pageViews: 1,
+                                        timeDelay: 30
+                                    }
+                                }
+                            ]
+                        }
                     },
                 });
-
-                // Race against a 3s timeout
-                await Promise.race([
-                    initPromise,
-                    new Promise((_, reject) => setTimeout(() => reject(new Error("OneSignal Init Timeout")), 5000))
-                ]);
 
                 setIsInitialized(true);
                 setIsSupported(OneSignal.Notifications.isPushSupported());
@@ -60,14 +71,13 @@ export function useOneSignal() {
                 OneSignal.Notifications.addEventListener("permissionChange", updateState);
 
             } catch (error) {
-                // Suppress excessive noise for known network blocks
-                console.warn("⚠️ [OneSignal] Init Failed (likely AdBlock/Network):", error);
-                setIsSupported(false);
+                console.warn("⚠️ [OneSignal] Init Failed:", error);
+                // Don't disable support flag based on init failure alone, as it might be network
             }
         };
 
         if (typeof window !== 'undefined') {
-            // Small delay to allow main thread to settle
+            // Small delay to ensure page load
             setTimeout(initOneSignal, 1000);
         }
 
@@ -76,7 +86,6 @@ export function useOneSignal() {
     const updateState = useCallback(async () => {
         try {
             // Permission
-            // OneSignal wraps this, but we can also use native for raw truth
             const rawPermission = Notification.permission;
             setPermission(rawPermission as PermissionState);
 
@@ -84,14 +93,12 @@ export function useOneSignal() {
             const subId = OneSignal.User.PushSubscription.id;
             const optedIn = OneSignal.User.PushSubscription.optedIn;
 
-            // We consider them "Subscribed" only if they have an ID and are opted in
             if (subId && optedIn) {
                 setSubscriptionId(subId);
             } else {
                 setSubscriptionId(null);
             }
 
-            // Update supported flag again just in case
             setIsSupported(OneSignal.Notifications.isPushSupported());
 
         } catch (e) {
@@ -108,6 +115,11 @@ export function useOneSignal() {
             console.log(`👤 OneSignal: Logging in as ${firebaseUser.uid}`);
             try {
                 OneSignal.login(firebaseUser.uid);
+                // Add default tags
+                OneSignal.User.addTags({
+                    user_type: 'registered',
+                    last_login: new Date().toISOString()
+                });
             } catch (e) {
                 console.warn("OneSignal login error", e);
             }
@@ -127,9 +139,8 @@ export function useOneSignal() {
 
         console.log("🔔 Requesting Notification Permission...");
         try {
-            // This triggers the native prompt
+            // This triggers the native prompt or slidedown depending on config
             await OneSignal.Notifications.requestPermission();
-            // Force an update after
             await updateState();
         } catch (e) {
             console.error("OneSignal Prompt Error", e);
