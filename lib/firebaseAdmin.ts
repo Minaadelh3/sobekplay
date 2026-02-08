@@ -1,76 +1,45 @@
 import admin from 'firebase-admin';
 
-// Helper to initialize on demand
-const initFirebase = () => {
-    // Debug logging
-    console.log("🔥 [Firebase Admin] Init check. Admin type:", typeof admin);
-    console.log("🔥 [Firebase Admin] Admin keys:", admin ? Object.keys(admin) : "null");
-    if (admin && (admin as any).default) {
-        console.log("🔥 [Firebase Admin] Possible ESM mismatch. 'admin.default' exists.");
-    }
+let app: admin.app.App | null = null;
 
-    // Safety check for admin object
-    if (!admin) {
-        throw new Error("Firebase Admin SDK failed to load.");
-    }
+function initFirebase() {
+  if (app) return app;
 
-    // Check for apps safely
-    const apps = admin.apps;
-    console.log("🔥 [Firebase Admin] Apps:", apps);
+  const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
 
-    if (apps && apps.length) return;
+  if (!serviceAccount) {
+    throw new Error('FIREBASE_SERVICE_ACCOUNT env var is missing');
+  }
 
-    try {
-        let serviceAccount;
+  let parsedServiceAccount;
+  try {
+    parsedServiceAccount = JSON.parse(serviceAccount);
+  } catch {
+    throw new Error('FIREBASE_SERVICE_ACCOUNT must be valid JSON');
+  }
 
-        if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-            try {
-                serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-            } catch (jsonError) {
-                console.error("❌ [Firebase Admin] Failed to parse FIREBASE_SERVICE_ACCOUNT env var. It must be valid JSON.");
-                throw new Error("Invalid FIREBASE_SERVICE_ACCOUNT JSON");
-            }
-        }
+  app = admin.initializeApp({
+    credential: admin.credential.cert(parsedServiceAccount),
+  });
 
-        if (serviceAccount) {
-            admin.initializeApp({
-                credential: admin.credential.cert(serviceAccount)
-            });
-            console.log("🔥 [Firebase Admin] Initialized with Service Account");
-        } else {
-            // Fallback for local development or if Google Application Credentials are set automatically
-            console.warn("⚠️ [Firebase Admin] No FIREBASE_SERVICE_ACCOUNT. Trying default credentials...");
-            admin.initializeApp();
-        }
-    } catch (error) {
-        console.error("❌ [Firebase Admin] Initialization Error:", error);
-        throw error; // Re-throw so the caller knows it failed
-    }
-};
+  return app;
+}
 
-// Lazy Getters
-export const getDb = () => {
-    initFirebase();
-    // Handle ESM/CJS interop for namespace access
-    const _admin = (admin as any).default || admin;
-    return _admin.firestore();
-};
+export function getDb() {
+  const app = initFirebase();
+  return app.firestore();
+}
 
-export const getAuth = () => {
-    initFirebase();
-    const _admin = (admin as any).default || admin;
-    return _admin.auth();
-};
+export function getAuth() {
+  const app = initFirebase();
+  return app.auth();
+}
 
-export const getMessaging = () => {
-    initFirebase();
-    const _admin = (admin as any).default || admin;
-    return _admin.messaging();
-};
+export function getMessaging() {
+  const app = initFirebase();
+  return app.messaging();
+}
 
-// Export FieldValue safely
-export const getFieldValue = () => {
-    const _admin = (admin as any).default || admin;
-    return _admin.firestore.FieldValue;
-};
-
+export function getFieldValue() {
+  return admin.firestore.FieldValue;
+}
