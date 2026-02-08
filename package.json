@@ -4,9 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently \"vite\" \"npm run api\"",
     "api": "tsx watch scripts/local-api.ts",
-    "dev:all": "concurrently \"npm run dev\" \"npm run api\"",
     "build": "vite build",
     "preview": "vite preview",
     "cap": "cap"
