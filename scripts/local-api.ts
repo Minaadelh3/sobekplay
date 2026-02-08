@@ -80,10 +80,17 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
+// 404 Handler (Force JSON)
+app.use((req, res) => {
+    res.status(404).json({ error: "Not Found", path: req.path });
+});
+
 // Global Error Handler
 app.use((err: any, req: any, res: any, next: any) => {
     console.error("Global Server Error:", err);
-    res.status(500).json({ error: "Internal Server Error", details: err.message });
+    if (!res.headersSent) {
+        res.status(500).json({ error: "Internal Server Error", details: err.message });
+    }
 });
 
 app.listen(PORT, () => {

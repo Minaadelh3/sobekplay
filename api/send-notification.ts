@@ -3,6 +3,7 @@ import { getDb, getFieldValue } from '../lib/firebaseAdmin';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 1. CORS Headers (Security)
+    console.log(`🔔 [Notification API] Hit: ${req.method}`);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Origin', '*'); // Adjust this in production to your domain
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
