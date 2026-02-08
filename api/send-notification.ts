@@ -1,5 +1,4 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import fetch from 'node-fetch';
 import { getDb, getFieldValue } from '../lib/firebaseAdmin';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -17,6 +16,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method === 'OPTIONS') {
         res.status(200).end();
         return;
+    }
+
+    // Health Check (Temporary)
+    if (req.method === 'GET') {
+        return res.status(200).json({ status: 'ok', message: 'Notification API is running (Node Runtime)' });
     }
 
     // 2. Only allow POST
