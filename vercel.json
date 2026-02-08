@@ -1,8 +1,13 @@
 {
-    "rewrites": [
-        {
-            "source": "/((?!api/|assets/|sw.js|manifest.json|OneSignalSDKWorker.js|icons/).*)",
-            "destination": "/index.html"
-        }
-    ]
+  "functions": {
+    "api/**/*.ts": {
+      "nodeVersion": "18.x"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/((?!api/|assets/|sw.js|manifest.json|OneSignalSDKWorker.js|icons/).*)",
+      "destination": "/index.html"
+    }
+  ]
 }
