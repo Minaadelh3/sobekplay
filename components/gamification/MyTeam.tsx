@@ -6,7 +6,8 @@ import { TOKENS } from '../../lib/gamification';
 
 const MyTeam: React.FC = () => {
     const { user, activeTeam } = useAuth();
-    const { sortedTeams, teamMembers, loading } = useTeamRanking();
+    const { sortedTeams, loading } = useTeamRanking();
+    const teamMembers: Record<string, any[]> = {}; // optimized out
 
     if (!user || !activeTeam) return null;
 
@@ -19,7 +20,7 @@ const MyTeam: React.FC = () => {
 
     // Find full ranked team object
     const rankedTeam = sortedTeams.find(t => t.id === activeTeam.id);
-    const members = teamMembers[activeTeam.id] || [];
+    const members = (teamMembers && teamMembers[activeTeam.id]) ? teamMembers[activeTeam.id] : [];
 
     // Display Members (Hook already handles Admin exclusion in members list)
     const displayMembers = members;

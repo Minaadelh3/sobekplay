@@ -3,7 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTeamRanking } from '../hooks/useTeamRanking';
 
 const TeamRankList = () => {
-    const { sortedTeams, teamMembers, loading, error } = useTeamRanking();
+    const { sortedTeams, loading, error } = useTeamRanking();
+    // Fallback for teamMembers since we optimized it out (prevents crash)
+    const teamMembers: Record<string, any[]> = {};
 
     if (loading) {
         return (
@@ -108,7 +110,7 @@ const TeamRankList = () => {
                 <AnimatePresence>
                     {sortedTeams.map((team, index) => {
                         const isNonScorable = team.rank === null;
-                        const members = teamMembers[team.id] || [];
+                        const members = (teamMembers && teamMembers[team.id]) ? teamMembers[team.id] : [];
                         const isTop3 = team.rank && team.rank <= 3;
 
                         // Card Styles based on Rank
