@@ -16,7 +16,7 @@ import { awardPoints } from '../services/scoring/scoreEngine';
 
 // --- Types ---
 
-export type TransactionType = 'ADJUSTMENT' | 'TRANSFER' | 'GAME_REWARD' | 'TEAM_REWARD' | 'SYSTEM_RESET' | 'ROLLBACK' | 'ACHIEVEMENT_REWARD';
+export type TransactionType = 'ADJUSTMENT' | 'TRANSFER' | 'GAME_REWARD' | 'TEAM_REWARD' | 'SYSTEM_RESET' | 'ROLLBACK' | 'ACHIEVEMENT_REWARD' | 'BAN_USER' | 'UNBAN_USER' | 'CREATE_TEAM';
 export type EntityType = 'SYSTEM' | 'TEAM' | 'USER';
 
 export interface LedgerEntry {
