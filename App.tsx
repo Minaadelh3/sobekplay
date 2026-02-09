@@ -21,7 +21,7 @@ import LoadingSpinner from './components/LoadingSpinner';
 
 // Lazy Load Pages
 const LoginPage = lazy(() => import('./pages/LoginPage'));
-const OnboardingPage = lazy(() => import('./pages/OnboardingPage'));
+
 const ProfileSelectionPage = lazy(() => import('./pages/ProfileSelectionPage'));
 
 // Admin Pages
