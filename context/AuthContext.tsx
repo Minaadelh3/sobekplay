@@ -229,8 +229,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                 setRoleLoading(false);
                 setRoleReady(true);
-                setAuthLoading(false);
-                setAuthReady(true);
+
+                // CRITICAL FIX: Do NOT set Auth Ready if we have a team ID.
+                // Wait for the Team Listener to fire first.
+                // This prevents ProtectedRoute from seeing "No Team" momentarily and redirecting to /profiles
+                if (!appUser.teamId) {
+                    setAuthLoading(false);
+                    setAuthReady(true);
+                } else {
+                    log(`⏳ [AUTH] User has team (${appUser.teamId}), waiting for Team Listener...`);
+                }
             }, (err) => {
                 console.error("❌ [AUTH] Profile Snapshot Error:", err);
                 setRoleLoading(false);
@@ -261,6 +269,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         points: data.xp || data.points || 0 // Prefer XP, fallback to points
                     } as TeamProfile));
                 }
+
+                // FORCE READY (Fix for Redirect Issue)
+                // Once we have the team (or failed to get it), we are ready.
+                setAuthLoading(false);
+                setAuthReady(true);
             }, (err) => {
                 console.error("❌ [AUTH] Team Snapshot Error:", err);
             });
