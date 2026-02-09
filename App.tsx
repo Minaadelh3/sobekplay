@@ -172,11 +172,6 @@ const App: React.FC = () => {
                       </Route>
 
                       {/* Profile Selection (Intermediate Step) */}
-                      <Route path="/onboarding" element={
-                        <ProtectedRoute>
-                          <OnboardingPage />
-                        </ProtectedRoute>
-                      } />
 
                       <Route path="/profiles" element={
                         <ProtectedRoute>

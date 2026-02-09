@@ -22,15 +22,9 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
         return <Navigate to="/login" state={{ from: location.pathname }} replace />;
     }
 
-    // 3. Check Onboarding Status (NEW STEP)
-    // If user is NOT onboarded, and is NOT currently on the onboarding page -> Block and Redirect.
-    if (!user.isOnboarded && location.pathname !== '/onboarding') {
-        return <Navigate to="/onboarding" replace />;
-    }
-
-    // 4. Check Team (if onboarded but no team selected - logic shift)
+    // 3. Check Team (if onboarded but no team selected - logic shift)
     // If we are ONBOARDED, but no Team, and not on profiles/onboarding -> Profiles
-    if (user.isOnboarded && !selectedTeam && location.pathname !== '/profiles' && location.pathname !== '/onboarding') {
+    if (user.isOnboarded && !selectedTeam && location.pathname !== '/profiles') {
         return <Navigate to="/profiles" replace />;
     }
 

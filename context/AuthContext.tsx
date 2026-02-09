@@ -138,9 +138,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         uid: fUser.uid,
                         email: fUser.email || "",
                         displayName: fUser.displayName || "New User",
+                        nickname: fUser.displayName || "Player", // Default Nickname
+                        avatarUrl: fUser.photoURL || "https://api.dicebear.com/7.x/avataaars/svg?seed=" + fUser.uid, // Default Avatar
                         role: "USER",
                         status: "active",
                         teamId: null,
+                        isOnboarded: true, // AUTO-ONBOARDING: Skip onboarding page
                         provider: fUser.providerData[0]?.providerId || 'unknown',
                         createdAt: serverTimestamp(),
                         lastLogin: serverTimestamp(),
