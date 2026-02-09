@@ -2,6 +2,9 @@ import React from 'react';
 import { useTabReset } from '../hooks/useTabReset';
 import { motion, Variants } from 'framer-motion';
 import BackButton from '../components/BackButton';
+import { useAuth } from '../context/AuthContext';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 const TripAnthem: React.FC = () => {
   // Animation for verses
@@ -32,6 +35,37 @@ const TripAnthem: React.FC = () => {
   }, []);
 
   useTabReset('/she3ar-al-re7la', handleTabReset);
+
+  // SoundCloud Link Logic
+  const { user, isAdmin } = useAuth();
+  const [soundcloudLink, setSoundcloudLink] = React.useState("https://soundcloud.com/ahmed-ismail-19/ekadoli-nubian-song");
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [newLink, setNewLink] = React.useState("");
+
+  // Check permissions: Admin or Uncle Joy Team
+  const canEdit = isAdmin || user?.teamId === 'uncle_joy';
+
+  // Listen for Link Updates
+  React.useEffect(() => {
+    const unsub = onSnapshot(doc(db, "content", "tripAnthem"), (doc) => {
+      if (doc.exists() && doc.data().soundcloudLink) {
+        setSoundcloudLink(doc.data().soundcloudLink);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  const handleSaveLink = async () => {
+    if (!newLink.trim()) return;
+    try {
+      await setDoc(doc(db, "content", "tripAnthem"), { soundcloudLink: newLink }, { merge: true });
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error saving link:", error);
+      alert("Failed to save link.");
+    }
+  };
+
 
   return (
     <div key={resetKey} className="min-h-screen bg-[#050505] text-white font-arabic safe-area-pb selection:bg-amber-500/30 overflow-x-hidden flex flex-col relative" dir="rtl">
@@ -202,20 +236,63 @@ const TripAnthem: React.FC = () => {
           {/* SoundCloud Link */}
           <motion.div
             variants={verseVars}
-            className="flex justify-center pt-8"
+            className="flex flex-col items-center gap-4 pt-8"
           >
-            <a
-              href="https://soundcloud.com/ahmed-ismail-19/ekadoli-nubian-song"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group relative flex items-center justify-center w-24 h-24 bg-[#ff7700] rounded-full shadow-2xl shadow-orange-600/40 transition-all duration-300 hover:scale-110 hover:shadow-orange-600/60 active:scale-95"
-              aria-label="Play on SoundCloud"
-            >
-              <div className="absolute inset-0 rounded-full border-4 border-white/20 scale-110 group-hover:scale-125 opacity-0 group-hover:opacity-100 transition-all duration-500" />
-              <svg className="w-12 h-12 text-white fill-current ml-1" viewBox="0 0 24 24">
-                <path d="M19.3,10.8c-0.2,0-0.4,0-0.6,0.1c-0.7-2.6-3.1-4.4-5.9-4.4c-2.3,0-4.3,1.2-5.4,3.1C7.1,9.4,6.8,9.4,6.5,9.4c-2.7,0-4.9,2.2-4.9,4.9 s2.2,4.9,4.9,4.9h12.8c2.4,0,4.4-2,4.4-4.4S21.7,10.8,19.3,10.8z" />
-              </svg>
-            </a>
+            {isEditing ? (
+              <div className="flex flex-col items-center gap-2 bg-white/10 p-4 rounded-xl border border-white/20 w-full max-w-md">
+                <input
+                  type="text"
+                  value={newLink}
+                  onChange={(e) => setNewLink(e.target.value)}
+                  placeholder="Paste SoundCloud URL here..."
+                  className="w-full bg-black/50 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-amber-500"
+                />
+                <div className="flex gap-2 w-full">
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-bold transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveLink}
+                    className="flex-1 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-black rounded-lg font-bold transition-colors"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="relative group/container">
+                <a
+                  href={soundcloudLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group relative flex items-center justify-center w-24 h-24 bg-[#ff7700] rounded-full shadow-2xl shadow-orange-600/40 transition-all duration-300 hover:scale-110 hover:shadow-orange-600/60 active:scale-95"
+                  aria-label="Play on SoundCloud"
+                >
+                  <div className="absolute inset-0 rounded-full border-4 border-white/20 scale-110 group-hover:scale-125 opacity-0 group-hover:opacity-100 transition-all duration-500" />
+                  <svg className="w-12 h-12 text-white fill-current ml-1" viewBox="0 0 24 24">
+                    <path d="M19.3,10.8c-0.2,0-0.4,0-0.6,0.1c-0.7-2.6-3.1-4.4-5.9-4.4c-2.3,0-4.3,1.2-5.4,3.1C7.1,9.4,6.8,9.4,6.5,9.4c-2.7,0-4.9,2.2-4.9,4.9 s2.2,4.9,4.9,4.9h12.8c2.4,0,4.4-2,4.4-4.4S21.7,10.8,19.3,10.8z" />
+                  </svg>
+                </a>
+
+                {canEdit && (
+                  <button
+                    onClick={() => {
+                      setNewLink(soundcloudLink);
+                      setIsEditing(true);
+                    }}
+                    className="absolute -top-2 -right-2 bg-white text-black p-2 rounded-full shadow-lg opacity-0 group-hover/container:opacity-100 transition-opacity hover:bg-gray-100"
+                    title="Edit Link"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            )}
           </motion.div>
 
         </motion.div>
