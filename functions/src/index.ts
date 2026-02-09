@@ -1,6 +1,9 @@
-// import * as functions from "firebase-functions";
-// import * as admin from "firebase-admin";
-// import fetch from "node-fetch";
+import * as admin from "firebase-admin";
+
+admin.initializeApp();
+
+export * from "./admin/userManagement";
+
 
 // admin.initializeApp();
 // const db = admin.firestore();
@@ -74,5 +77,5 @@
 //     } catch (error: any) {
 //         console.error("Error sending notification:", error);
 //         res.status(500).send({ error: error.message });
-//     }
-// });
+// Triggers
+export { onUserUpdate } from './triggers/onUserUpdate';

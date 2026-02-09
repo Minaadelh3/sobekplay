@@ -1,34 +1,22 @@
+import admin from 'firebase-admin';
+import { createRequire } from 'module';
 
-import { initializeApp } from "firebase/app";
-import { getFirestore, collection, getDocs, doc, writeBatch } from "firebase/firestore";
-import * as dotenv from 'dotenv';
-import path from 'path';
+const require = createRequire(import.meta.url);
+const serviceAccount = require('../service-account.json');
 
-// Load env vars from .env file in root
-dotenv.config({ path: path.resolve(process.cwd(), '.env') });
-
-const firebaseConfig = {
-    apiKey: process.env.VITE_FIREBASE_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-    authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-    projectId: process.env.VITE_FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET || process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-    appId: process.env.VITE_FIREBASE_APP_ID || process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-};
-
-if (!firebaseConfig.apiKey) {
-    console.error("❌ Missing Firebase Configuration. Check .env file.");
-    process.exit(1);
+if (!admin.apps?.length) {
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+    });
 }
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const db = admin.firestore();
 
 async function recalcTeamXP() {
-    console.log("🚀 Starting Team XP Recalculation...");
+    console.log("🚀 Starting Team XP Recalculation (Admin SDK)...");
 
     // 1. Fetch all users
-    const usersSnap = await getDocs(collection(db, "users"));
+    const usersSnap = await db.collection("users").get();
     console.log(`📊 Found ${usersSnap.size} users.`);
 
     // 2. Aggregate XP by Team
@@ -37,7 +25,8 @@ async function recalcTeamXP() {
     usersSnap.forEach(doc => {
         const data = doc.data();
         const teamId = data.teamId;
-        const xp = data.xp || data.points || 0; // Fallback to points if XP missing, but prefer XP
+        // Use the exact same logic as the sync script: XP is truth
+        const xp = data.xp || 0;
 
         if (teamId) {
             if (!teamXP[teamId]) teamXP[teamId] = 0;
@@ -48,19 +37,21 @@ async function recalcTeamXP() {
     console.log("∑ Calculated Team XP:", teamXP);
 
     // 3. Update Teams
-    const batch = writeBatch(db);
+    const batch = db.batch();
     let updateCount = 0;
 
     for (const [teamId, xp] of Object.entries(teamXP)) {
-        if (teamId === 'uncle_joy') continue; // Skip admin team if needed
+        // REMOVED: if (teamId === 'uncle_joy') continue; 
 
-        const teamRef = doc(db, "teams", teamId);
-        // Update both fields for safety
+        const teamRef = db.collection("teams").doc(teamId);
+
+        // Sync everything: xp, points, totalPoints
         batch.update(teamRef, {
             xp: xp,
             points: xp,
             totalPoints: xp
         });
+
         updateCount++;
         console.log(`📝 Queueing update for Team ${teamId}: ${xp} XP`);
     }
@@ -77,4 +68,4 @@ async function recalcTeamXP() {
     }
 }
 
-recalcTeamXP();
+recalcTeamXP().catch(console.error);

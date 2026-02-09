@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { getCharactersByCategory, CATEGORIES, WhoCategory, WhoCharacter } from '../../data/who';
 import { useAuth } from '../../context/AuthContext';
-import { performTransaction } from '../../lib/ledger';
+import { awardPoints } from '../../services/scoring/scoreEngine';
 import { doc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import confetti from 'canvas-confetti';
@@ -87,19 +87,14 @@ export default function WhoGame() {
             // SAVE SCORE
             if (user && points > 0) {
                 try {
-                    await performTransaction({
-                        type: 'GAME_REWARD',
-                        amount: points,
-                        from: { type: 'SYSTEM', id: 'game_engine', name: 'Who Game' },
-                        to: { type: 'USER', id: user.id, name: user.name },
+                    // NEW: Unified Scoring
+                    await awardPoints({
+                        userId: user.id,
+                        actionType: 'GAME_WHO',
+                        points: points,
+                        idempotencyKey: `GAME:WHO:${user.id}:${currentChar?.id}:${Date.now()}`,
                         reason: `Who Game: ${currentChar?.name}`,
                         metadata: { gameId: 'who', characterId: currentChar?.id, clues: visibleClues }
-                    });
-
-                    const userRef = doc(db, 'users', user.id);
-                    await updateDoc(userRef, {
-                        xp: increment(points),
-                        score: increment(points)
                     });
                 } catch (err) {
                     console.error("Score save failed", err);

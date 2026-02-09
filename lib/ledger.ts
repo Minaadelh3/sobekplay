@@ -12,6 +12,7 @@ import {
     increment
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { awardPoints } from '../services/scoring/scoreEngine';
 
 // --- Types ---
 
@@ -57,64 +58,35 @@ export async function performTransaction(
     if (params.amount <= 0) throw new Error("المبلغ لازم يكون أكبر من صفر");
     if (!params.reason || params.reason.length < 3) throw new Error("لازم تكتب سبب واضح للعملية");
 
-    await runTransaction(db, async (transaction) => {
-        // References
-        const ledgerRef = doc(collection(db, 'ledger'));
-        const fromRef = params.from.type === 'USER' ? doc(db, 'users', params.from.id) :
-            params.from.type === 'TEAM' ? doc(db, 'teams', params.from.id) : null;
-        const toRef = params.to.type === 'USER' ? doc(db, 'users', params.to.id) :
-            params.to.type === 'TEAM' ? doc(db, 'teams', params.to.id) : null;
-
-        // 1. Validate & Deduct from Sender (if not SYSTEM)
-        if (fromRef && params.from.type !== 'SYSTEM') {
-            const fromSnap = await transaction.get(fromRef);
-            if (!fromSnap.exists()) throw new Error(`المصدر مش موجود: ${params.from.name}`);
-
-            const currentBalance = fromSnap.data().points || 0;
-            const currentXP = fromSnap.data().xp || 0;
-
-            // Prevent negative balance check could go here if strict
-            // if (currentBalance < params.amount) throw new Error("رصيد المصدر غير كافي");
-
-            transaction.update(fromRef, {
-                points: currentBalance - params.amount,
-                xp: currentXP - params.amount
-            });
-        }
-
-        // 2. Add to Receiver (if not SYSTEM)
-        if (toRef && params.to.type !== 'SYSTEM') {
-            const toSnap = await transaction.get(toRef);
-            if (!toSnap.exists()) throw new Error(`المستلم مش موجود: ${params.to.name}`);
-
-            const currentBalance = toSnap.data().points || 0;
-            const currentXP = toSnap.data().xp || 0;
-
-            transaction.update(toRef, {
-                points: currentBalance + params.amount,
-                xp: currentXP + params.amount
-            });
-        }
-
-        // 3. Create Ledger Entry
-        const entry: LedgerEntry = {
-            id: ledgerRef.id,
-            type: params.type,
-            amount: params.amount,
-            fromType: params.from.type,
-            fromId: params.from.id,
-            fromName: params.from.name,
-            toType: params.to.type,
-            toId: params.to.id,
-            toName: params.to.name,
+    // 1. Debit Source
+    if (params.from.type !== 'SYSTEM') {
+        await awardPoints({
+            userId: params.from.type === 'USER' ? params.from.id : undefined,
+            teamId: params.from.type === 'TEAM' ? params.from.id : undefined,
+            actionType: `${params.type}_DEBIT`,
+            points: -params.amount,
+            idempotencyKey: `LEDGER:${params.type}:SOURCE:${Date.now()}:${params.from.id}`,
             reason: params.reason,
-            adminId: params.adminId || 'system',
-            timestamp: serverTimestamp(),
-            metadata: params.metadata || null
-        };
+            metadata: { ...params.metadata, ledgerId: 'generated-on-success' }
+        });
+    }
 
-        transaction.set(ledgerRef, entry as any);
-    });
+    // 2. Credit Destination
+    if (params.to.type !== 'SYSTEM') {
+        await awardPoints({
+            userId: params.to.type === 'USER' ? params.to.id : undefined,
+            teamId: params.to.type === 'TEAM' ? params.to.id : undefined,
+            actionType: `${params.type}_CREDIT`,
+            points: params.amount,
+            idempotencyKey: `LEDGER:${params.type}:DEST:${Date.now()}:${params.to.id}`,
+            reason: params.reason,
+            metadata: { ...params.metadata, ledgerId: 'generated-on-success' }
+        });
+    }
+
+    // 3. Optional: Still create a legacy ledger entry for audit if needed, 
+    // but the above already created two ScoreEvents.
+    return true;
 
     return true;
 }

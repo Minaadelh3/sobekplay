@@ -5,7 +5,7 @@ import { GameConfig } from '../../lib/games';
 import { useAuth } from '../../context/AuthContext';
 import { doc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
-import { performTransaction } from '../../lib/ledger';
+import { awardPoints } from '../../services/scoring/scoreEngine';
 
 // Christian Icons (SVG)
 const CrossIcon = () => (
@@ -235,23 +235,12 @@ const VerseCompletionEngine: React.FC<VerseCompletionEngineProps> = ({ gameConfi
 
         if (user && score > 0) {
             try {
-                // TRACK EVENT: GAME_COMPLETED
-                import('../../lib/events').then(m => {
-                    m.trackEvent(user.id, 'GAME_COMPLETED', {
-                        gameId: gameConfig.id,
-                        score: score,
-                        result: 'WIN', // Any score > 0 is technicaly a win or progress
-                        difficulty: difficulty,
-                        correct: correctCount,
-                        total: sessionVerses.length
-                    });
-                });
-
-                await performTransaction({
-                    type: 'GAME_REWARD',
-                    amount: score,
-                    from: { type: 'SYSTEM', id: 'kamel_ayah', name: 'Kamel Elayah' },
-                    to: { type: 'USER', id: user.id, name: user.name },
+                // NEW: Unified Scoring
+                await awardPoints({
+                    userId: user.id,
+                    actionType: 'GAME_COMPLETE',
+                    points: score,
+                    idempotencyKey: `GAME:${gameConfig.id}:${user.id}:${startTime}`,
                     reason: `Kamel Elayah (${difficulty})`,
                     metadata: {
                         gameId: gameConfig.id,
@@ -261,6 +250,7 @@ const VerseCompletionEngine: React.FC<VerseCompletionEngineProps> = ({ gameConfi
                     }
                 });
 
+                // 2. Keep Stats Updated
                 const userRef = doc(db, 'users', user.id);
                 await updateDoc(userRef, {
                     'stats.kamel_ayah_wins': increment(correctCount),

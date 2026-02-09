@@ -67,9 +67,10 @@ export function useTeamRanking() {
                     name: d.name || d.displayName || "Unknown",
                     avatar: finalAvatar,
                     role: d.role,
-                    points: d.xp || d.points || 0,
-                    ...d // Include other fields if needed temporarily
-                } as RankingMember);
+                    points: d.scoreTotal || d.xp || d.points || 0,
+                    scoreTotal: d.scoreTotal || 0,
+                    teamId: d.teamId
+                } as any);
             });
             setRawUsers(users);
             setUsersLoaded(true);

@@ -7,6 +7,7 @@ import { useNotification } from '../context/NotificationContext';
 import { getAvatarUrl } from '../lib/getAvatarUrl';
 
 import { calculateLevelFromXP } from '../lib/gamification';
+import { subscribeToScores } from '../services/scoring/scoreEngine';
 
 interface NavbarProps {
   onSearchOpen: () => void;
@@ -17,6 +18,18 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
   const location = useLocation();
   const { user, logout, selectedTeam, isAdmin, roleLoading } = useAuth();
   const { unreadCount } = useNotification();
+
+  // Unified Scoring State
+  const [liveUserScore, setLiveUserScore] = useState(user?.xp || 0);
+  const [liveTeamScore, setLiveTeamScore] = useState(selectedTeam?.points || 0);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    return subscribeToScores(user.id, (u, t) => {
+      setLiveUserScore(u);
+      setLiveTeamScore(t);
+    });
+  }, [user?.id]);
 
   // Close dropdowns on route change
   useEffect(() => {
@@ -201,7 +214,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
                     <div className="text-sm font-black text-white flex items-center gap-3 justify-end">
                       {/* User XP */}
                       <div className="flex items-baseline gap-1">
-                        <span className="text-accent-gold font-mono">{(user.xp || 0).toLocaleString()}</span>
+                        <span className="text-accent-gold font-mono">{liveUserScore.toLocaleString()}</span>
                         <span className="text-[9px] text-gray-500 font-bold uppercase">XP</span>
                       </div>
 
@@ -213,7 +226,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
                         {/* Show Points if Scorable */}
                         {selectedTeam.isScorable !== false && (
                           <span className="bg-accent-gold/10 text-accent-gold px-1.5 py-0.5 rounded text-[9px] border border-accent-gold/20 flex items-center gap-1">
-                            🏆 {selectedTeam.points ?? 0}
+                            🏆 {liveTeamScore.toLocaleString()}
                           </span>
                         )}
                       </div>
@@ -245,7 +258,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
                         <div className="mt-2 flex items-center gap-2 text-xs">
                           <span className={`font-bold ${userLevel?.color}`}>{userLevel?.title}</span>
                           <span className="text-gray-500">•</span>
-                          <span className="text-white font-mono">{(user.xp || 0).toLocaleString()} XP</span>
+                          <span className="text-white font-mono">{liveUserScore.toLocaleString()} XP</span>
                         </div>
                       </div>
 
@@ -324,14 +337,14 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
                         <div className="flex items-center gap-2 mb-2">
                           <span className={`text-xs font-bold ${userLevel?.color}`}>{userLevel?.title}</span>
                           <span className="text-white/20">|</span>
-                          <span className="text-accent-gold font-mono text-xs font-bold">{(user.xp || 0).toLocaleString()} XP</span>
+                          <span className="text-accent-gold font-mono text-xs font-bold">{liveUserScore.toLocaleString()} XP</span>
                         </div>
 
                         <div className="text-white font-bold text-sm flex items-center gap-2 bg-black/20 p-2 rounded-lg border border-white/5">
                           {selectedTeam.name}
                           {selectedTeam.isScorable !== false && (
                             <span className="text-accent-gold text-xs bg-accent-gold/10 px-1.5 py-0.5 rounded border border-accent-gold/20 ml-auto">
-                              🏆 {selectedTeam.points ?? 0}
+                              🏆 {liveTeamScore.toLocaleString()}
                             </span>
                           )}
                         </div>

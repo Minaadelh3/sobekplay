@@ -69,7 +69,7 @@ export default function AdminTeamDetails() {
                     </div>
                 </div>
                 <div className="ml-auto text-right">
-                    <div className="text-3xl font-mono font-bold text-accent-gold">{team.points?.toLocaleString()} <span className="text-sm">SP</span></div>
+                    <div className="text-3xl font-mono font-bold text-accent-gold">{(team.scoreTotal ?? team.points ?? 0).toLocaleString()} <span className="text-sm">SP</span></div>
                     <div className="text-xs text-gray-500">النقاط الكلية</div>
                 </div>
             </div>

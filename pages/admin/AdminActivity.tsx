@@ -76,7 +76,8 @@ export default function AdminActivity() {
     const formatDetails = (act: any) => {
         if (act.action === 'UPDATE_STATS_DIRECT' && act.updates) {
             const parts = [];
-            if (act.updates.points !== undefined) parts.push(`النقاط: ${act.updates.points}`);
+            if (act.updates.scoreTotal !== undefined) parts.push(`Score: ${act.updates.scoreTotal}`);
+            if (act.updates.points !== undefined) parts.push(`Pts: ${act.updates.points}`);
             if (act.updates.xp !== undefined) parts.push(`XP: ${act.updates.xp}`);
             return parts.join(' | ');
         }

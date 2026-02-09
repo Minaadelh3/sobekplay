@@ -87,12 +87,13 @@ export async function evaluateAchievements(event: GameEvent) {
         // 2. Process XP & Leveling
         if (xpGained > 0) {
             const currentXP = (userData.xp || 0) + xpGained;
-            const currentPoints = (userData.points || 0) + xpGained;
             const currentLevel = userData.level || 1;
             const newLevel = calculateLevel(currentXP);
 
             updates.xp = currentXP;
-            updates.points = currentPoints; // SYNC POINTS WITH XP GAINS
+            updates.points = currentXP; // SYNC POINTS WITH XP GAINS (Force Equality)
+            updates.scoreTotal = admin.firestore.FieldValue.increment(xpGained);
+            updates.scoreUpdatedAt = admin.firestore.FieldValue.serverTimestamp();
 
             if (newLevel > currentLevel) {
                 updates.level = newLevel;
@@ -115,12 +116,14 @@ export async function evaluateAchievements(event: GameEvent) {
                 timestamp: admin.firestore.FieldValue.serverTimestamp()
             });
 
-            // Sync Team XP (Legacy Support)
+            // Sync Team XP (Legacy Support + Unified)
             if (userData.teamId) {
                 const teamRef = db.collection('teams').doc(userData.teamId);
                 t.update(teamRef, {
                     xp: admin.firestore.FieldValue.increment(xpGained),
-                    points: admin.firestore.FieldValue.increment(xpGained)
+                    points: admin.firestore.FieldValue.increment(xpGained),
+                    scoreTotal: admin.firestore.FieldValue.increment(xpGained),
+                    scoreUpdatedAt: admin.firestore.FieldValue.serverTimestamp()
                 });
             }
         }

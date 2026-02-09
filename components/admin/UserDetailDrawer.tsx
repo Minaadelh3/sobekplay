@@ -6,6 +6,7 @@ import { TEAMS } from '../../types/auth'; // Static teams for reference
 import UserAvatar from '../UserAvatar';
 import PointsControlPanel from './PointsControlPanel';
 import AdminUserProgression from './AdminUserProgression';
+import PasswordResetDialog from './PasswordResetDialog';
 import { db } from '../../lib/firebase';
 import { doc, updateDoc, deleteDoc, setDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
@@ -27,6 +28,7 @@ export default function UserDetailDrawer({ user, onClose, onUpdate, teams }: Use
 
     // Points Modal State
     const [showPointsPanel, setShowPointsPanel] = useState(false);
+    const [showPasswordReset, setShowPasswordReset] = useState(false);
 
     // Identity Save
     const handleIdentitySave = async () => {
@@ -143,6 +145,14 @@ export default function UserDetailDrawer({ user, onClose, onUpdate, teams }: Use
                             />
                         </motion.div>
                     </div>
+                )}
+                {showPasswordReset && (
+                    <PasswordResetDialog
+                        isOpen={showPasswordReset}
+                        onClose={() => setShowPasswordReset(false)}
+                        targetUserId={user.id}
+                        targetUserName={user.name || user.displayName || 'User'}
+                    />
                 )}
             </AnimatePresence>
 
@@ -351,6 +361,13 @@ export default function UserDetailDrawer({ user, onClose, onUpdate, teams }: Use
                             ☠️ منطقة الخطر
                         </h3>
                         <div className="space-y-3">
+                            <button
+                                onClick={() => setShowPasswordReset(true)}
+                                className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-bold text-gray-300 transition-colors flex items-center justify-center gap-2"
+                            >
+                                <span>🔒</span> إعادة تعيين كلمة المرور (Reset Password)
+                            </button>
+
                             <button
                                 onClick={handleSuspend}
                                 className={`w-full py-3 rounded-xl border text-sm font-bold transition-all flex items-center justify-center gap-2 ${user.isDisabled

@@ -8,7 +8,7 @@ import { calculateGameResult, calculateStageResult } from '../../lib/scoring';
 import { useAuth } from '../../context/AuthContext';
 import { doc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
-import { performTransaction } from '../../lib/ledger';
+import { awardPoints } from '../../services/scoring/scoreEngine';
 import Navbar from '../../components/Navbar';
 import UserAvatar from '../../components/UserAvatar';
 import ExitButton from './ExitButton';
@@ -195,53 +195,28 @@ const MalahyEngine: React.FC<MalahyEngineProps> = ({ gameConfig, questions, onEx
                     // Toast or visual indicator
                     // console.log("Admin score skipped"); 
                 } else {
-                    // 1. Transaction for User Points (XP + Score)
-                    // NEW: Event-Driven Logic
-                    await import('../../lib/events').then(m => m.trackEvent(user.id, 'GAME_COMPLETED', {
-                        gameId: gameConfig.id,
-                        xp: finalXp, // Dynamic XP (allowed by malahy_score_base rule)
-                        score: finalScore,
-                        correct: correctCount,
-                        durationMs: duration,
-                        result: won ? 'WIN' : 'LOSS'
-                    }));
-
-                    // 2. We still need to update the User doc specifically if we want to store 'score' separate from 'points/xp'
-                    // Ledger updates 'points'. 
-                    // Let's update XP/Score specifically here if needed, or rely on performTransaction if it handles both.
-                    // Implementation Detail: performTransaction updates user.points.
-                    // We need to update user.xp manually if it differs, or maybe user.points IS xp.
-                    // Score (Competitive) is definitely separate.
-
-                    const userRef = doc(db, 'users', user.id);
-                    await updateDoc(userRef, {
-                        // points: increment(finalXp), // Handled by Ledger
-                        xp: increment(finalXp),
-                        score: increment(finalScore) // Competitive Score
-                        // We duplicate the 'points' update logic inside performTransaction, so we don't need to do it here for 'points'.
+                    // NEW: Unified Scoring
+                    await awardPoints({
+                        userId: user.id,
+                        actionType: 'GAME_COMPLETE',
+                        points: finalXp,
+                        idempotencyKey: `GAME:${gameConfig.id}:${user.id}:${startTimeRef.current}`,
+                        reason: `${gameConfig.title} (${difficulty})`,
+                        metadata: {
+                            gameId: gameConfig.id,
+                            score: finalScore,
+                            correct: correctCount,
+                            durationMs: duration,
+                            result: won ? 'WIN' : 'LOSS'
+                        }
                     });
 
-                    // Team Points (Only on Win)
-                    if (user.teamId && finalScore > 0) {
-                        let teamPts = 0;
-                        if (!isSobekLogic) {
-                            const res = calculateGameResult({ mode: 'SOLO', outcome: won ? 'WIN' : 'LOSS' });
-                            teamPts = res.teamPoints;
-                        } else {
-                            teamPts = Math.floor(finalScore * 0.5);
-                        }
-
-                        if (teamPts > 0) {
-                            await performTransaction({
-                                type: 'TEAM_REWARD',
-                                amount: teamPts,
-                                from: { type: 'USER', id: user.id, name: user.name },
-                                to: { type: 'TEAM', id: user.teamId, name: 'Team' },
-                                reason: `Team Contrib: ${gameConfig.title}`,
-                                metadata: { gameId: gameConfig.id }
-                            });
-                        }
-                    }
+                    // 2. Keep Stats Updated (Non-scoring metrics)
+                    const userRef = doc(db, 'users', user.id);
+                    await updateDoc(userRef, {
+                        'stats.kamel_ayah_wins': increment(correctCount),
+                        'stats.kamel_ayah_played': increment(filteredQuestions.length)
+                    });
                 }
             } catch (err) {
                 console.error("Failed to update points", err);

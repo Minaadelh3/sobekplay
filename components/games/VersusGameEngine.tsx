@@ -5,7 +5,7 @@ import { db } from '../../lib/firebase';
 import { MatchState, VersusPlayer } from '../../lib/versus';
 import { PROVERBS, VERSES, Question } from '../../lib/questionBank';
 import confetti from 'canvas-confetti';
-import { performTransaction } from '../../lib/ledger';
+import { awardPoints } from '../../services/scoring/scoreEngine';
 import { useGame } from '../../hooks/useGameControl';
 
 interface VersusGameEngineProps {
@@ -149,35 +149,20 @@ const VersusGameEngine: React.FC<VersusGameEngineProps> = ({ matchId, currentUse
 
         if (!isAdmin) {
             try {
-                // TRACK EVENT: GAME_COMPLETED
-                import('../../lib/events').then(m => {
-                    m.trackEvent(currentUser.id, 'GAME_COMPLETED', {
-                        gameId: match.gameId || 'versus_match',
-                        score: myP.score,
-                        result: outcome,
-                        opponentScore: opponent?.score || 0
-                    });
-                });
-
-                // Award XP/Points to User
+                // NEW: Unified Scoring
                 if (xpReward > 0) {
-                    await performTransaction({
-                        type: 'GAME_REWARD',
-                        amount: xpReward,
-                        from: { type: 'SYSTEM', id: 'versus_arena', name: 'Versus Arena' },
-                        to: { type: 'USER', id: currentUser.id, name: currentUser.name },
-                        reason: `Versus Result: ${outcome} (Match ${match.code || matchId})`
-                    });
-                }
-
-                // Award Points to Team
-                if (myP.teamId && scoreReward > 0) {
-                    await performTransaction({
-                        type: 'ADJUSTMENT',
-                        amount: scoreReward,
-                        from: { type: 'SYSTEM', id: 'versus_arena', name: 'Versus Arena' },
-                        to: { type: 'TEAM', id: myP.teamId, name: myP.teamId },
-                        reason: `Member ${currentUser.name} won Versus Match`
+                    await awardPoints({
+                        userId: currentUser.id,
+                        actionType: 'VERSUS_RESULT',
+                        points: xpReward,
+                        idempotencyKey: `VERSUS:${matchId}:${currentUser.id}`,
+                        reason: `Versus Result: ${outcome} (Match ${match.code || matchId})`,
+                        metadata: {
+                            gameId: match.gameId || 'versus_match',
+                            score: myP.score,
+                            result: outcome,
+                            opponentScore: opponent?.score || 0
+                        }
                     });
                 }
 

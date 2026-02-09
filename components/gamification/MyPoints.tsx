@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
-import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { subscribeToScores } from '../../services/scoring/scoreEngine';
 import { RANK_TIERS, calculateRank, getNextRank, calculateProgress, TOKENS } from '../../lib/gamification';
 import { TEAMS } from '../../types/auth';
 
@@ -17,14 +17,12 @@ const MyPoints: React.FC = () => {
     useEffect(() => {
         if (!user?.id) return;
 
-        const unsub = onSnapshot(doc(db, "users", user.id), (docS) => {
-            const data = docS.data();
-            const p = data?.xp || 0; // ⚡ MIGRATION: Use XP
-            setPoints(p);
+        const unsub = subscribeToScores(user.id, (uScore) => {
+            setPoints(uScore);
 
-            const r = calculateRank(p);
+            const r = calculateRank(uScore);
             const n = getNextRank(r.level);
-            const prog = calculateProgress(p);
+            const prog = calculateProgress(uScore);
 
             setRank(r);
             setNextRank(n);
@@ -33,6 +31,9 @@ const MyPoints: React.FC = () => {
 
         return () => unsub();
     }, [user?.id]);
+
+    // Note: If you want to use the team score here, the callback provides it as a second arg.
+    // For now, MyPoints focuses on personal XP.
 
     if (!user) return null;
 

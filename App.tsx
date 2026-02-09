@@ -31,6 +31,7 @@ import AdminTeamDetails from './pages/admin/AdminTeamDetails';
 import AdminAchievements from './pages/admin/AdminAchievements';
 import AdminJourney from './pages/admin/AdminJourney';
 import PushNotifications from './pages/admin/PushNotifications';
+import WhatsAppManager from './pages/admin/WhatsAppManager';
 import PushDebug from './pages/admin/PushDebug';
 import NewsManager from './pages/admin/NewsManager';
 import PrayersManager from './pages/admin/PrayersManager';
@@ -157,6 +158,7 @@ const App: React.FC = () => {
                       <Route path="balancing" element={<GameBalancing />} />
                       <Route path="balancing" element={<GameBalancing />} />
                       <Route path="notifications" element={<PushNotifications />} />
+                      <Route path="whatsapp" element={<WhatsAppManager />} />
                       <Route path="push-debug" element={<PushDebug />} />
                       <Route path="news" element={<NewsManager />} />
                       <Route path="prayers" element={<PrayersManager />} />

@@ -11,6 +11,7 @@ export interface AdminUser extends Omit<User, 'teamId'> {
     isDisabled?: boolean;
     teamId?: string;
     xp?: number;
+    scoreTotal?: number;
 }
 
 export function useAdminData() {
@@ -75,7 +76,7 @@ export function useAdminData() {
 
             const userData = userSnap.data() as AdminUser;
             const currentTeamId = userData.teamId;
-            const pointsToTransfer = userData.points || 0;
+            const pointsToTransfer = userData.scoreTotal || userData.points || 0;
 
             if (currentTeamId === teamId) return;
 
@@ -205,7 +206,7 @@ export function useAdminData() {
         const currentAdmin = users.find(u => u.id === auth.currentUser?.uid);
 
         // Permission Check
-        const diff = newPoints - (teams.find(t => t.id === teamId)?.points || 0);
+        const diff = newPoints - (teams.find(t => t.id === teamId)?.scoreTotal || teams.find(t => t.id === teamId)?.points || 0);
         const action = Math.abs(diff) > 500 ? 'adjust_points_limitless' : 'adjust_points';
 
         if (!currentAdmin || (currentAdmin.role !== 'SUPER_ADMIN' && currentAdmin.role !== 'POINTS_MANAGER')) {
@@ -275,7 +276,7 @@ export function useAdminData() {
         }
     };
 
-    const updateTeamProfile = async (teamId: string, updates: Partial<{ name: string, description: string, color: string, avatar: string, isScorable: boolean }>) => {
+    const updateTeamProfile = async (teamId: string, updates: Partial<{ name: string, description: string, color: string, avatar: string, isScorable: boolean, pin: string }>) => {
         try {
             await updateDoc(doc(db, "teams", teamId), updates);
             setTeams(prev => prev.map(t => t.id === teamId ? { ...t, ...updates } : t));

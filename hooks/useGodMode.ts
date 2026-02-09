@@ -129,10 +129,68 @@ export function useGodMode() {
         }
     };
 
+    // 4. RESET ALL TEAM CHATS
+    const resetAllChats = async () => {
+        const confirmPhrase = "RESET ALL CHATS";
+        const input = prompt(`⚠️ WARNING: IRREVERSIBLE ACTION ⚠️\n\nThis will permanently delete ALL messages (text, images, voice notes) from ALL team chats.\n\nType "${confirmPhrase}" to confirm:`);
+
+        if (input !== confirmPhrase) {
+            alert("Reset Cancelled.");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const teamsSnap = await getDocs(collection(db, 'teams'));
+            const deletePromises = teamsSnap.docs.map(async (teamDoc) => {
+                const messagesColl = collection(db, `teams/${teamDoc.id}/messages`);
+                const messagesSnap = await getDocs(messagesColl);
+
+                if (messagesSnap.empty) return;
+
+                const chunks = [];
+                let currentBatch = writeBatch(db);
+                let count = 0;
+
+                messagesSnap.docs.forEach((msgDoc) => {
+                    currentBatch.delete(msgDoc.ref);
+                    count++;
+                    if (count >= 490) {
+                        chunks.push(currentBatch.commit());
+                        currentBatch = writeBatch(db);
+                        count = 0;
+                    }
+                });
+
+                if (count > 0) chunks.push(currentBatch.commit());
+                await Promise.all(chunks);
+
+                // Send a system message to indicate reset
+                await addDoc(messagesColl, {
+                    text: "تم إعادة ضبط الشات. كل الرسائل السابقة تم مسحها.",
+                    uid: "SYSTEM",
+                    name: "System",
+                    type: "text",
+                    createdAt: serverTimestamp()
+                });
+            });
+
+            await Promise.all(deletePromises);
+            await logAction('GLOBAL_CHAT_RESET', { affectedTeams: teamsSnap.size });
+            alert("✅ ALL CHATS RESET COMPLETE.");
+        } catch (error) {
+            console.error("GLOBAL CHAT RESET FAILED:", error);
+            alert("Critical error during chat reset. Check console.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return {
         updateTeamScore,
         resetTeam,
         resetSeason,
+        resetAllChats,
         loading
     };
 }

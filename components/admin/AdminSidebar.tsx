@@ -32,6 +32,7 @@ export default function AdminSidebar({ mobile = false, onClose }: { mobile?: boo
                 { path: '/admin/rooms', label: 'Rooms', icon: 'bed' },
                 { path: '/admin/media', label: 'Media Library', icon: 'film_frames' },
                 { path: '/admin/notifications', label: 'Push Notifications', icon: 'bell' },
+                { path: '/admin/whatsapp', label: 'WhatsApp', icon: 'whatsapp' },
                 { path: '/admin/flags', label: 'Feature Flags', icon: 'test_tube' },
                 { path: '/admin/logs', label: 'Audit Logs', icon: 'scroll' },
                 { path: '/admin/settings', label: 'Settings', icon: 'gear' },
@@ -104,7 +105,8 @@ export default function AdminSidebar({ mobile = false, onClose }: { mobile?: boo
                                                                                     item.icon === 'praying_hands' ? '🙏' :
                                                                                         item.icon === 'film_frames' ? '🎬' :
                                                                                             item.icon === 'bed' ? '🛏️' :
-                                                                                                item.icon}
+                                                                                                item.icon === 'whatsapp' ? '💬' :
+                                                                                                    item.icon}
                                     </span>
                                     <span className="font-medium">{item.label}</span>
                                 </NavLink>

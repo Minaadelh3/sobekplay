@@ -1,6 +1,6 @@
 import { doc, getDoc, updateDoc, arrayUnion, increment, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
-import { performTransaction } from './ledger';
+import { awardPoints } from '../services/scoring/scoreEngine';
 import {
     ACHIEVEMENTS_LIST,
     LEVELS,
@@ -112,7 +112,18 @@ export async function processGamificationEvent(
     }
 
     if (totalXPGained > 0) {
-        updates.xp = increment(totalXPGained);
+        // Use Unified Scoring API
+        await awardPoints({
+            userId,
+            actionType: 'ACHIEVEMENT_UNLOCKED',
+            points: totalXPGained,
+            idempotencyKey: `ACH:${userId}:${newlyUnlocked.map(a => a.id).join(',')}`,
+            reason: `Unlocked: ${newlyUnlocked.map(a => a.title).join(', ')}`,
+            metadata: {
+                achievements: newlyUnlocked.map(a => a.id)
+            }
+        });
+
         progress.xp += totalXPGained;
 
         // Check Level Up
@@ -120,34 +131,19 @@ export async function processGamificationEvent(
         if (newLevelConfig.level > progress.level) {
             updates.level = newLevelConfig.level;
             // return new level info
+            await updateDoc(userRef, updates); // Commit remaining updates (level, progress)
             return { unlocked: newlyUnlocked, xpGained: totalXPGained, newLevel: newLevelConfig.level };
         }
     }
 
-    // Commit to Firestore
+    // Commit non-scoring updates (achievementProgress, unlockedAchievements)
     if (Object.keys(updates).length > 0) {
-        console.log("💾 [XP] Committing updates to Firestore:", updates);
+        console.log("💾 [Gamification] Committing metadata updates:", updates);
         try {
             await updateDoc(userRef, updates);
-            console.log("✅ [XP] Firestore update successful");
-
-            // --- SYNC TO TEAM ---
-            // If user gained XP, add it to their Team as well
-            if (totalXPGained > 0 && userData.teamId) {
-                const teamRef = doc(db, 'teams', userData.teamId);
-                // We update both 'xp' (new) and 'points' (legacy) for compatibility
-                await updateDoc(teamRef, {
-                    xp: increment(totalXPGained),
-                    points: increment(totalXPGained)
-                }).catch(err => console.error("❌ [XP] Team Sync Failed:", err));
-            }
-
         } catch (err) {
-            console.error("❌ [XP] Firestore update FAILED:", err);
-            // If this fails, the local state won't update, causing the loop.
+            console.error("❌ [Gamification] Metadata update FAILED:", err);
         }
-    } else {
-        console.log("ℹ️ [XP] No updates to commit.");
     }
 
     return { unlocked: newlyUnlocked, xpGained: totalXPGained };

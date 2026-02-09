@@ -2,6 +2,7 @@ import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth, setPersistence, indexedDBLocalPersistence, browserLocalPersistence } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 import { getStorage, type FirebaseStorage } from "firebase/storage";
+import { getFunctions, type Functions } from "firebase/functions";
 import { getAnalytics, isSupported } from "firebase/analytics";
 
 // --- 1. CONFIGURATION ---
@@ -47,6 +48,7 @@ let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 let storage: FirebaseStorage;
+let functions: Functions;
 
 if (isFirebaseConfigValid) {
     try {
@@ -61,6 +63,7 @@ if (isFirebaseConfigValid) {
 
         db = getFirestore(app);
         storage = getStorage(app);
+        functions = getFunctions(app);
 
         // Messaging is only supported in browser environments
         if (typeof window !== 'undefined') {
@@ -89,7 +92,7 @@ if (isFirebaseConfigValid) {
 // --- 3. EXPORTS ---
 // We export these. Consumers MUST check if they are defined or we accept the crash 
 // as a signal that ENV is missing. 
-export { app, auth, db, storage };
+export { app, auth, db, storage, functions };
 
 // --- 4. SAFE ANALYTICS ---
 export async function initAnalytics() {

@@ -294,7 +294,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const selectTeam = async (teamId: string, pin: string): Promise<boolean> => {
         if (!firebaseUser) return false;
-        if (TEAM_PINS[teamId] && TEAM_PINS[teamId] !== pin) return false;
+
+        // 1. Check Firestore for dynamic PIN first
+        try {
+            const teamDoc = await getDoc(doc(db, "teams", teamId));
+            if (teamDoc.exists()) {
+                const teamData = teamDoc.data();
+                // If team has a PIN set in DB, verify it
+                if (teamData.pin && teamData.pin.toString().toLowerCase() !== pin.toLowerCase()) {
+                    return false;
+                }
+                // If it doesn't have a PIN in DB, fallback to static TEAM_PINS
+                if (!teamData.pin && TEAM_PINS[teamId] && TEAM_PINS[teamId] !== pin) {
+                    return false;
+                }
+            } else if (TEAM_PINS[teamId] && TEAM_PINS[teamId] !== pin) {
+                // Fallback for non-existent team docs (static teams)
+                return false;
+            }
+        } catch (e) {
+            console.error("Error fetching team PIN", e);
+            // Fallback to static PINS on error
+            if (TEAM_PINS[teamId] && TEAM_PINS[teamId] !== pin) return false;
+        }
 
         try {
             await updateDoc(doc(db, "users", firebaseUser.uid), { teamId });

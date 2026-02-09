@@ -46,7 +46,7 @@ const TransfersCenter = () => {
                     id: d.id,
                     name: d.data().name || d.id,
                     type: 'TEAM' as EntityType,
-                    points: d.data().points || 0
+                    points: d.data().scoreTotal || d.data().points || 0
                 }));
                 setTeams(teamsData);
 
@@ -56,7 +56,7 @@ const TransfersCenter = () => {
                     id: d.id,
                     name: d.data().name || d.data().displayName || 'Unknown',
                     type: 'USER' as EntityType,
-                    points: d.data().points || 0,
+                    points: d.data().scoreTotal || d.data().points || 0,
                     avatar: d.data().avatar || d.data().photoURL
                 }));
                 setUsers(usersData);

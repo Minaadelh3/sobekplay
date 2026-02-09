@@ -21,11 +21,12 @@ export default function TeamDetailDrawer({ team, onClose, onUpdate }: TeamDetail
     const [name, setName] = useState(team.name || '');
     const [avatar, setAvatar] = useState(team.avatar || '');
     const [color, setColor] = useState(team.color || '');
+    const [pin, setPin] = useState(team.pin || '');
     const [loading, setLoading] = useState(false);
 
     const handleSave = async () => {
         setLoading(true);
-        await updateTeamProfile(team.id, { name, avatar, color });
+        await updateTeamProfile(team.id, { name, avatar, color, pin });
         setLoading(false);
         onUpdate();
     };
@@ -115,6 +116,15 @@ export default function TeamDetailDrawer({ team, onClose, onUpdate }: TeamDetail
                                         className="w-full bg-black/40 border border-white/10 rounded px-3 py-2 text-white focus:border-accent-gold outline-none text-xs font-mono"
                                     />
                                 </div>
+                            </div>
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-1">Team PIN/Password (Alphanumeric)</label>
+                                <input
+                                    value={pin} onChange={e => setPin(e.target.value)}
+                                    placeholder="Default: 1234"
+                                    className="w-full bg-black/40 border border-white/10 rounded px-3 py-2 text-white focus:border-accent-gold outline-none text-xs font-mono"
+                                />
+                                <p className="text-[10px] text-gray-500 mt-1">This is the code users enter to select this profile.</p>
                             </div>
                             <div className="flex justify-end pt-2">
                                 <button
