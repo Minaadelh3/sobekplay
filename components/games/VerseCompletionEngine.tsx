@@ -235,6 +235,18 @@ const VerseCompletionEngine: React.FC<VerseCompletionEngineProps> = ({ gameConfi
 
         if (user && score > 0) {
             try {
+                // TRACK EVENT: GAME_COMPLETED
+                import('../../lib/events').then(m => {
+                    m.trackEvent(user.id, 'GAME_COMPLETED', {
+                        gameId: gameConfig.id,
+                        score: score,
+                        result: 'WIN', // Any score > 0 is technicaly a win or progress
+                        difficulty: difficulty,
+                        correct: correctCount,
+                        total: sessionVerses.length
+                    });
+                });
+
                 await performTransaction({
                     type: 'GAME_REWARD',
                     amount: score,

@@ -1,4 +1,4 @@
-export type TeamId = 'tout' | 'ankh' | 'amon' | 'ra' | 'uncle_joy';
+export type TeamId = 'tout' | 'ptah' | 'amon' | 'ra' | 'uncle_joy';
 
 export interface PlayerProfile {
     id: string; // Firestore Doc ID

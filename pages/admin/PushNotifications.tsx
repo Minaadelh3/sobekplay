@@ -1,133 +1,181 @@
+
 import React, { useState } from 'react';
-import { useOneSignal } from '../../hooks/useOneSignal';
-import { Bell, CheckCircle, XCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { usePushNotifications } from '../../hooks/usePushNotifications';
+import PushComposer from '../../components/admin/push/PushComposer';
+import AudienceSelector from '../../components/admin/push/AudienceSelector';
+import PushScheduler from '../../components/admin/push/PushScheduler';
+import PushHistory from '../../components/admin/push/PushHistory';
 
-const PushNotifications = () => {
-    const { permission, enableNotifications, isSupported, subscriptionId } = useOneSignal();
-    const [tagKey, setTagKey] = useState('');
-    const [tagValue, setTagValue] = useState('');
+const PushNotifications: React.FC = () => {
+    const { sendPush, schedulePush, loading, error } = usePushNotifications();
+    const [activeTab, setActiveTab] = useState<'compose' | 'history'>('compose');
 
-    const handleAddTag = () => {
-        if (!tagKey || !tagValue) return;
-        // Client-side tagging only
-        // @ts-ignore
-        if (window.OneSignal) {
-            // @ts-ignore
-            window.OneSignal.User.addTag(tagKey, tagValue);
-            alert(`Tag Added: ${tagKey} = ${tagValue}`);
-            setTagKey('');
-            setTagValue('');
+    // Form State
+    const [formData, setFormData] = useState({
+        title: '',
+        message: '',
+        url: '',
+        imageUrl: ''
+    });
+
+    const [audience, setAudience] = useState<any>({ type: 'All' });
+    const [sendAfter, setSendAfter] = useState('');
+    const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+    const handleSend = async () => {
+        if (!confirm("Are you sure you want to send this push notification?")) return;
+
+        setSuccessMsg(null);
+        try {
+            const payload = { ...formData, audience, sendAfter };
+
+            if (sendAfter) {
+                await schedulePush(payload);
+                setSuccessMsg("Notification Scheduled Successfully! 📅");
+            } else {
+                await sendPush(payload);
+                setSuccessMsg("Notification Sent Successfully! 🚀");
+            }
+        } catch (err: any) {
+            console.error("Failed to send push:", err);
+            // Error is handled in hook, but we can double check
         }
     };
 
     return (
-        <div className="p-6 md:p-10 max-w-4xl mx-auto space-y-8 min-h-screen pb-20 text-white">
+        <div className="space-y-8 relative">
             {/* Header */}
-            <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-black mb-2 tracking-tight flex items-center gap-3">
-                    <Bell className="w-8 h-8 text-accent-gold" />
-                    Push Notifications
-                </h1>
-                <p className="text-gray-400">
-                    Manage your client-side notification settings.
-                    <br />
-                    <span className="text-yellow-500 font-bold">Note:</span> Sending notifications is now done via the OneSignal Dashboard or automatically by the system (client-side triggers).
-                </p>
-            </div>
-
-            {/* Status Card */}
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-[#0F1218] border border-white/5 rounded-3xl p-8"
-            >
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold">Device Status</h2>
-                    <div className={`px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 ${permission === 'granted' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                        {permission === 'granted' ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
-                        {permission.toUpperCase()}
-                    </div>
+            <div className="flex justify-between items-end border-b border-white/10 pb-6">
+                <div>
+                    <h1 className="text-3xl font-black text-white tracking-tight mb-2">Push Notifications</h1>
+                    <p className="text-gray-400">Manage targeting, schedule campaigns, and track delivery.</p>
                 </div>
-
-                <div className="space-y-4">
-                    <div className="p-4 bg-black/40 rounded-xl border border-white/5">
-                        <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">OneSignal ID</div>
-                        <div className="font-mono text-sm break-all text-blue-400">
-                            {subscriptionId || 'Not Subscribed / Loading...'}
-                        </div>
-                    </div>
-
-                    <div className="p-4 bg-black/40 rounded-xl border border-white/5">
-                        <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Browser Support</div>
-                        <div className="font-mono text-sm text-gray-300">
-                            {isSupported ? 'Supported ✅' : 'Not Supported ❌'}
-                        </div>
-                    </div>
-
-                    {permission !== 'granted' && isSupported && (
-                        <button
-                            onClick={enableNotifications}
-                            className="w-full py-3 bg-accent-gold text-black font-bold rounded-xl hover:scale-[1.02] transition-transform"
-                        >
-                            Enable Notifications
-                        </button>
-                    )}
-
-                    {permission === 'granted' && (
-                        <div className="text-center text-sm text-gray-500 mt-4">
-                            You are ready to receive notifications! 🚀
-                        </div>
-                    )}
-                </div>
-            </motion.div>
-
-            {/* Tagging Section (Client Side Only) */}
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="bg-[#0F1218] border border-white/5 rounded-3xl p-8"
-            >
-                <h2 className="text-xl font-bold mb-6">User Tags (Client-Side)</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <input
-                        type="text"
-                        placeholder="Tag Key (e.g. role)"
-                        value={tagKey}
-                        onChange={e => setTagKey(e.target.value)}
-                        className="bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-gold"
-                    />
-                    <input
-                        type="text"
-                        placeholder="Tag Value (e.g. admin)"
-                        value={tagValue}
-                        onChange={e => setTagValue(e.target.value)}
-                        className="bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-gold"
-                    />
+                <div className="flex gap-2">
                     <button
-                        onClick={handleAddTag}
-                        disabled={!tagKey || !tagValue}
-                        className="bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl px-4 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={() => setActiveTab('compose')}
+                        className={`px-4 py-2 rounded-lg font-bold transition-all ${activeTab === 'compose' ? 'bg-accent-gold text-black' : 'bg-white/5 text-gray-400 hover:text-white'}`}
                     >
-                        Add Tag
+                        Compose
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('history')}
+                        className={`px-4 py-2 rounded-lg font-bold transition-all ${activeTab === 'history' ? 'bg-accent-gold text-black' : 'bg-white/5 text-gray-400 hover:text-white'}`}
+                    >
+                        History
                     </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-4">
-                    These tags are sent directly to OneSignal from your browser. No backend involved.
-                </p>
-            </motion.div>
+            </div>
 
-            {/* Information Section */}
-            <div className="p-6 bg-blue-900/10 border border-blue-500/20 rounded-2xl">
-                <h3 className="text-blue-400 font-bold mb-2">How to Send Notifications?</h3>
-                <p className="text-sm text-gray-300">
-                    To send a push notification to users, please use the
-                    <a href="https://dashboard.onesignal.com" target="_blank" rel="noreferrer" className="text-accent-gold hover:underline mx-1">
-                        OneSignal Dashboard
-                    </a>.
-                    Select your audience using the tags above or send to everyone.
-                </p>
+            {/* Error / Success Messages */}
+            {error && (
+                <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-xl flex items-center gap-2">
+                    <span>❌</span> {error}
+                </div>
+            )}
+            {successMsg && (
+                <div className="bg-green-500/10 border border-green-500/20 text-green-500 p-4 rounded-xl flex items-center gap-2">
+                    <span>✅</span> {successMsg}
+                </div>
+            )}
+
+            {/* Content */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {activeTab === 'compose' ? (
+                    <>
+                        <div className="lg:col-span-2 space-y-8">
+                            <PushComposer formData={formData} setFormData={setFormData} />
+                            <AudienceSelector audience={audience} setAudience={setAudience} />
+                            <PushScheduler sendAfter={sendAfter} setSendAfter={setSendAfter} />
+                        </div>
+
+                        <div className="lg:col-span-1 space-y-8">
+                            {/* Mobile Preview */}
+                            <div className="bg-white p-4 rounded-xl text-black shadow-xl border-4 border-gray-800">
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-5 h-5 bg-accent-gold rounded flex items-center justify-center text-[10px] font-bold text-white">SP</div>
+                                        <span className="text-xs font-bold text-gray-600">Sobek Play • Now</span>
+                                    </div>
+                                </div>
+                                <div className="flex gap-3">
+                                    <div className="flex-1">
+                                        <h4 className="font-bold text-sm mb-1 leading-tight">{formData.title || 'Notification Title'}</h4>
+                                        <p className="text-xs text-gray-600 line-clamp-3 leading-snug">{formData.message || 'Notification content will appear here...'}</p>
+                                    </div>
+                                    {formData.imageUrl && (
+                                        <img src={formData.imageUrl} className="w-12 h-12 rounded object-cover bg-gray-200" alt="" />
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="bg-white/5 p-6 rounded-2xl border border-white/10 sticky top-24">
+                                <h3 className="text-lg font-bold text-white mb-4">📢 Campaign Summary</h3>
+                                <ul className="space-y-3 text-sm text-gray-400 mb-6 font-mono">
+                                    <li className="flex justify-between border-b border-white/5 pb-2">
+                                        <span>Audience:</span>
+                                        <span className="text-white text-right truncate max-w-[150px]">{audience.type}</span>
+                                    </li>
+                                    <li className="flex justify-between border-b border-white/5 pb-2">
+                                        <span>Target Count:</span>
+                                        <span className="text-accent-gold">~ Est. Reach</span>
+                                    </li>
+                                    <li className="flex justify-between border-b border-white/5 pb-2">
+                                        <span>Schedule:</span>
+                                        <span className="text-white">{sendAfter ? new Date(sendAfter).toLocaleString() : 'Immediately'}</span>
+                                    </li>
+                                </ul>
+
+                                <div className="space-y-3">
+                                    <button
+                                        onClick={async () => {
+                                            if (audience.type === 'Test') {
+                                                // TEST MODE: Get ID + Send
+                                                try {
+                                                    // V16 SDK Support Only
+                                                    // @ts-ignore
+                                                    let playerId = window.OneSignal?.User?.PushSubscription?.id;
+
+                                                    if (!playerId) {
+                                                        console.log("Player ID not found immediately, waiting...");
+                                                        await new Promise(r => setTimeout(r, 2000));
+                                                        // @ts-ignore
+                                                        playerId = window.OneSignal?.User?.PushSubscription?.id;
+                                                    }
+
+                                                    if (!playerId) {
+                                                        alert("Could not detect your Push ID.\n\n1. Ensure you have clicked 'Subscribe' or accepted permissions.\n2. Disable AdBlockers.\n3. Try refreshing the page.");
+                                                        return;
+                                                    }
+
+                                                    if (!confirm("Send Test to Device ID: " + playerId)) return;
+
+                                                    const testPayload = { ...formData, audience: { ...audience, include_player_ids: [playerId] } };
+                                                    await sendPush(testPayload);
+                                                    setSuccessMsg("Test Sent! 🧪");
+                                                } catch (e) {
+                                                    console.error(e);
+                                                    alert("Test Failed: " + (e instanceof Error ? e.message : String(e)));
+                                                }
+                                            } else {
+                                                // NORMAL MODE
+                                                handleSend();
+                                            }
+                                        }}
+                                        disabled={loading || !formData.title || !formData.message}
+                                        className={`w-full py-4 rounded-xl font-black text-lg transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${audience.type === 'Test' ? 'bg-white text-black hover:bg-gray-200' : 'bg-accent-gold text-black hover:bg-yellow-400 hover:shadow-accent-gold/20'}`}
+                                    >
+                                        {loading ? 'Processing...' : (audience.type === 'Test' ? '🧪 Send Test (Me Only)' : (sendAfter ? 'Schedule Campaign 📅' : '🚀 Send Blast'))}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </>
+                ) : (
+                    <div className="lg:col-span-3">
+                        <PushHistory />
+                    </div>
+                )}
             </div>
         </div>
     );

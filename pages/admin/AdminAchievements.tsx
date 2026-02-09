@@ -126,19 +126,19 @@ export default function AdminAchievements() {
                                         key={achievement.id}
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        className={`group relative bg-[#1A1A1A] rounded-2xl border ${achievement.isActive ? 'border-white/10' : 'border-red-500/20 opacity-70'} overflow-hidden hover:shadow-2xl transition-all hover:border-accent-gold/30`}
+                                        className={`group relative bg-[#1A1A1A] rounded-2xl border ${achievement.visible ? 'border-white/10' : 'border-red-500/20 opacity-70'} overflow-hidden hover:shadow-2xl transition-all hover:border-accent-gold/30`}
                                     >
                                         <div className="p-6">
                                             <div className="flex justify-between items-start mb-4">
                                                 <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center text-4xl shadow-inner border border-white/5">
-                                                    {achievement.icon}
+                                                    {achievement.emoji}
                                                 </div>
-                                                <div className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${achievement.isActive ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
-                                                    {achievement.isActive ? 'Active' : 'Disabled'}
+                                                <div className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${achievement.visible ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                                                    {achievement.visible ? 'Active' : 'Disabled'}
                                                 </div>
                                             </div>
 
-                                            <h3 className="text-xl font-bold text-white mb-2">{achievement.name}</h3>
+                                            <h3 className="text-xl font-bold text-white mb-2">{achievement.title}</h3>
                                             <p className="text-sm text-gray-400 h-10 mb-4 line-clamp-2">{achievement.description}</p>
 
                                             <div className="bg-black/30 p-3 rounded-xl mb-4 border border-white/5">
@@ -147,35 +147,20 @@ export default function AdminAchievements() {
                                                 </div>
                                                 <div className="space-y-1 text-xs font-mono">
                                                     <div className="flex justify-between items-center text-green-400">
-                                                        <span>Collection</span>
-                                                        <span>✅ Online</span>
+                                                        <span>Category</span>
+                                                        <span>✅ {achievement.category}</span>
                                                     </div>
                                                     <div className="flex justify-between items-center">
                                                         <span>Trigger</span>
-                                                        {['LOGIN_STREAK', 'FIRST_LOGIN', 'TEAM_WIN', 'POINTS_THRESHOLD', 'MANUAL'].includes(achievement.conditionType)
-                                                            ? <span className="text-green-400">✅ {achievement.conditionType}</span>
-                                                            : <span className="text-yellow-400">⚠️ {achievement.conditionType} (Review)</span>
-                                                        }
+                                                        <span className="text-green-400">✅ {achievement.trigger?.event || 'Manual'}</span>
                                                     </div>
                                                     <div className="flex justify-between items-center">
                                                         <span>Points Flow</span>
-                                                        {achievement.points > 0
-                                                            ? <span className="text-green-400">✅ {achievement.points} SP</span>
+                                                        {achievement.xp > 0
+                                                            ? <span className="text-green-400">✅ {achievement.xp} SP</span>
                                                             : <span className="text-gray-500">⚪ No Points</span>
                                                         }
                                                     </div>
-                                                    {achievement.isHidden && (
-                                                        <div className="flex justify-between items-center text-blue-400">
-                                                            <span>Visibility</span>
-                                                            <span>👀 Hidden</span>
-                                                        </div>
-                                                    )}
-                                                    {achievement.isSeasonal && (
-                                                        <div className="flex justify-between items-center text-purple-400">
-                                                            <span>Seasonal</span>
-                                                            <span>⏳ {achievement.seasonName || 'Active'}</span>
-                                                        </div>
-                                                    )}
                                                 </div>
                                             </div>
 
@@ -196,7 +181,7 @@ export default function AdminAchievements() {
                                                     onClick={() => toggleAchievementStatus(achievement)}
                                                     className="col-span-1 py-2 bg-transparent hover:bg-white/5 text-gray-500 hover:text-white rounded-lg text-xs font-bold transition-colors border border-dashed border-white/10"
                                                 >
-                                                    {achievement.isActive ? '🔒 Disable' : '🔓 Enable'}
+                                                    {achievement.visible ? '🔒 Disable' : '🔓 Enable'}
                                                 </button>
                                                 <button
                                                     onClick={() => deleteAchievement(achievement.id)}

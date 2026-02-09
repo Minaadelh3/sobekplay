@@ -11,10 +11,22 @@ export default function NewsManager() {
 
     // Seed function
     const handleSeed = async () => {
-        if (confirm("Seed default news? This will add duplicates if they exist.")) {
-            for (const item of newsDefaults) {
+        // Filter out items that already exist (by title)
+        const existingTitles = new Set(news.map(n => n.title));
+        const newItems = newsDefaults.filter(item => !existingTitles.has(item.title));
+
+        if (newItems.length === 0) {
+            alert("All default news items already exist! No new items to add.");
+            return;
+        }
+
+        if (confirm(`Found ${newItems.length} new items. Add them? (Skipping ${newsDefaults.length - newItems.length} duplicates)`)) {
+            let addedCount = 0;
+            for (const item of newItems) {
                 await addNews(item);
+                addedCount++;
             }
+            alert(`Successfully added ${addedCount} new news items!`);
         }
     };
 
@@ -37,6 +49,21 @@ export default function NewsManager() {
         setIsModalOpen(false);
     };
 
+    const handleDeleteAll = async () => {
+        if (confirm("⚠️ WARNING: Are you sure you want to DELETE ALL news items? This cannot be undone.")) {
+            if (confirm("Really? Delete EVERYTHING? Type 'yes' to confirm if you are sure.")) {
+                // Iterate and delete
+                let deletedCount = 0;
+                const newsToDelete = [...news];
+                for (const item of newsToDelete) {
+                    await deleteNews(item.id);
+                    deletedCount++;
+                }
+                alert(`Deleted ${deletedCount} news items.`);
+            }
+        }
+    };
+
     return (
         <div className="p-6 md:p-12 pb-24">
             <div className="flex justify-between items-center mb-8">
@@ -45,6 +72,12 @@ export default function NewsManager() {
                     <p className="text-gray-400">Manage announcements, news, and jokes for the News Page.</p>
                 </div>
                 <div className="flex gap-2">
+                    <button
+                        onClick={handleDeleteAll}
+                        className="bg-red-500/10 text-red-500 font-bold px-4 py-3 rounded-xl hover:bg-red-500 hover:text-white transition-colors border border-red-500/20"
+                    >
+                        🗑️ Clear All
+                    </button>
                     <button
                         onClick={handleSeed}
                         className="bg-white/5 text-white font-bold px-4 py-3 rounded-xl hover:bg-white/10 transition-colors"

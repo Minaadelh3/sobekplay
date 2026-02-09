@@ -71,11 +71,14 @@ export async function performTransaction(
             if (!fromSnap.exists()) throw new Error(`المصدر مش موجود: ${params.from.name}`);
 
             const currentBalance = fromSnap.data().points || 0;
+            const currentXP = fromSnap.data().xp || 0;
+
             // Prevent negative balance check could go here if strict
             // if (currentBalance < params.amount) throw new Error("رصيد المصدر غير كافي");
 
             transaction.update(fromRef, {
-                points: currentBalance - params.amount
+                points: currentBalance - params.amount,
+                xp: currentXP - params.amount
             });
         }
 
@@ -85,8 +88,11 @@ export async function performTransaction(
             if (!toSnap.exists()) throw new Error(`المستلم مش موجود: ${params.to.name}`);
 
             const currentBalance = toSnap.data().points || 0;
+            const currentXP = toSnap.data().xp || 0;
+
             transaction.update(toRef, {
-                points: currentBalance + params.amount
+                points: currentBalance + params.amount,
+                xp: currentXP + params.amount
             });
         }
 
@@ -137,13 +143,19 @@ export async function rollbackTransaction(entryId: string, adminId: string, reas
         // Refund Sender (A gets points back)
         if (original.fromType !== 'SYSTEM') {
             const senderRef = original.fromType === 'USER' ? doc(db, 'users', original.fromId) : doc(db, 'teams', original.fromId);
-            transaction.update(senderRef, { points: increment(amount) });
+            transaction.update(senderRef, {
+                points: increment(amount),
+                xp: increment(amount)
+            });
         }
 
         // Deduct Receiver (B loses points)
         if (original.toType !== 'SYSTEM') {
             const receiverRef = original.toType === 'USER' ? doc(db, 'users', original.toId) : doc(db, 'teams', original.toId);
-            transaction.update(receiverRef, { points: increment(-amount) });
+            transaction.update(receiverRef, {
+                points: increment(-amount),
+                xp: increment(-amount)
+            });
         }
 
         // 3. Create Rollback Entry

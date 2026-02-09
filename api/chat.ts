@@ -1,6 +1,7 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import crypto from 'node:crypto';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const startTime = Date.now();
@@ -16,29 +17,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
 
-  const { message } = req.body;
-
-  if (!message || typeof message !== "string" || !message.trim()) {
-    return res.status(200).json({ reply: "مش سامعك كويس.. قول تاني؟ 🤔" });
-  }
-
-  // --- Environment Variables ---
-  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-  const GROQ_API_KEY = process.env.GROQ_API_KEY;
-
-  // --- Persona & System Prompt ---
-  const timeString = new Date().toLocaleTimeString("en-EG", { timeZone: "Africa/Cairo" });
-  const systemPrompt = `
-    You are "Abn Akho Sobek" (Sobek's Nephew), the cool concierge of Sobek Play.
-    Current Cairo Time: ${timeString}.
-    User Message ID: ${requestId}
-    
-    Persona: Witty, friendly Egyptian slang (Franco-Arab ok). Helpful but chill.
-    Rules: Short answers (max 2 sentences). NEVER repeat "How can I help you?".
-    IMPORTANT: If the user greeted you before, vary your response. Don't say the same thing twice.
-  `;
-
   try {
+    // Robust Body Checking
+    if (!req.body) {
+      console.warn(`[${requestId}] Missing request body`);
+      return res.status(400).json({ error: "Missing request body" });
+    }
+
+    const { message } = req.body;
+
+    if (!message || typeof message !== "string" || !message.trim()) {
+      return res.status(200).json({ reply: "مش سامعك كويس.. قول تاني؟ 🤔" });
+    }
+
+    console.log(`[${requestId}] Processing chat message: "${message.substring(0, 50)}..."`);
+
+    // --- Environment Variables ---
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+    const GROQ_API_KEY = process.env.GROQ_API_KEY;
+
+    // --- Persona & System Prompt ---
+    const timeString = new Date().toLocaleTimeString("en-EG", { timeZone: "Africa/Cairo" });
+    const systemPrompt = `
+      You are "Abn Akho Sobek" (Sobek's Nephew), the cool concierge of Sobek Play.
+      Current Cairo Time: ${timeString}.
+      User Message ID: ${requestId}
+      
+      Persona: Witty, friendly Egyptian slang (Franco-Arab ok). Helpful but chill.
+      Rules: Short answers (max 2 sentences). NEVER repeat "How can I help you?".
+      IMPORTANT: If the user greeted you before, vary your response. Don't say the same thing twice.
+    `;
+
     let reply = "";
     let provider = "";
 
@@ -49,6 +58,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (GEMINI_API_KEY) {
       provider = "gemini-1.5-flash";
+      console.log(`[${requestId}] Using Provider: ${provider}`);
+
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -71,6 +82,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     } else if (GROQ_API_KEY) {
       provider = "groq-llama3-70b";
+      console.log(`[${requestId}] Using Provider: ${provider}`);
+
       const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -89,6 +102,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[${requestId}] Groq API Error: ${response.status} ${response.statusText}`, errorText);
         throw new Error(`Groq API Error: ${response.statusText}`);
       }
 
@@ -102,6 +117,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!reply.trim()) reply = "الشبكة بتقطع.. قول تاني؟ 🐊";
 
+    console.log(`[${requestId}] Success. Duration: ${Date.now() - startTime}ms`);
+
     return res.status(200).json({
       reply,
       meta: {
@@ -113,7 +130,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
   } catch (error: any) {
-    console.error(`API_FAIL [${requestId}]:`, error.message || error);
+    console.error(`API_FAIL [${requestId}]:`, error);
+    console.error(error.stack);
 
     // Graceful Fallback
     const fallbacks = [
@@ -121,6 +139,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       "السيستم بياخد دش.. جرب تاني كمان دقيقة 🐊",
       "يا ساتر.. النت فصل! قول تاني كدة؟"
     ];
+
+    // In DEV mode, return actual error
+    // Note: Vercel environment variables are strings
+    const isDev = process.env.NODE_ENV === 'development' || !process.env.NODE_ENV;
+
+    if (isDev) {
+      return res.status(500).json({
+        error: "Internal Handler Error",
+        message: error.message,
+        stack: error.stack,
+        requestId
+      });
+    }
 
     return res.status(200).json({
       reply: fallbacks[Math.floor(Math.random() * fallbacks.length)],

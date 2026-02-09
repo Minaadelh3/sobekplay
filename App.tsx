@@ -31,9 +31,11 @@ import AdminTeamDetails from './pages/admin/AdminTeamDetails';
 import AdminAchievements from './pages/admin/AdminAchievements';
 import AdminJourney from './pages/admin/AdminJourney';
 import PushNotifications from './pages/admin/PushNotifications';
+import PushDebug from './pages/admin/PushDebug';
 import NewsManager from './pages/admin/NewsManager';
 import PrayersManager from './pages/admin/PrayersManager';
 import MediaManager from './pages/admin/MediaManager';
+import RoomsManager from './pages/admin/RoomsManager';
 import AchievementsPage from './pages/AchievementsPage';
 import AchievementNotification from './components/gamification/AchievementNotification';
 
@@ -52,7 +54,7 @@ import SoloGameVerse from './pages/games/SoloGameVerse';
 import SoloGameWho from './pages/games/SoloGameWho';
 import SoloGameSobek from './pages/games/SoloGameSobek';
 import MafiaGame from './pages/games/MafiaGame';
-import CharadesGame from './pages/games/CharadesGame';
+import CharadesGame from './pages/games/CharadesGamePage';
 import PanicGame from './pages/games/PanicGame';
 import ForbiddenGame from './pages/games/ForbiddenGame';
 import StoryGame from './pages/games/StoryGame';
@@ -155,9 +157,12 @@ const App: React.FC = () => {
                       <Route path="balancing" element={<GameBalancing />} />
                       <Route path="balancing" element={<GameBalancing />} />
                       <Route path="notifications" element={<PushNotifications />} />
+                      <Route path="push-debug" element={<PushDebug />} />
                       <Route path="news" element={<NewsManager />} />
                       <Route path="prayers" element={<PrayersManager />} />
+                      <Route path="prayers" element={<PrayersManager />} />
                       <Route path="media" element={<MediaManager />} />
+                      <Route path="rooms" element={<RoomsManager />} />
                     </Route>
 
                     {/* Profile Selection (Intermediate Step) */}

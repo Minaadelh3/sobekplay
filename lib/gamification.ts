@@ -12,7 +12,9 @@ import {
 } from '../types/achievements';
 
 /**
- * SOBEK PLAY GAMIFICATION SYSTEM V2
+ * SOBEK PLAY GAMIFICATION SYSTEM V2 (LEGACY / CLIENT-SIDE)
+ * @deprecated This logic is moving to server-side (functions/achievements).
+ * Use 'lib/events.ts' > trackEvent() instead.
  */
 
 // --- Leveling Logic ---
@@ -124,9 +126,29 @@ export async function processGamificationEvent(
 
     // Commit to Firestore
     if (Object.keys(updates).length > 0) {
-        await updateDoc(userRef, updates);
-    }
+        console.log("💾 [XP] Committing updates to Firestore:", updates);
+        try {
+            await updateDoc(userRef, updates);
+            console.log("✅ [XP] Firestore update successful");
 
+            // --- SYNC TO TEAM ---
+            // If user gained XP, add it to their Team as well
+            if (totalXPGained > 0 && userData.teamId) {
+                const teamRef = doc(db, 'teams', userData.teamId);
+                // We update both 'xp' (new) and 'points' (legacy) for compatibility
+                await updateDoc(teamRef, {
+                    xp: increment(totalXPGained),
+                    points: increment(totalXPGained)
+                }).catch(err => console.error("❌ [XP] Team Sync Failed:", err));
+            }
+
+        } catch (err) {
+            console.error("❌ [XP] Firestore update FAILED:", err);
+            // If this fails, the local state won't update, causing the loop.
+        }
+    } else {
+        console.log("ℹ️ [XP] No updates to commit.");
+    }
 
     return { unlocked: newlyUnlocked, xpGained: totalXPGained };
 }

@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { RoomsLanding } from '../../components/Rooms/RoomsLanding';
 import { RoomsDetails } from '../../components/Rooms/RoomsDetails';
 import { RoomsAdmin } from '../../components/Rooms/RoomsAdmin';
-import { getAllAssignments } from '../../data/rooms/allocate';
-
+import { RoomService } from '../../services/roomService';
+import { Assignment } from '../../data/rooms/types';
 import { useTabReset } from '../../hooks/useTabReset';
 
 type ViewState = 'LANDING' | 'DETAILS' | 'ADMIN';
@@ -12,6 +12,12 @@ type ViewState = 'LANDING' | 'DETAILS' | 'ADMIN';
 const RoomsPage: React.FC = () => {
     const [view, setView] = useState<ViewState>('LANDING');
     const [selectedName, setSelectedName] = useState<string | null>(null);
+    const [assignments, setAssignments] = useState<Assignment[]>([]);
+
+    useEffect(() => {
+        const unsub = RoomService.subscribe(setAssignments);
+        return () => unsub();
+    }, []);
 
     // Tab Reset Logic
     const handleTabReset = React.useCallback(() => {
@@ -21,7 +27,6 @@ const RoomsPage: React.FC = () => {
 
     useTabReset('/rooms', handleTabReset);
 
-    const assignments = getAllAssignments();
     const selectedAssignment = selectedName ? assignments.find(a => a.personName === selectedName) : null;
 
     const handleSelect = (name: string) => {
@@ -47,6 +52,7 @@ const RoomsPage: React.FC = () => {
                         <RoomsLanding
                             onSelect={handleSelect}
                             onAdminClick={() => setView('ADMIN')}
+                            assignments={assignments} // Pass assignments if needed, otherwise Landing typically uses search which might need this
                         />
                     </motion.div>
                 )}
@@ -81,3 +87,4 @@ const RoomsPage: React.FC = () => {
 };
 
 export default RoomsPage;
+

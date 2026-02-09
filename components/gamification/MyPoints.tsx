@@ -19,11 +19,11 @@ const MyPoints: React.FC = () => {
 
         const unsub = onSnapshot(doc(db, "users", user.id), (docS) => {
             const data = docS.data();
-            const p = data?.points || 0;
+            const p = data?.xp || 0; // ⚡ MIGRATION: Use XP
             setPoints(p);
 
             const r = calculateRank(p);
-            const n = getNextRank(r.id);
+            const n = getNextRank(r.level);
             const prog = calculateProgress(p);
 
             setRank(r);
@@ -81,7 +81,7 @@ const MyPoints: React.FC = () => {
 
                 {/* Current Rank Title */}
                 <div className={`text-xl font-bold mb-4 tracking-wide ${rank.color}`}>
-                    {rank.name}
+                    {rank.title}
                 </div>
 
                 {/* Progress Bar */}
@@ -92,7 +92,7 @@ const MyPoints: React.FC = () => {
                             initial={{ width: 0 }}
                             animate={{ width: `${progress}%` }}
                             transition={{ duration: 1, ease: "easeOut" }}
-                            style={{ backgroundColor: rank.id === 'pro' || rank.id === 'pharaoh' ? TOKENS.colors.goldPrimary : undefined }}
+                            style={{ backgroundColor: rank.level >= 9 ? TOKENS.colors.goldPrimary : undefined }}
                         />
                     </div>
                 </div>
@@ -101,8 +101,8 @@ const MyPoints: React.FC = () => {
                 <div className="mt-2 text-sm text-gray-400 font-medium">
                     {nextRank ? (
                         <>
-                            فاضلك <span className="text-white font-bold">{nextRank.minPoints - points}</span> نقطة
-                            وتطلع <span className={`font-bold ${nextRank.color}`}>{nextRank.name}</span> 💪
+                            فاضلك <span className="text-white font-bold">{nextRank.minXP - points}</span> نقطة
+                            وتطلع <span className={`font-bold ${nextRank.color}`}>{nextRank.title}</span> 💪
                         </>
                     ) : (
                         <span className="text-[#D4AF37] font-bold">أنت وصلت للقمة يا بطل! 👑</span>
@@ -111,7 +111,7 @@ const MyPoints: React.FC = () => {
 
                 {/* Tooltip / Helper */}
                 <div className="mt-4 text-xs text-gray-600">
-                    {nextRank ? rank.nextMsg : "حافظ على مكانك في القمة!"}
+                    {nextRank ? "كمل يا بطل، المشوار لسه طويل!" : "حافظ على مكانك في القمة!"}
                 </div>
             </div>
         </motion.div>

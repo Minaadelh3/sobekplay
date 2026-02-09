@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Achievement, AchievementCondition } from '../../types/achievements';
+import { Achievement, AchievementCategory } from '../../types/achievements';
 
 interface AchievementDialogProps {
     achievement?: Achievement | null;
@@ -9,20 +9,25 @@ interface AchievementDialogProps {
 
 export default function AchievementDialog({ achievement, onClose, onSave }: AchievementDialogProps) {
     const [formData, setFormData] = useState<Partial<Achievement>>({
-        name: '',
+        title: '',
         description: '',
-        points: 0,
-        icon: '🏆',
-        category: 'ACTIVITY',
-        conditionType: 'MANUAL',
+        xp: 0,
+        emoji: '🏆',
+        category: 'Discovery',
+        type: 'one_time',
+        trigger: { event: 'manual' },
         repeatable: false,
-        isActive: true
+        visible: true
     });
     const [loading, setLoading] = useState(false);
+
+    // Temp state for trigger event editing
+    const [triggerEvent, setTriggerEvent] = useState('manual');
 
     useEffect(() => {
         if (achievement) {
             setFormData(achievement);
+            setTriggerEvent(achievement.trigger?.event || 'manual');
         }
     }, [achievement]);
 
@@ -30,7 +35,12 @@ export default function AchievementDialog({ achievement, onClose, onSave }: Achi
         e.preventDefault();
         setLoading(true);
         try {
-            await onSave(formData);
+            // Merge trigger event
+            const finalData = {
+                ...formData,
+                trigger: { ...formData.trigger, event: triggerEvent }
+            };
+            await onSave(finalData);
             onClose();
         } catch (error) {
             console.error(error);
@@ -53,21 +63,21 @@ export default function AchievementDialog({ achievement, onClose, onSave }: Achi
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-4 gap-4">
                         <div className="col-span-1">
-                            <label className="block text-xs text-gray-400 mb-1">Icon</label>
+                            <label className="block text-xs text-gray-400 mb-1">Emoji / Icon</label>
                             <input
                                 type="text"
-                                value={formData.icon}
-                                onChange={e => setFormData({ ...formData, icon: e.target.value })}
+                                value={formData.emoji}
+                                onChange={e => setFormData({ ...formData, emoji: e.target.value })}
                                 className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-center text-2xl"
                                 placeholder="🏆"
                             />
                         </div>
                         <div className="col-span-3">
-                            <label className="block text-xs text-gray-400 mb-1">Name (Arabic - Slang preferred)</label>
+                            <label className="block text-xs text-gray-400 mb-1">Title (Arabic preferred)</label>
                             <input
                                 type="text"
-                                value={formData.name}
-                                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                value={formData.title}
+                                onChange={e => setFormData({ ...formData, title: e.target.value })}
                                 className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white"
                                 required
                             />
@@ -84,13 +94,24 @@ export default function AchievementDialog({ achievement, onClose, onSave }: Achi
                         />
                     </div>
 
+                    <div>
+                        <label className="block text-xs text-gray-400 mb-1">How to Get (Hint)</label>
+                        <input
+                            type="text"
+                            value={formData.how_to_get || ''}
+                            onChange={e => setFormData({ ...formData, how_to_get: e.target.value })}
+                            className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white"
+                            placeholder="e.g. افتح الباب"
+                        />
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs text-gray-400 mb-1">Points Value (SP)</label>
+                            <label className="block text-xs text-gray-400 mb-1">XP Value</label>
                             <input
                                 type="number"
-                                value={formData.points}
-                                onChange={e => setFormData({ ...formData, points: parseInt(e.target.value) })}
+                                value={formData.xp}
+                                onChange={e => setFormData({ ...formData, xp: parseInt(e.target.value) })}
                                 className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white font-mono"
                             />
                         </div>
@@ -98,45 +119,58 @@ export default function AchievementDialog({ achievement, onClose, onSave }: Achi
                             <label className="block text-xs text-gray-400 mb-1">Category</label>
                             <select
                                 value={formData.category}
-                                onChange={e => setFormData({ ...formData, category: e.target.value as any })}
+                                onChange={e => setFormData({ ...formData, category: e.target.value as AchievementCategory })}
                                 className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white"
                             >
-                                <option value="ACTIVITY">Activity</option>
-                                <option value="TEAM">Team</option>
-                                <option value="ASWANY">Aswany Flavor</option>
-                                <option value="SPECIAL">Special</option>
+                                <option value="Onboarding">Onboarding</option>
+                                <option value="Daily">Daily</option>
+                                <option value="Discovery">Discovery</option>
+                                <option value="Games">Games</option>
+                                <option value="Community">Community</option>
+                                <option value="Profile">Profile</option>
+                                <option value="Special">Special</option>
                             </select>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs text-gray-400 mb-1">Condition Type</label>
+                            <label className="block text-xs text-gray-400 mb-1">Trigger Event Code</label>
+                            <input
+                                type="text"
+                                value={triggerEvent}
+                                onChange={e => setTriggerEvent(e.target.value)}
+                                className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white font-mono text-xs"
+                                placeholder="e.g. user_login"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs text-gray-400 mb-1">Type</label>
                             <select
-                                value={formData.conditionType}
-                                onChange={e => setFormData({ ...formData, conditionType: e.target.value as any })}
+                                value={formData.type}
+                                onChange={e => setFormData({ ...formData, type: e.target.value as any })}
                                 className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white"
                             >
-                                <option value="MANUAL">Manual (Admin Only)</option>
-                                <option value="FIRST_LOGIN">First Login</option>
-                                <option value="LOGIN_STREAK">Login Streak</option>
-                                <option value="TEAM_WIN">Team Win</option>
-                                <option value="POINTS_THRESHOLD">Points Threshold</option>
-                                <option value="CUSTOM">Custom Logic</option>
+                                <option value="one_time">One Time</option>
+                                <option value="daily">Daily</option>
+                                <option value="progressive">Progressive</option>
+                                <option value="admin">Admin Manual</option>
                             </select>
                         </div>
-                        {(formData.conditionType === 'LOGIN_STREAK' || formData.conditionType === 'POINTS_THRESHOLD') && (
-                            <div>
-                                <label className="block text-xs text-gray-400 mb-1">Target Value</label>
-                                <input
-                                    type="number"
-                                    value={formData.targetValue || 0}
-                                    onChange={e => setFormData({ ...formData, targetValue: parseInt(e.target.value) })}
-                                    className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white font-mono"
-                                />
-                            </div>
-                        )}
                     </div>
+
+                    {formData.type === 'progressive' && (
+                        <div>
+                            <label className="block text-xs text-gray-400 mb-1">Target Count</label>
+                            <input
+                                type="number"
+                                value={formData.target || 0}
+                                onChange={e => setFormData({ ...formData, target: parseInt(e.target.value) })}
+                                className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white font-mono"
+                            />
+                        </div>
+                    )}
+
 
                     <div className="flex gap-4 pt-4 border-t border-white/5">
                         <label className="flex items-center gap-2 cursor-pointer">
@@ -151,11 +185,11 @@ export default function AchievementDialog({ achievement, onClose, onSave }: Achi
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input
                                 type="checkbox"
-                                checked={formData.isActive}
-                                onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
+                                checked={formData.visible}
+                                onChange={e => setFormData({ ...formData, visible: e.target.checked })}
                                 className="rounded border-white/10 bg-black/40 checked:bg-accent-gold"
                             />
-                            <span className="text-sm text-gray-300">Active</span>
+                            <span className="text-sm text-gray-300">Visible</span>
                         </label>
                     </div>
 

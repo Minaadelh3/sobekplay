@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useGame } from '../../hooks/useGameControl';
 import { useNavigate } from 'react-router-dom';
 import { GameConfig } from '../../lib/games';
+import { useAuth } from '../../context/AuthContext';
 
 interface GameContainerProps {
     gameId: string;
@@ -11,6 +12,13 @@ interface GameContainerProps {
 export default function GameContainer({ gameId, children }: GameContainerProps) {
     const { game, loading } = useGame(gameId);
     const navigate = useNavigate();
+    const { user } = useAuth();
+
+    useEffect(() => {
+        if (user && game && !loading) {
+            import('../../lib/events').then(m => m.trackEvent(user.id, 'GAME_OPENED', { gameId }));
+        }
+    }, [user, game, loading, gameId]);
 
     if (loading) {
         return (

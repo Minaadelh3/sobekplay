@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, doc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, serverTimestamp, query, where } from 'firebase/firestore';
+import { collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, addDoc, serverTimestamp, query, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Achievement, ACHIEVEMENTS_LIST } from '../types/achievements';
 import { performTransaction } from '../lib/ledger';
@@ -91,9 +91,12 @@ export function useAchievements() {
         // 2. Add Points (if xp > 0)
         if (achievement.xp > 0) {
             // Fetch User Name for Ledger
-            const userSnap = await import('firebase/firestore').then(mod => mod.getDoc(mod.doc(db, 'users', userId)));
+            const userRef = doc(db, 'users', userId);
+            const userSnap = await getDoc(userRef);
             const userData = userSnap.data();
             const userName = userData?.displayName || userData?.name || 'Unknown User';
+            const currentXP = userData?.xp || 0;
+            const currentLevel = userData?.level || 1;
 
             await performTransaction({
                 type: 'ACHIEVEMENT_REWARD',
@@ -103,37 +106,48 @@ export function useAchievements() {
                 reason: `[ACHIEVEMENT] ${achievement.title}`,
                 adminId: adminId
             });
+
+            // 3. Update User Level & Unlocked Array
+            const newTotalXP = currentXP + achievement.xp;
+            const newLevelConfig = await import('../types/achievements').then(m => m.getLevelConfig(newTotalXP));
+
+            await updateDoc(userRef, {
+                unlockedAchievements: await import('firebase/firestore').then(m => m.arrayUnion(achievementId)),
+                level: newLevelConfig.level
+            });
+        } else {
+            // Just update unlocked array if no XP
+            await updateDoc(doc(db, 'users', userId), {
+                unlockedAchievements: await import('firebase/firestore').then(m => m.arrayUnion(achievementId))
+            });
         }
     };
 
     const resetAllAchievements = async () => {
-        if (!confirm("☢️ DANGER: This will LOCK all achievements for ALL users. They will have to earn them again. Points they already earned will NOT be deducted. Are you sure?")) return;
+        // 🛑 EXTREME DANGER: Full Wipe Protocol
+        if (!confirm("☢️ DANGER: ZERO POINT PROTOCOL \n\nThis will:\n1. RELOCK all achievements for ALL users.\n2. RESET all XP and Level to 1.\n3. RESET all Points to 0.\n\nThis cannot be undone. Are you absolutely sure?")) return;
 
         setLoading(true);
         try {
             // 1. Delete all 'user_achievements' logs
-            // Ideally we'd use a cloud function for this, but client-side batching works for small-scale
             const q = query(collection(db, 'user_achievements'));
             const snap = await getDocs(q);
-
-            // Delete in batches of 500
-            const chunks = [];
-            let batch = import('firebase/firestore').then(mod => mod.writeBatch(db));
-            let counter = 0;
-
-            // Actually, for simplicity in client-side without batch complexity import mess:
-            // sequential delete is safer to write here, or map.
-            // Let's just use simple parallel delete for now or batch if possible.
-            // We'll update the 'users' collection 'unlockedAchievements' field as well.
-
-            const usersSnap = await getDocs(collection(db, 'users'));
-            const userUpdates = usersSnap.docs.map(d => updateDoc(d.ref, { unlockedAchievements: [] }));
-
             const logDeletes = snap.docs.map(d => deleteDoc(d.ref));
+
+            // 2. Reset User Fields (XP, Points, Level, Progress)
+            const usersSnap = await getDocs(collection(db, 'users'));
+            const userUpdates = usersSnap.docs.map(d => updateDoc(d.ref, {
+                unlockedAchievements: [],
+                achievementProgress: {},
+                lastDailyAction: {},
+                xp: 0,
+                points: 0,
+                level: 1
+            }));
 
             await Promise.all([...userUpdates, ...logDeletes]);
 
-            alert("All achievements have been reset!");
+            alert("✅ GAME ECONOMY RESET COMPLETE.\nAll users are now Level 1 with 0 XP.");
             fetchAchievements();
         } catch (e) {
             console.error("Reset Failed", e);

@@ -17,12 +17,17 @@ export default function SettingsPage() {
     // Notifications Hook
     const {
         permission,
-        fcmToken,
-        registerToken,
-        unregisterToken,
-        loading: pushLoading,
-        isSupported: pushSupported
+        subscriptionId,
+        promptPush,
+        isInitialized
     } = usePushNotifications();
+
+    // Mapped for UI compatibility
+    const fcmToken = subscriptionId;
+    const registerToken = promptPush;
+    const unregisterToken = async () => { alert("To disable notifications, please use your browser settings."); };
+    const pushLoading = false;
+    const pushSupported = isInitialized;
 
     // UI State
     const [toast, setToast] = useState<{ msg: string, type: 'success' | 'error', visible: boolean }>({ msg: '', type: 'success', visible: false });
@@ -39,6 +44,9 @@ export default function SettingsPage() {
     // Sync local state when user updates (e.g. initial load)
     useEffect(() => {
         if (user) {
+            // TRACK EVENT: SETTINGS_OPENED
+            import('../lib/events').then(m => m.trackEvent(user.id, 'SETTINGS_OPENED'));
+
             const currentName = user.profile?.fullName || user.name || '';
             const currentNickname = user.profile?.nickname || user.profile?.displayName || '';
             const currentMobile = user.profile?.mobile || user.mobile || '';
@@ -54,6 +62,14 @@ export default function SettingsPage() {
             });
         }
     }, [user]);
+
+    // Track Notification Enable
+    useEffect(() => {
+        if (fcmToken && user) {
+            // If token exists, user enabled notifications
+            import('../lib/events').then(m => m.trackEvent(user.id, 'NOTIFICATIONS_ENABLED', { token: fcmToken }));
+        }
+    }, [fcmToken, user]);
 
     const hasChanges = name !== initialState.name || nickname !== initialState.nickname || mobile !== initialState.mobile;
 
@@ -74,6 +90,13 @@ export default function SettingsPage() {
         if (success) {
             showToast("تم تحديث البيانات بنجاح ✅", 'success');
             setInitialState({ name, nickname, mobile });
+
+            // TRACK EVENT: PROFILE_UPDATED
+            import('../lib/events').then(m => m.trackEvent(user?.id || '', 'PROFILE_UPDATED', {
+                hasName: !!name,
+                hasAvatar: !!user?.avatar, // We accept current state as success
+                fieldCount: [name, nickname, mobile].filter(Boolean).length
+            }));
         } else {
             showToast("حدث خطأ أثناء التحديث", 'error');
         }

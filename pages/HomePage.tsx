@@ -9,7 +9,7 @@ interface HomeProps {
 }
 
 import TeamRankList from '../components/TeamRankList';
-import SystemMessagesFeed from '../components/SystemMessagesFeed';
+import HomeNotificationBanner from '../components/HomeNotificationBanner';
 
 const HomePage: React.FC<HomeProps> = ({ posters }) => {
     const rows = useMemo(() => {
@@ -46,7 +46,7 @@ const HomePage: React.FC<HomeProps> = ({ posters }) => {
             <TeamRankList />
 
             {/* Global Broadcasts */}
-            <SystemMessagesFeed />
+            <HomeNotificationBanner />
 
             {/* Real-time Content */}
             <div className="relative z-30 px-4 max-w-7xl mx-auto space-y-8">

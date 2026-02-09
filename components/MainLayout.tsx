@@ -38,9 +38,28 @@ const MainLayout: React.FC<MainLayoutProps> = ({ analyzedPosters, isAnalyzing })
     // Check for Achievements
     useEffect(() => {
         if (user) {
-            trackEvent('user_first_login');
+            // Guard: Only fire if not already unlocked (to avoid infinite loops)
+            // IDs must match those in generic ACHIEVEMENTS_LIST
+            const unlocked = user.unlockedAchievements || [];
 
-            if (user.teamId) {
+            // 🛑 SESSION GUARD: Immediate stop for the loop
+            // Even if DB is slow, this stops it for this session
+            const sessionFirstLogin = sessionStorage.getItem('sobek_event_fired_user_first_login');
+            const sessionTeamJoined = sessionStorage.getItem('sobek_event_fired_team_joined');
+
+            const hasFirstLogin = unlocked.includes('first_login');
+            const hasTeamJoined = unlocked.includes('team_joined');
+
+            if (!hasFirstLogin && !sessionFirstLogin) {
+                console.log("⚠️ [MainLayout] Triggering 'user_first_login'...");
+                // Set session immediately to prevent loop
+                sessionStorage.setItem('sobek_event_fired_user_first_login', 'true');
+                trackEvent('user_first_login');
+            }
+
+            if (user.teamId && !hasTeamJoined && !sessionTeamJoined) {
+                console.log("⚠️ [MainLayout] Triggering 'team_joined'...");
+                sessionStorage.setItem('sobek_event_fired_team_joined', 'true');
                 trackEvent('team_joined');
             }
         }

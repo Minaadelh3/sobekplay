@@ -4,11 +4,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from "
 import { onAuthStateChanged, type User as FirebaseUser, getRedirectResult, UserCredential, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp, updateDoc, onSnapshot } from "firebase/firestore";
 import { auth, db } from "../lib/firebase";
-import {
-    loginEmail,
-    signupEmail,
-    logoutFull
-} from "../lib/authActions";
+import { authService } from "@/lib/AuthService";
 import { User, TEAMS, TeamProfile } from "../types/auth";
 import { PlayerProfile, TeamId } from "../types/store";
 
@@ -41,7 +37,7 @@ type AuthCtx = {
 const Ctx = createContext<AuthCtx | null>(null);
 
 const TEAM_PINS: Record<string, string> = {
-    'tout': '1234', 'ankh': '1234', 'amon': '1234', 'ra': '1234', 'uncle_joy': '1234'
+    'tout': '1234', 'ptah': '1234', 'amon': '1234', 'ra': '1234', 'uncle_joy': '1234'
 };
 
 // Global Log Buffer for PWA Debugging
@@ -155,12 +151,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                             lastLogin: serverTimestamp(),
                             photoURL: fUser.photoURL || ""
                         };
-                        // We must create it. Use setDoc. 
-                        // Note: This might trigger another snapshot event, which is fine.
                         await setDoc(ref, userData);
+
+                        // TRACK EVENT: USER_CREATED
+                        // We use a dynamic import to avoid circular deps if any
+                        import('../lib/events').then(m => m.trackEvent(fUser.uid, 'USER_CREATED', {
+                            provider: userData.provider,
+                            email: userData.email
+                        }));
                     } else {
                         // console.log("✅ [AUTH] Profile Update Received");
                         userData = snap.data();
+
+
+                        // 🔄 SYNC: Ensure PhotoURL is up to date if missing in DB but present in Auth
+                        // This fixes the Avatar issue in Rankings
+                        if (!userData.photoURL && fUser.photoURL) {
+                            console.log("🔄 [AUTH] Syncing PhotoURL to Firestore...");
+                            await updateDoc(ref, { photoURL: fUser.photoURL });
+                        }
+
+                        // 📅 DAILY LOGIN TRACKER
+                        const now = new Date();
+                        const lastLogin = userData.lastLogin?.toDate ? userData.lastLogin.toDate() : new Date(0);
+                        const isNewDay = now.getDate() !== lastLogin.getDate() || now.getMonth() !== lastLogin.getMonth();
+
+                        if (isNewDay) {
+                            import('../lib/events').then(m => {
+                                m.trackEvent(fUser.uid, 'DAILY_LOGIN');
+
+                                // Streak Logic could be here or backend. 
+                                // Let's send STREAK event so backend calculates it strictly.
+                                m.trackEvent(fUser.uid, 'LOGIN_STREAK');
+                            });
+
+                            // Update lastLogin to now preventing double trigger
+                            await updateDoc(ref, { lastLogin: serverTimestamp() });
+                        }
                     }
 
                     // Map to App User
@@ -201,19 +228,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                     setUser(appUser);
 
-                    // Team Logic (kept simple for now, fetched once)
-                    if (appUser.teamId) {
-                        const staticTeam = TEAMS.find(team => team.id === appUser.teamId);
-                        if (staticTeam) {
-                            setActiveTeam(staticTeam);
-                        } else {
-                            // Only fetch if not already set or different
-                            const teamDoc = await getDoc(doc(db, "teams", appUser.teamId));
-                            if (teamDoc.exists()) {
-                                setActiveTeam({ id: appUser.teamId, ...teamDoc.data() } as TeamProfile);
-                            }
-                        }
-                    }
+                    // Team Logic
+                    // We REMOVED the one-time fetch here because the new useEffect handles real-time updates based on user.teamId
+                    // This prevents double-fetching and ensures data is always fresh.
 
                     setRoleLoading(false);
                     setRoleReady(true);
@@ -228,12 +245,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
 
         initAuth();
-
         return () => {
             if (authUnsub) authUnsub();
             if (profileUnsub) profileUnsub();
         };
     }, []);
+
+    // --- 2. TEAM REAL-TIME LISTENER ---
+    useEffect(() => {
+        let teamUnsub: () => void;
+
+        if (user?.teamId) {
+            // If user has a team, listen to it
+            const teamRef = doc(db, "teams", user.teamId);
+            teamUnsub = onSnapshot(teamRef, (snap) => {
+                if (snap.exists()) {
+                    const data = snap.data();
+                    setActiveTeam(prev => ({
+                        ...prev,
+                        id: user.teamId as TeamId,
+                        ...data,
+                        points: data.xp || data.points || 0 // Prefer XP, fallback to points
+                    } as TeamProfile));
+                }
+            }, (err) => {
+                console.error("❌ [AUTH] Team Snapshot Error:", err);
+            });
+        } else {
+            setActiveTeam(null);
+        }
+
+        return () => {
+            if (teamUnsub) teamUnsub();
+        };
+    }, [user?.teamId]);
 
     const isAdmin = user?.role === 'ADMIN' || user?.teamId === 'uncle_joy';
     const loading = authLoading || roleLoading;
@@ -248,6 +293,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
             await updateDoc(doc(db, "users", firebaseUser.uid), { teamId });
             setUser(prev => prev ? { ...prev, teamId: teamId as TeamId } : null);
+
+            // TRACK EVENT: TEAM_JOINED
+            import('../lib/events').then(m => m.trackEvent(firebaseUser.uid, 'TEAM_JOINED', { teamId }));
 
             // Update Active Team State Logic
             const staticTeam = TEAMS.find(x => x.id === teamId);
@@ -275,15 +323,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         authReady,
         roleReady,
         loading,
-        loginEmail,
-        signupEmail,
-        logout: logoutFull,
+        loginEmail: (e, p) => authService.loginEmail(e, p),
+        signupEmail: (e, p) => authService.signupEmail(e, p),
+        logout: () => authService.logout(),
         activeTeam,
         selectedTeam: activeTeam,
         isAdmin,
         selectTeam,
         hasAccess: () => true,
-        login: async (e, p) => { try { await loginEmail(e, p); return true; } catch { return false; } },
+        login: async (e, p) => { try { await authService.loginEmail(e, p); return true; } catch { return false; } },
         activePlayer: user,
         TEAMS
     };

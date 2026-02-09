@@ -1,25 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { searchIndexedPeople, buildIndex, SearchablePerson } from '../../data/rooms/search';
-import { getAllAssignments } from '../../data/rooms/allocate';
+
+
+import { Assignment } from '../../data/rooms/types';
 
 interface SearchBarProps {
     onSelect: (personName: string) => void;
     onClear: () => void;
+    assignments: Assignment[];
 }
 
-export const SearchBar: React.FC<SearchBarProps> = ({ onSelect, onClear }) => {
+export const SearchBar: React.FC<SearchBarProps> = ({ onSelect, onClear, assignments }) => {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<string[]>([]);
 
-    // Build Index once
+    // Build Index when assignments change
     const indexRef = React.useRef<SearchablePerson[]>([]);
 
     useEffect(() => {
-        const allAssignments = getAllAssignments();
-        const allNames = allAssignments.map(a => a.personName);
+        const allNames = assignments.map(a => a.personName);
         indexRef.current = buildIndex(allNames);
-    }, []);
+    }, [assignments]);
 
     useEffect(() => {
         if (query.length > 1) {

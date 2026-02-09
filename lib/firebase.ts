@@ -10,8 +10,17 @@ import { getAnalytics, isSupported } from "firebase/analytics";
 // but here we stick to Vite's standard.
 const getEnv = (key: string): string => {
     // Vercel/Next.js often exposes vars on process.env, while Vite uses import.meta.env.
-    // We check import.meta.env first for Vite consistency.
-    const val = import.meta.env[`VITE_${key}`] || import.meta.env[`NEXT_PUBLIC_${key}`];
+    // We check import.meta.env first for Vite consistency, then process.env for Node scripts.
+    let val = "";
+    try {
+        if (typeof import.meta !== 'undefined' && import.meta.env) {
+            val = import.meta.env[`VITE_${key}`] || import.meta.env[`NEXT_PUBLIC_${key}`];
+        }
+    } catch (e) { /* ignore */ }
+
+    if (!val && typeof process !== 'undefined' && process.env) {
+        val = process.env[`VITE_${key}`] || process.env[`NEXT_PUBLIC_${key}`];
+    }
     return val || "";
 };
 

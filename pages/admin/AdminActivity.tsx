@@ -41,7 +41,8 @@ export default function AdminActivity() {
     };
 
     // Helper: Translate Action Code
-    const formatAction = (action: string) => {
+    const formatAction = (action?: string) => {
+        if (!action) return 'Unknown Action';
         const map: Record<string, string> = {
             'UPDATE_STATS_DIRECT': 'تعديل رصيد مباشر',
             'ASSIGN_ROLE': 'تغيير صلاحية إدارية',

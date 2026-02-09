@@ -14,34 +14,50 @@ export const AchievementsProvider: React.FC<{ children: ReactNode }> = ({ childr
     const { user } = useAuth();
     const [currentAchievement, setCurrentAchievement] = useState<Achievement | null>(null);
 
-    const trackEvent = async (eventName: string, metadata: any = {}) => {
+    // 🛡️ Track Event (Fire and Forget)
+    const trackEvent = React.useCallback(async (eventName: string, metadata: any = {}) => {
         if (!user) return;
+        // Import dynamic to avoid cycles
+        import('../lib/events').then(m => m.trackEvent(user.id, eventName, metadata));
+    }, [user]);
 
-        try {
-            console.log(`🎮 [XP] Tracking Event: ${eventName}`);
-            const result = await processGamificationEvent(user.id, eventName, metadata);
+    // 👂 Listen for New Achievements via User Object Updates
+    // The AuthContext maintains the 'user' object from Firestore snapshots.
+    // When 'user.unlockedAchievements' changes, we detect it here.
+    const prevUnlockedRef = React.useRef<string[]>([]);
+    const isFirstRun = React.useRef(true);
 
-            if (result.unlocked.length > 0) {
-                // Show most valuable unlocked achievement (or queue them if we improve toast)
-                // For now, show the first one
-                const mainUnlock = result.unlocked[0];
-                setCurrentAchievement(mainUnlock);
+    React.useEffect(() => {
+        if (!user) return;
+        const current = user.unlockedAchievements || [];
 
-                // Play Sound Effect Here if needed
-            }
-
-            if (result.newLevel) {
-                // TODO: Show Level Up Modal
-                console.log(`🚀 [XP] Level Up! Now Level ${result.newLevel}`);
-            }
-
-        } catch (e) {
-            console.error("XP Tack Error", e);
+        if (isFirstRun.current) {
+            prevUnlockedRef.current = current;
+            isFirstRun.current = false;
+            return;
         }
-    };
+
+        if (current.length > prevUnlockedRef.current.length) {
+            // Find difference
+            const newIds = current.filter(id => !prevUnlockedRef.current.includes(id));
+            if (newIds.length > 0) {
+                // Find config
+                import('../types/achievements').then(({ ACHIEVEMENTS_LIST }) => {
+                    const achievement = ACHIEVEMENTS_LIST.find(a => a.id === newIds[0]);
+                    if (achievement) {
+                        setCurrentAchievement(achievement);
+                        // Sound effect could go here
+                    }
+                });
+            }
+        }
+        prevUnlockedRef.current = current;
+    }, [user?.unlockedAchievements]);
+
+    const value = React.useMemo(() => ({ trackEvent }), [trackEvent]);
 
     return (
-        <AchievementsContext.Provider value={{ trackEvent }}>
+        <AchievementsContext.Provider value={value}>
             {children}
             {/* Global Toast Layer */}
             <AchievementToast

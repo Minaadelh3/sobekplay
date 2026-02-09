@@ -24,7 +24,7 @@ const Leaderboard: React.FC = () => {
         // We handle Admin filtering client side.
         const q = query(
             collection(db, "users"),
-            orderBy("points", "desc"),
+            orderBy("xp", "desc"), // ⚡ MIGRATION: Sort by XP
             limit(50)
         );
 
@@ -52,7 +52,8 @@ const Leaderboard: React.FC = () => {
                     id: doc.id,
                     name: data.displayName || data.name || "Unknown",
                     avatar: finalAvatar || "",
-                    points: data.points || 0,
+                    points: data.xp || 0, // ⚡ MIGRATION: Use XP as main score
+                    xp: data.xp || 0,
                     role: 'USER',
                     teamId: data.teamId
                 } as User);
@@ -186,7 +187,7 @@ const Leaderboard: React.FC = () => {
                                                             {(u.points || 0).toLocaleString()}
                                                         </div>
                                                         <div className="text-[9px] text-gray-600 font-bold uppercase tracking-widest">
-                                                            نقطة
+                                                            XP
                                                         </div>
                                                     </div>
                                                 </div>

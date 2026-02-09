@@ -18,7 +18,7 @@ export const ToutIcon = () => (
     </TeamIcon>
 );
 
-export const AnkhIcon = () => (
+export const PtahIcon = () => (
     <TeamIcon>
         <path d="M256 96c-44.2 0-80 35.8-80 80s35.8 80 80 80 80-35.8 80-80-35.8-80-80-80zM216 288h-40v40h40v128h80V328h40v-40h-40v-24c0-13.3-10.7-24-24-24h-32c-13.3 0-24 10.7-24 24v24z" />
     </TeamIcon>

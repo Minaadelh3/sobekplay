@@ -10,7 +10,8 @@ const SmartGamesPage: React.FC = () => {
     const { accountData, isAdmin } = useAuth();
 
     // Account Points (Admin gets infinite)
-    const totalPoints = isAdmin ? 999999 : (accountData?.totalPoints || 0);
+    // Account Points (Admin gets infinite)
+    const totalPoints = isAdmin ? 999999 : (accountData?.xp || 0);
 
     const getRequiredPoints = (difficulty: string) => {
         switch (difficulty) {

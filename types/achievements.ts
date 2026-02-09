@@ -10,16 +10,16 @@ export interface LevelConfig {
 }
 
 export const LEVELS: LevelConfig[] = [
-    { level: 1, minXP: 0, maxXP: 20, title: "مستكشف جديد", description: "لسه داخل وبيتعرف", icon: "👣", color: "text-gray-400" },
-    { level: 2, minXP: 21, maxXP: 50, title: "ماشي صح", description: "فاهم الدنيا", icon: "🧭", color: "text-blue-400" },
-    { level: 3, minXP: 51, maxXP: 100, title: "ابن الرحلة", description: "ثابت ومكمّل", icon: "🐪", color: "text-amber-600" },
-    { level: 4, minXP: 101, maxXP: 180, title: "نوبي أصيل", description: "هادي وبيحسبها", icon: "⚓", color: "text-teal-500" },
-    { level: 5, minXP: 181, maxXP: 300, title: "حارس النيل", description: "تقيل ومؤثر", icon: "🐊", color: "text-emerald-500" },
-    { level: 6, minXP: 301, maxXP: 450, title: "ابن سوبك", description: "من الكبار", icon: "👑", color: "text-yellow-500" },
-    { level: 7, minXP: 451, maxXP: 650, title: "سيد الرحلة", description: "Leader", icon: "🔱", color: "text-orange-500" },
-    { level: 8, minXP: 651, maxXP: 900, title: "روح النيل", description: "Rare", icon: "🌊", color: "text-cyan-400" },
-    { level: 9, minXP: 901, maxXP: 1200, title: "أسطورة حية", description: "Very Rare", icon: "🏺", color: "text-purple-500" },
-    { level: 10, minXP: 1201, maxXP: 99999, title: "مختار سوبك", description: "Elite (Invite Only)", icon: "☀️", color: "text-rose-500" },
+    { level: 1, minXP: 0, maxXP: 99, title: "مستكشف جديد", description: "لسه داخل وبيتعرف", icon: "👣", color: "text-gray-400" },
+    { level: 2, minXP: 100, maxXP: 299, title: "ماشي صح", description: "فاهم الدنيا", icon: "🧭", color: "text-blue-400" },
+    { level: 3, minXP: 300, maxXP: 599, title: "ابن الرحلة", description: "ثابت ومكمّل", icon: "🐪", color: "text-amber-600" },
+    { level: 4, minXP: 600, maxXP: 999, title: "حارس النيل", description: "هادي وبيحسبها", icon: "⚓", color: "text-teal-500" },
+    { level: 5, minXP: 1000, maxXP: 1499, title: "ابن سوبك", description: "من الكبار", icon: "🐊", color: "text-emerald-500" },
+    { level: 6, minXP: 1500, maxXP: 2199, title: "سيد الرحلة", description: "من الكبار", icon: "👑", color: "text-yellow-500" },
+    { level: 7, minXP: 2200, maxXP: 2999, title: "روح النيل", description: "Leader", icon: "🔱", color: "text-orange-500" },
+    { level: 8, minXP: 3000, maxXP: 4999, title: "أسطورة حية", description: "Rare", icon: "🌊", color: "text-cyan-400" },
+    { level: 9, minXP: 5000, maxXP: 9999, title: "مختار سوبك", description: "Very Rare", icon: "🏺", color: "text-purple-500" },
+    { level: 10, minXP: 10000, maxXP: 99999, title: "نصف إله", description: "Elite (Invite Only)", icon: "☀️", color: "text-rose-500" },
 ];
 
 export const getLevelConfig = (xp: number): LevelConfig => {
@@ -32,12 +32,18 @@ export const getNextLevelConfig = (currentLevel: number): LevelConfig | null => 
 
 
 // --- 2. ACHIEVEMENT SCHEMA ---
+import { GameEventType } from './Events';
 
 export type AchievementType = 'one_time' | 'daily' | 'progressive' | 'admin';
 export type AchievementCategory = 'Onboarding' | 'Daily' | 'Profile' | 'Discovery' | 'Community' | 'Games' | 'Special';
 
 export interface AchievementTrigger {
-    event: string;
+    event: GameEventType;
+    condition?: {
+        field: string;
+        operator: '==' | '>' | '>=' | '<' | '<=' | 'contains';
+        value: any;
+    };
     cooldown_hours?: number;
     required_count?: number; // For progressive
 }
@@ -71,7 +77,7 @@ export const ACHIEVEMENTS_LIST: Achievement[] = [
         category: "Onboarding",
         type: "one_time",
         xp: 5,
-        trigger: { event: "user_first_login" },
+        trigger: { event: "USER_CREATED" },
         repeatable: false,
         visible: true,
         order: 1
@@ -85,7 +91,7 @@ export const ACHIEVEMENTS_LIST: Achievement[] = [
         category: "Onboarding",
         type: "one_time",
         xp: 5,
-        trigger: { event: "onboarding_completed" },
+        trigger: { event: "ONBOARDING_COMPLETED" },
         repeatable: false,
         visible: true,
         order: 2
@@ -101,7 +107,7 @@ export const ACHIEVEMENTS_LIST: Achievement[] = [
         category: "Daily",
         type: "daily",
         xp: 2,
-        trigger: { event: "app_open", cooldown_hours: 24 },
+        trigger: { event: "DAILY_LOGIN", cooldown_hours: 24 },
         repeatable: true,
         visible: true,
         order: 10
@@ -115,7 +121,10 @@ export const ACHIEVEMENTS_LIST: Achievement[] = [
         category: "Daily",
         type: "one_time",
         xp: 15,
-        trigger: { event: "login_streak_7" },
+        trigger: {
+            event: "LOGIN_STREAK",
+            condition: { field: 'count', operator: '>=', value: 7 }
+        },
         repeatable: false,
         visible: true,
         order: 11
@@ -129,7 +138,10 @@ export const ACHIEVEMENTS_LIST: Achievement[] = [
         category: "Daily",
         type: "one_time",
         xp: 30,
-        trigger: { event: "login_streak_30" },
+        trigger: {
+            event: "LOGIN_STREAK",
+            condition: { field: 'count', operator: '>=', value: 30 }
+        },
         repeatable: false,
         visible: true,
         order: 12
@@ -145,7 +157,7 @@ export const ACHIEVEMENTS_LIST: Achievement[] = [
         category: "Profile",
         type: "one_time",
         xp: 5,
-        trigger: { event: "profile_photo_uploaded" },
+        trigger: { event: "PROFILE_PICTURE_UPLOADED" },
         repeatable: false,
         visible: true,
         order: 20
@@ -159,7 +171,7 @@ export const ACHIEVEMENTS_LIST: Achievement[] = [
         category: "Profile",
         type: "one_time",
         xp: 5,
-        trigger: { event: "settings_opened" },
+        trigger: { event: "SETTINGS_OPENED" },
         repeatable: false,
         visible: true,
         order: 21
@@ -173,7 +185,7 @@ export const ACHIEVEMENTS_LIST: Achievement[] = [
         category: "Profile",
         type: "one_time",
         xp: 5,
-        trigger: { event: "notifications_enabled" },
+        trigger: { event: "NOTIFICATIONS_ENABLED" },
         repeatable: false,
         visible: true,
         order: 22
@@ -190,7 +202,7 @@ export const ACHIEVEMENTS_LIST: Achievement[] = [
         type: "progressive",
         xp: 10,
         target: 10,
-        trigger: { event: "movie_poster_open" },
+        trigger: { event: "MOVIE_POSTER_OPENED" },
         repeatable: false,
         visible: true,
         order: 30
@@ -205,7 +217,7 @@ export const ACHIEVEMENTS_LIST: Achievement[] = [
         type: "progressive",
         xp: 15,
         target: 5, // Home, Games, Team, Profile, Store?
-        trigger: { event: "section_visit" },
+        trigger: { event: "SECTION_OPENED" },
         repeatable: false,
         visible: true,
         order: 31
@@ -219,7 +231,7 @@ export const ACHIEVEMENTS_LIST: Achievement[] = [
         category: "Discovery",
         type: "one_time",
         xp: 5,
-        trigger: { event: "city_info_opened" },
+        trigger: { event: "CITY_INFO_OPENED" },
         repeatable: false,
         visible: true,
         order: 32
@@ -233,7 +245,7 @@ export const ACHIEVEMENTS_LIST: Achievement[] = [
         category: "Discovery",
         type: "one_time",
         xp: 5,
-        trigger: { event: "soundcloud_clicked" },
+        trigger: { event: "SOUNDCLOUD_CLICKED" },
         repeatable: false,
         visible: true,
         order: 33
@@ -247,7 +259,7 @@ export const ACHIEVEMENTS_LIST: Achievement[] = [
         category: "Discovery",
         type: "one_time",
         xp: 5,
-        trigger: { event: "google_photos_clicked" },
+        trigger: { event: "GOOGLE_PHOTOS_CLICKED" },
         repeatable: false,
         visible: true,
         order: 34
@@ -263,7 +275,7 @@ export const ACHIEVEMENTS_LIST: Achievement[] = [
         category: "Community",
         type: "one_time",
         xp: 5,
-        trigger: { event: "chat_message_sent" },
+        trigger: { event: "CHAT_MESSAGE_SENT" },
         repeatable: false,
         visible: true,
         order: 40
@@ -277,7 +289,7 @@ export const ACHIEVEMENTS_LIST: Achievement[] = [
         category: "Community",
         type: "one_time",
         xp: 10,
-        trigger: { event: "team_joined" },
+        trigger: { event: "TEAM_JOINED" },
         repeatable: false,
         visible: true,
         order: 39
@@ -291,7 +303,7 @@ export const ACHIEVEMENTS_LIST: Achievement[] = [
         category: "Community",
         type: "one_time",
         xp: 5,
-        trigger: { event: "room_assigned" },
+        trigger: { event: "ROOM_ASSIGNED" },
         repeatable: false,
         visible: true,
         order: 41
@@ -307,7 +319,7 @@ export const ACHIEVEMENTS_LIST: Achievement[] = [
         category: "Games",
         type: "one_time",
         xp: 10,
-        trigger: { event: "games_opened" },
+        trigger: { event: "GAMES_OPENED" },
         repeatable: false,
         visible: true,
         order: 50
@@ -321,10 +333,45 @@ export const ACHIEVEMENTS_LIST: Achievement[] = [
         category: "Games",
         type: "one_time",
         xp: 10,
-        trigger: { event: "game_score_submitted" },
+        trigger: { event: "GAME_SCORE_SUBMITTED" },
         repeatable: false,
         visible: true,
         order: 51
+    },
+    // 6️⃣ Games
+    {
+        id: "mafia_don",
+        title: "الـ Don",
+        emoji: "🕶️",
+        description: "كسبت دور المافيا",
+        how_to_get: "اكسب لعبة مافيا وأنت مافيا",
+        category: "Games",
+        type: "one_time",
+        xp: 50,
+        trigger: {
+            event: "GAME_COMPLETED",
+            condition: { field: "result", operator: "==", value: "win_mafia" }
+        },
+        repeatable: false,
+        visible: true,
+        order: 55
+    },
+    {
+        id: "first_win",
+        title: "أول مكسب",
+        emoji: "🏆",
+        description: "طعم الفوز حلو",
+        how_to_get: "اكسب أي لعبة لأول مرة",
+        category: "Games",
+        type: "one_time",
+        xp: 20,
+        trigger: {
+            event: "GAME_COMPLETED",
+            condition: { field: "result", operator: "==", value: "win" }
+        },
+        repeatable: false,
+        visible: true,
+        order: 53
     },
     {
         id: "save_el_helwa",
@@ -335,7 +382,7 @@ export const ACHIEVEMENTS_LIST: Achievement[] = [
         category: "Games",
         type: "one_time",
         xp: 10,
-        trigger: { event: "el_helwa_saved" },
+        trigger: { event: "EL_HELWA_SAVED" },
         repeatable: false,
         visible: true,
         order: 52
@@ -351,7 +398,7 @@ export const ACHIEVEMENTS_LIST: Achievement[] = [
         category: "Special",
         type: "admin",
         xp: 20,
-        trigger: { event: "admin_grant_nubi" },
+        trigger: { event: "ADMIN_GRANT" },
         repeatable: false,
         visible: true,
         order: 90
@@ -365,7 +412,7 @@ export const ACHIEVEMENTS_LIST: Achievement[] = [
         category: "Special",
         type: "admin",
         xp: 100,
-        trigger: { event: "admin_grant_sobek" },
+        trigger: { event: "ADMIN_GRANT" },
         repeatable: false,
         visible: true,
         order: 99

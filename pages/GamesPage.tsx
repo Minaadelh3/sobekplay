@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useAuth } from '../context/AuthContext';
+import { useEffect } from 'react';
 import BackButton from '../components/BackButton';
 
 import { GAMES_CONFIG } from '../lib/games';
@@ -99,6 +101,13 @@ const CLASSIC_GAMES: GameItem[] = [
 
 const GamesPage: React.FC = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
+
+    useEffect(() => {
+        if (user) {
+            import('../lib/events').then(m => m.trackEvent(user.id, 'GAMES_OPENED'));
+        }
+    }, [user]);
 
     return (
         <div className="min-h-screen bg-[#050505] text-white font-arabic safe-area-pb selection:bg-purple-500/30 overflow-x-hidden" dir="rtl">

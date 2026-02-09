@@ -2,6 +2,7 @@ export type UserRole = 'SUPER_ADMIN' | 'POINTS_MANAGER' | 'GAMES_MODERATOR' | 'V
 
 export interface User {
     id: string;
+    uid?: string; // Firebase Auth UID compatibility
     name: string;
     email?: string;
     role: UserRole;
@@ -89,7 +90,7 @@ export const USERS_DB: User[] = [
 ];
 
 
-export type TeamId = 'tout' | 'ankh' | 'amon' | 'ra' | 'uncle_joy';
+export type TeamId = 'tout' | 'ptah' | 'amon' | 'ra' | 'uncle_joy';
 
 export interface TeamProfile {
     id: TeamId;
@@ -97,13 +98,14 @@ export interface TeamProfile {
     avatar: string;
     pin?: string;
     color: string;
-    points: number;      // Current Score
+    xp?: number;         // ⚡ MAIN SCORE (Migrated from points)
+    points: number;      // Legacy / Current Score (Deprecated)
     isScorable: boolean; // Eligibility for points
 }
 
 export const TEAMS: TeamProfile[] = [
     { id: 'tout', name: 'توت', avatar: '/profile/toot.png', color: 'from-[#1a237e] to-[#0d47a1]', points: 0, isScorable: true },
-    { id: 'ankh', name: 'عنخ', avatar: '/profile/ankh.png', color: 'from-[#1b5e20] to-[#004d40]', points: 0, isScorable: true },
+    { id: 'ptah', name: 'بتاح', avatar: '/profile/ankh.png', color: 'from-[#1b5e20] to-[#004d40]', points: 0, isScorable: true },
     { id: 'amon', name: 'آمون', avatar: '/profile/amoun.png', color: 'from-[#4a148c] to-[#311b92]', points: 0, isScorable: true },
     { id: 'ra', name: 'رع', avatar: '/profile/raa.png', color: 'from-[#ff6f00] to-[#ffca28]', points: 0, isScorable: true },
     // Uncle Joy is NOT Scorable

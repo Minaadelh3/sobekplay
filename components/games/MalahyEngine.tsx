@@ -101,6 +101,8 @@ const MalahyEngine: React.FC<MalahyEngineProps> = ({ gameConfig, questions, onEx
         setXp(0);
         setCorrectCount(0);
         setStreak(0);
+        setIsAnswered(false);
+        setSelectedOption(null);
         setTimeLeft(DIFFICULTY_RULES[diff].time);
         setGameState('PLAYING');
         startTimeRef.current = Date.now(); // ⏱️ Start Timer for Security
@@ -194,23 +196,15 @@ const MalahyEngine: React.FC<MalahyEngineProps> = ({ gameConfig, questions, onEx
                     // console.log("Admin score skipped"); 
                 } else {
                     // 1. Transaction for User Points (XP + Score)
-                    await performTransaction({
-                        type: 'GAME_REWARD', // Or GAME_REWARD
-                        amount: finalXp, // We use XP for the transaction value usually, or maybe Score? 
-                        // The Ledger tracks 'points' which usually maps to XP/Progression.
-                        // Competitive Score is separate. 
-                        // Let's assume performTransaction updates the main 'points' field.
-                        from: { type: 'SYSTEM', id: 'game_engine', name: gameConfig.title },
-                        to: { type: 'USER', id: user.id, name: user.name },
-                        reason: `Game Reward: ${gameConfig.title}`,
-                        metadata: {
-                            gameId: gameConfig.id,
-                            score: finalScore,
-                            xp: finalXp,
-                            correct: correctCount,
-                            durationMs: duration // Audit Log
-                        }
-                    });
+                    // NEW: Event-Driven Logic
+                    await import('../../lib/events').then(m => m.trackEvent(user.id, 'GAME_COMPLETED', {
+                        gameId: gameConfig.id,
+                        xp: finalXp, // Dynamic XP (allowed by malahy_score_base rule)
+                        score: finalScore,
+                        correct: correctCount,
+                        durationMs: duration,
+                        result: won ? 'WIN' : 'LOSS'
+                    }));
 
                     // 2. We still need to update the User doc specifically if we want to store 'score' separate from 'points/xp'
                     // Ledger updates 'points'. 

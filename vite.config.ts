@@ -21,9 +21,10 @@ export default defineConfig(({ mode }) => {
       },
       proxy: {
         '/api': {
-          target: 'http://127.0.0.1:3001',
+          target: 'http://localhost:3001',
           changeOrigin: true,
-        },
+          secure: false,
+        }
       },
     },
     plugins: [
@@ -69,7 +70,7 @@ export default defineConfig(({ mode }) => {
           cleanupOutdatedCaches: true,
           skipWaiting: true,
           clientsClaim: true,
-          maximumFileSizeToCacheInBytes: 5000000,
+          maximumFileSizeToCacheInBytes: 10000000,
           importScripts: ['/OneSignalSDKWorker.js'],
           navigateFallback: '/index.html',
           // SAFELIST: Do not intercept Auth or API

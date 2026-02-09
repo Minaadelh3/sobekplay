@@ -3,17 +3,19 @@ import { performTransaction } from '../../lib/ledger';
 import { useAuth } from '../../context/AuthContext';
 import { doc, getDoc, updateDoc, collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { getLevelConfig } from '../../types/achievements'; // Import Level Config
 
 interface PointsControlPanelProps {
     targetId: string;
     targetName: string;
     targetType: 'USER' | 'TEAM';
     currentPoints: number;
+    currentUserLevel?: number; // Optional current level to check against
     onSuccess: () => void;
     onClose: () => void;
 }
 
-const PointsControlPanel: React.FC<PointsControlPanelProps> = ({ targetId, targetName, targetType, currentPoints, onSuccess, onClose }) => {
+const PointsControlPanel: React.FC<PointsControlPanelProps> = ({ targetId, targetName, targetType, currentPoints, currentUserLevel, onSuccess, onClose }) => {
     const { user: adminUser } = useAuth();
     const [tab, setTab] = useState<'ADJUST' | 'HISTORY' | 'LOCK'>('ADJUST');
 
@@ -99,7 +101,25 @@ const PointsControlPanel: React.FC<PointsControlPanelProps> = ({ targetId, targe
                 adminId: adminUser?.id
             });
 
-            alert("تمت العملية بنجاح! ✅");
+            // 🌟 LEVEL CHECK (For Users)
+            if (targetType === 'USER') {
+                const numericAmount = parseInt(amount) || 0;
+                const newTotalXP = mode === 'ADD' ? currentPoints + numericAmount : Math.max(0, currentPoints - numericAmount);
+
+                // Calculate new level based on XP
+                const newLevelConfig = getLevelConfig(newTotalXP);
+
+                if (newLevelConfig.level !== currentUserLevel) {
+                    // Update Level in DB
+                    await updateDoc(doc(db, 'users', targetId), { level: newLevelConfig.level });
+                    alert(`✅ Transaction Complete.\nUser Level Updated: ${currentUserLevel} ➝ ${newLevelConfig.level}`);
+                } else {
+                    alert("تمت العملية بنجاح! ✅");
+                }
+            } else {
+                alert("تمت العملية بنجاح! ✅");
+            }
+
             onSuccess();
             onClose();
         } catch (err: any) {
@@ -117,7 +137,7 @@ const PointsControlPanel: React.FC<PointsControlPanelProps> = ({ targetId, targe
         <div className="bg-[#1A1A1A] p-6 rounded-2xl border border-white/10 w-full max-w-md mx-auto shadow-2xl relative overflow-hidden">
             <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-4 relative z-10">
                 <h3 className="text-xl font-black text-white flex items-center gap-2">
-                    <span>⚡</span> Points Control
+                    <span>⚡</span> Score / XP Control
                 </h3>
                 <button onClick={onClose} className="text-gray-500 hover:text-white">✕</button>
             </div>
@@ -130,7 +150,7 @@ const PointsControlPanel: React.FC<PointsControlPanelProps> = ({ targetId, targe
                 </div>
                 <div className="text-right">
                     <div className="text-xs text-gray-500">Current Balance</div>
-                    <div className="font-mono text-xl text-accent-gold">{currentPoints.toLocaleString()} SP</div>
+                    <div className="font-mono text-xl text-accent-gold">{currentPoints.toLocaleString()} XP</div>
                 </div>
             </div>
 
@@ -179,7 +199,7 @@ const PointsControlPanel: React.FC<PointsControlPanelProps> = ({ targetId, targe
                                 <span className="text-gray-500 line-through">{currentPoints}</span>
                                 <span>→</span>
                                 <span className={mode === 'ADD' ? 'text-green-400' : 'text-red-400'}>
-                                    {finalPoints.toLocaleString()} SP
+                                    {finalPoints.toLocaleString()} XP
                                 </span>
                             </div>
                         </div>

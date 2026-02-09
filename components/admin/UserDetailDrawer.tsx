@@ -5,6 +5,7 @@ import { useAdminData } from '../../hooks/useAdminData';
 import { TEAMS } from '../../types/auth'; // Static teams for reference
 import UserAvatar from '../UserAvatar';
 import PointsControlPanel from './PointsControlPanel';
+import AdminUserProgression from './AdminUserProgression';
 import { db } from '../../lib/firebase';
 import { doc, updateDoc, deleteDoc, setDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
@@ -136,7 +137,7 @@ export default function UserDetailDrawer({ user, onClose, onUpdate, teams }: Use
                                 targetId={user.id}
                                 targetName={user.name || 'User'}
                                 targetType="USER"
-                                currentPoints={user.points || 0}
+                                currentPoints={user.xp || 0}
                                 onSuccess={() => { onUpdate(); setShowPointsPanel(false); }}
                                 onClose={() => setShowPointsPanel(false)}
                             />
@@ -297,6 +298,14 @@ export default function UserDetailDrawer({ user, onClose, onUpdate, teams }: Use
                         </div>
                     </section>
 
+                    {/* PROGRESSION - NEW SECTION */}
+                    <section className="space-y-4">
+                        <h3 className="text-xs font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
+                            📊 التاريخ والإنجازات
+                        </h3>
+                        <AdminUserProgression userId={user.id} userName={user.name || 'User'} unlockedIds={user.unlockedAchievements || []} />
+                    </section>
+
                     {/* Points & XP - DIRECT EDIT MODE */}
                     <section className="space-y-4">
                         <div className="flex justify-between items-center">
@@ -313,42 +322,21 @@ export default function UserDetailDrawer({ user, onClose, onUpdate, teams }: Use
                             )}
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4">
                             <div className="bg-white/5 p-4 rounded-xl border border-white/5">
-                                <label className="block text-[10px] text-gray-400 mb-1 font-bold">إجمالي النقاط (Points)</label>
-                                <input
-                                    type="number"
-                                    value={user.points || 0}
-                                    onChange={async (e) => {
-                                        // Auto-save on blur or enter? Better to have a small save button or auto-save.
-                                        // For UX "Change Everything", let's do local state then save, BUT user prop is immutable-ish from parent.
-                                        // Actually better to use local state for this section if we want "Change" behavior.
-                                        // But to limit complexity, let's just trigger update on Blur.
-                                        const p = parseInt(e.target.value);
-                                        if (!isNaN(p)) {
-                                            // Optimistic update for UI input
-                                            // user.points = p; // Bad practice but effective for controlled input if we mapped it.
-                                            // Proper way: Call update
-                                            await updateUserStats(user.id, { points: p });
-                                            onUpdate();
-                                        }
-                                    }}
-                                    className="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-xl font-mono font-bold text-accent-gold outline-none focus:border-accent-gold"
-                                />
-                            </div>
-                            <div className="bg-white/5 p-4 rounded-xl border border-white/5">
-                                <label className="block text-[10px] text-gray-400 mb-1 font-bold">الخبرة (XP)</label>
+                                <label className="block text-[10px] text-gray-400 mb-1 font-bold">Score / XP (Official Rank)</label>
                                 <input
                                     type="number"
                                     value={user.xp || 0}
                                     onChange={async (e) => {
                                         const x = parseInt(e.target.value);
                                         if (!isNaN(x)) {
-                                            await updateUserStats(user.id, { xp: x });
+                                            // Unified Update: Sync both XP and Points
+                                            await updateUserStats(user.id, { xp: x, points: x });
                                             onUpdate();
                                         }
                                     }}
-                                    className="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-xl font-mono font-bold text-blue-400 outline-none focus:border-blue-400"
+                                    className="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-xl font-mono font-bold text-accent-gold outline-none focus:border-accent-gold"
                                 />
                             </div>
                         </div>

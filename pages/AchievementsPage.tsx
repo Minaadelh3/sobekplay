@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useAchievements } from '../context/AchievementsContext';
-import { ACHIEVEMENTS_LIST, AchievementCategory } from '../types/achievements';
+import { ACHIEVEMENTS_LIST, AchievementCategory, UserProgress } from '../types/achievements';
 import AchievementCard from '../components/gamification/AchievementCard';
 import LevelProgress from '../components/gamification/LevelProgress';
-import { UserProgress } from '../types/achievements';
 
 const CATEGORIES: { id: AchievementCategory | 'All', label: string }[] = [
     { id: 'All', label: 'الكل' },
@@ -19,6 +17,11 @@ const CATEGORIES: { id: AchievementCategory | 'All', label: string }[] = [
 
 const AchievementsPage: React.FC = () => {
     const { user } = useAuth();
+    // Use static list to ensure IDs match the Engine's rules (e.g. 'first_login')
+    // instead of random Firestore IDs.
+    const achievements = ACHIEVEMENTS_LIST;
+    const loading = false;
+
     const [activeCategory, setActiveCategory] = useState<AchievementCategory | 'All'>('All');
 
     // Safe Fallback for User Progress
@@ -33,7 +36,7 @@ const AchievementsPage: React.FC = () => {
     const progressMap = userProgress.achievementProgress;
 
     // Sort logic
-    const displayedAchievements = ACHIEVEMENTS_LIST.filter(a => {
+    const displayedAchievements = achievements.filter(a => {
         if (activeCategory !== 'All' && a.category !== activeCategory) return false;
         return a.visible;
     });
@@ -63,7 +66,7 @@ const AchievementsPage: React.FC = () => {
                 </div>
                 <div className="bg-[#121820] rounded-xl p-3 text-center border border-white/5">
                     <div className="text-2xl font-bold text-gray-300">
-                        {Math.round((userProgress.unlockedAchievements.length / ACHIEVEMENTS_LIST.length) * 100)}%
+                        {Math.round((userProgress.unlockedAchievements.length / (achievements.length || 1)) * 100)}%
                     </div>
                     <div className="text-[10px] text-gray-500 uppercase">إتمام</div>
                 </div>
@@ -90,34 +93,42 @@ const AchievementsPage: React.FC = () => {
 
             {/* Achievements List */}
             <div className="px-4 space-y-3 max-w-md mx-auto pb-20">
-                {sortedAchievements.map(achievement => {
-                    const isUnlocked = userProgress.unlockedAchievements.includes(achievement.id);
-
-                    // Determine Status
-                    let status: 'locked' | 'unlocked' | 'progress' = isUnlocked ? 'unlocked' : 'locked';
-
-                    const currentVal = progressMap[achievement.id] || 0;
-
-                    if (!isUnlocked && achievement.type === 'progressive' && currentVal > 0) {
-                        status = 'progress';
-                    }
-
-                    return (
-                        <AchievementCard
-                            key={achievement.id}
-                            achievement={achievement}
-                            status={status}
-                            progress={achievement.target ? currentVal / achievement.target : 0}
-                            currentValue={currentVal}
-                            targetValue={achievement.target}
-                        />
-                    );
-                })}
-
-                {sortedAchievements.length === 0 && (
-                    <div className="text-center py-10 text-gray-500">
-                        مفيش إنجازات في القسم ده لسه 👀
+                {loading ? (
+                    <div className="text-center py-20 text-gray-500">
+                        جاري التحميل...
                     </div>
+                ) : (
+                    <>
+                        {sortedAchievements.map(achievement => {
+                            const isUnlocked = userProgress.unlockedAchievements.includes(achievement.id);
+
+                            // Determine Status
+                            let status: 'locked' | 'unlocked' | 'progress' = isUnlocked ? 'unlocked' : 'locked';
+
+                            const currentVal = progressMap[achievement.id] || 0;
+
+                            if (!isUnlocked && achievement.type === 'progressive' && currentVal > 0) {
+                                status = 'progress';
+                            }
+
+                            return (
+                                <AchievementCard
+                                    key={achievement.id}
+                                    achievement={achievement}
+                                    status={status}
+                                    progress={achievement.target ? currentVal / achievement.target : 0}
+                                    currentValue={currentVal}
+                                    targetValue={achievement.target}
+                                />
+                            );
+                        })}
+
+                        {sortedAchievements.length === 0 && (
+                            <div className="text-center py-10 text-gray-500">
+                                مفيش إنجازات في القسم ده لسه 👀
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
 

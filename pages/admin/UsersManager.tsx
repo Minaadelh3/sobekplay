@@ -123,6 +123,7 @@ export default function UsersManager() {
                                 targetName={pointsUser.displayName || pointsUser.name || 'Unknown User'}
                                 targetType="USER"
                                 currentPoints={pointsUser.points || 0}
+                                currentUserLevel={pointsUser.level || 1}
                                 onSuccess={() => { fetchUsers(); setPointsUser(null); }}
                                 onClose={() => setPointsUser(null)}
                             />
@@ -248,9 +249,9 @@ export default function UsersManager() {
                             </th>
                             <th
                                 className="px-6 py-4 text-[10px] uppercase font-bold text-gray-500 tracking-wider text-right cursor-pointer hover:text-white transition-colors group select-none"
-                                onClick={() => handleSort('points')}
+                                onClick={() => handleSort('xp')}
                             >
-                                Points {sortConfig?.key === 'points' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                                XP {sortConfig?.key === 'xp' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                             </th>
                             <th className="px-6 py-4 text-[10px] uppercase font-bold text-gray-500 tracking-wider text-right">
                                 <div className="flex justify-end">
@@ -323,7 +324,7 @@ export default function UsersManager() {
                                         )}
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <div className="font-mono font-bold text-accent-gold">{user.points?.toLocaleString() || 0}</div>
+                                        <div className="font-mono font-bold text-accent-gold">{user.xp?.toLocaleString() || 0} XP</div>
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${user.isDisabled ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>

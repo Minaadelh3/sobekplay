@@ -1,12 +1,15 @@
 import React from 'react';
 import { SearchBar } from './SearchBar';
 
+import { Assignment } from '../../data/rooms/types';
+
 interface RoomsLandingProps {
     onSelect: (name: string) => void;
     onAdminClick: () => void;
+    assignments: Assignment[];
 }
 
-export const RoomsLanding: React.FC<RoomsLandingProps> = ({ onSelect, onAdminClick }) => {
+export const RoomsLanding: React.FC<RoomsLandingProps> = ({ onSelect, onAdminClick, assignments }) => {
     return (
         <div className="min-h-screen flex flex-col justify-center items-center px-4 pb-32">
             <div className="text-center mb-12">
@@ -18,7 +21,7 @@ export const RoomsLanding: React.FC<RoomsLandingProps> = ({ onSelect, onAdminCli
                 </p>
             </div>
 
-            <SearchBar onSelect={onSelect} onClear={() => { }} />
+            <SearchBar onSelect={onSelect} onClear={() => { }} assignments={assignments} />
 
             {/* Admin Trigger */}
             <div className="mt-12">

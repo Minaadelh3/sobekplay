@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useAchievements } from '../context/AchievementsContext';
 import PinModal from '../components/PinModal';
 import { motion } from 'framer-motion';
-import { ToutIcon, AnkhIcon, AmonIcon, RaIcon } from '../components/icons/teams/TeamIcons';
+import { ToutIcon, PtahIcon, AmonIcon, RaIcon } from '../components/icons/teams/TeamIcons';
 
 import { UNCLE_JOY_AVATAR as JOY_IMG } from '../lib/avatars';
 
@@ -33,7 +33,7 @@ const TeamAvatar = ({ team }: { team: TeamProfile }) => {
 
     switch (team.id) {
         case 'tout': return <ToutIcon />;
-        case 'ankh': return <AnkhIcon />;
+        case 'ptah': return <PtahIcon />;
         case 'amon': return <AmonIcon />;
         case 'ra': return <RaIcon />;
         default: return null;

@@ -66,7 +66,7 @@ export default function BulkPointsDialog({ data, selectedIds, onClose, onSuccess
             <div className="bg-[#1A1A1A] p-6 rounded-2xl border border-white/10 w-full max-w-md shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95">
                 <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-4">
                     <h3 className="text-xl font-black text-white flex items-center gap-2">
-                        <span>⚖️</span> Bulk Points Adjustment
+                        <span>⚖️</span> Bulk Score / XP Adjustment
                     </h3>
                     <button onClick={onClose} className="text-gray-500 hover:text-white">✕</button>
                 </div>

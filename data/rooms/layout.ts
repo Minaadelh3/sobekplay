@@ -1,6 +1,6 @@
 import { RoomMeta } from './types';
 
-const ROOM_CAPACITIES = [3, 3, 4, 3, 4, 3, 3, 3, 3, 3]; // Sum = 32
+const ROOM_CAPACITIES = [4, 3, 4, 3, 4, 3, 4, 3, 3, 3]; // Updated based on master list
 
 export const getFloorLayout = (floor: 1 | 2 | 3): RoomMeta[] => {
     return Array.from({ length: 10 }, (_, i) => {

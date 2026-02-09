@@ -39,14 +39,17 @@ const MafiaGame = () => {
             const awardPoints = async () => {
                 if (user.role === 'ADMIN') return;
                 try {
-                    await performTransaction({
-                        type: 'GAME_REWARD',
-                        amount: gameConfig.rewards.win,
-                        from: { type: 'SYSTEM', id: 'game_engine', name: gameConfig.title },
-                        to: { type: 'USER', id: user.id, name: user.name },
-                        reason: `Game Reward: ${gameConfig.title}`,
-                        metadata: { gameId: gameConfig.id, winner: state.winner }
-                    });
+                    // Determine Win/Loss
+                    const myPlayer = state.players.find(p => p.id === user.id);
+                    const isWinner = (state.winner === 'MAFIA' && myPlayer?.role === 'MAFIA') ||
+                        (state.winner === 'VILLAGERS' && myPlayer?.role !== 'MAFIA');
+
+                    await import('../../lib/events').then(m => m.trackEvent(user.id, 'GAME_COMPLETED', {
+                        gameId: gameConfig.id,
+                        result: isWinner ? 'WIN' : 'LOSS',
+                        role: myPlayer?.role,
+                        winnerSide: state.winner
+                    }));
                 } catch (e) { console.error(e); }
             };
             awardPoints();

@@ -43,8 +43,13 @@ if (fs.existsSync(serviceAccountPath)) {
     console.error("❌ CRITICAL: No credentials found (checked .env and service-account.json).");
 }
 
+
 // Import handlers
-import chatHandler from '../api/chat.ts';
+import chatHandler from '../api/chat';
+import pushUsersHandler from '../api/push/users';
+import pushSendHandler from '../api/push/send';
+import pushScheduleHandler from '../api/push/schedule';
+import pushHistoryHandler from '../api/push/history';
 
 const app = express();
 const PORT = 3001;
@@ -63,6 +68,8 @@ app.use((req, res, next) => {
 
 // Wrapper to adapt Vercel function signature to Express
 const handleVercel = (handler: any) => async (req: any, res: any) => {
+    // Mock Vercel Request/Response if needed, but Express req/res are usually compatible enough
+    // We might need to handle specific Vercel helper properties if used
     try {
         await handler(req, res);
     } catch (e: any) {
@@ -74,12 +81,17 @@ const handleVercel = (handler: any) => async (req: any, res: any) => {
 };
 
 // Routes
-// app.post('/api/send-notification', handleVercel(sendNotification));
 app.post('/api/chat', handleVercel(chatHandler));
+// Push Routes
+app.get('/api/push/users', handleVercel(pushUsersHandler));
+app.post('/api/push/send', handleVercel(pushSendHandler));
+app.post('/api/push/schedule', handleVercel(pushScheduleHandler));
+app.get('/api/push/history', handleVercel(pushHistoryHandler));
 
 // Health Check
+
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', time: new Date().toISOString() });
+    res.json({ status: 'online', time: new Date().toISOString() });
 });
 
 // 404 Handler (Force JSON)
@@ -104,6 +116,6 @@ app.listen(PORT, '0.0.0.0', () => {
     curl -X POST http://localhost:3000/api/chat -H "Content-Type: application/json" -d '{"message":"Hello"}'
     
     Test Push:
-    curl -X POST http://localhost:3000/api/send-notification -H "Content-Type: application/json" -d '{"title":"Test","message":"Hello"}'
+    curl -X POST http://localhost:3000/api/push/send -H "Content-Type: application/json" -d '{"title":"Test","message":"Hello", "audience": {"type": "All"}}'
     `);
 });

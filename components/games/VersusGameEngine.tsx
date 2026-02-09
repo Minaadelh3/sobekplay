@@ -149,6 +149,16 @@ const VersusGameEngine: React.FC<VersusGameEngineProps> = ({ matchId, currentUse
 
         if (!isAdmin) {
             try {
+                // TRACK EVENT: GAME_COMPLETED
+                import('../../lib/events').then(m => {
+                    m.trackEvent(currentUser.id, 'GAME_COMPLETED', {
+                        gameId: match.gameId || 'versus_match',
+                        score: myP.score,
+                        result: outcome,
+                        opponentScore: opponent?.score || 0
+                    });
+                });
+
                 // Award XP/Points to User
                 if (xpReward > 0) {
                     await performTransaction({

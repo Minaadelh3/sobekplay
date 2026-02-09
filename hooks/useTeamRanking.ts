@@ -67,7 +67,7 @@ export function useTeamRanking() {
                     name: d.name || d.displayName || "Unknown",
                     avatar: finalAvatar,
                     role: d.role,
-                    points: d.points || 0,
+                    points: d.xp || d.points || 0,
                     ...d // Include other fields if needed temporarily
                 } as RankingMember);
             });
