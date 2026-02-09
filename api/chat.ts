@@ -56,63 +56,83 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 2. Try Groq (Llama) if available
     // 3. Fail if neither is configured
 
+    let modelError;
+
     if (GEMINI_API_KEY) {
-      provider = "gemini-1.5-flash";
-      console.log(`[${requestId}] Using Provider: ${provider}`);
+      try {
+        provider = "gemini-1.5-flash";
+        console.log(`[${requestId}] Attempting Provider: ${provider}`);
 
-      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-      const chat = model.startChat({
-        history: [
-          {
-            role: "user",
-            parts: [{ text: systemPrompt }],
-          },
-          {
-            role: "model",
-            parts: [{ text: "OK. I am ready to be Sobek's Nephew. Bring it on!" }],
-          },
-        ],
-      });
-
-      const result = await chat.sendMessage(message);
-      const response = await result.response;
-      reply = response.text();
-
-    } else if (GROQ_API_KEY) {
-      provider = "groq-llama3-70b";
-      console.log(`[${requestId}] Using Provider: ${provider}`);
-
-      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${GROQ_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: "llama3-70b-8192",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: message }
+        const chat = model.startChat({
+          history: [
+            {
+              role: "user",
+              parts: [{ text: systemPrompt }],
+            },
+            {
+              role: "model",
+              parts: [{ text: "OK. I am ready to be Sobek's Nephew. Bring it on!" }],
+            },
           ],
-          temperature: 0.9,
-          max_tokens: 200,
-        })
-      });
+        });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`[${requestId}] Groq API Error: ${response.status} ${response.statusText}`, errorText);
-        throw new Error(`Groq API Error: ${response.statusText}`);
+        const result = await chat.sendMessage(message);
+        const response = await result.response;
+        reply = response.text();
+        console.log(`[${requestId}] Gemini Success`);
+
+      } catch (e: any) {
+        console.warn(`[${requestId}] Gemini Failed: ${e.message}. Falling back...`);
+        modelError = e;
+        provider = "";
       }
+    }
 
-      const data = await response.json();
-      reply = data.choices?.[0]?.message?.content || "";
+    // Attempt Groq if Gemini failed OR wasn't configured
+    if (!reply && GROQ_API_KEY) {
+      try {
+        provider = "groq-llama-3.1-8b";
+        console.log(`[${requestId}] Attempting Provider: ${provider}`);
 
-    } else {
-      console.error(`[FATAL] No AI API Keys found!`);
-      throw new Error("MISSING_KEYS");
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${GROQ_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "llama-3.1-8b-instant",
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: message }
+            ],
+            temperature: 0.9,
+            max_tokens: 200,
+          })
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Groq API Error: ${response.status} ${response.statusText} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        reply = data.choices?.[0]?.message?.content || "";
+        console.log(`[${requestId}] Groq Success`);
+
+      } catch (e: any) {
+        console.error(`[${requestId}] Groq Failed: ${e.message}`);
+        modelError = e;
+      }
+    }
+
+    if (!reply) {
+      console.error(`[FATAL] All AI Providers Failed!`);
+      if (modelError) throw modelError;
+      throw new Error("No AI Providers configured or working.");
     }
 
     if (!reply.trim()) reply = "الشبكة بتقطع.. قول تاني؟ 🐊";

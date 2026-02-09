@@ -1,7 +1,8 @@
 
 import * as admin from 'firebase-admin';
 
-// Initialize Admin SDK
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
 const serviceAccount = require('../service-account.json');
 
 if (!admin.apps.length) {

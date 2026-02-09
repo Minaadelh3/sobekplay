@@ -84,167 +84,160 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // --- 1. GLOBAL INITIALIZATION ---
 
     useEffect(() => {
-        let authUnsub: () => void;
+        let authUnsub: (() => void) | undefined;
         let profileUnsub: (() => void) | undefined;
 
-        const initAuth = async () => {
-            log("🔐 [AUTH] Initializing AuthProvider v2.2 (Realtime)...");
-            setAuthLoading(true);
+        // --- 1. GLOBAL INITIALIZATION ---
+        log("🔐 [AUTH] Initializing AuthProvider v2.3 (Realtime Fix)...");
+        setAuthLoading(true);
 
-            if (!auth) {
-                log("⚠️ [AUTH] Firebase Auth not initialized.");
+        if (!auth) {
+            log("⚠️ [AUTH] Firebase Auth not initialized.");
+            setAuthLoading(false);
+            return;
+        }
+
+        // Check Redirect (Non-blocking side effect)
+        getRedirectResult(auth).catch(e => console.error("Auth Redirect Error", e));
+
+        // B. Listen for Auth Changes (IMMEDIATE)
+        authUnsub = onAuthStateChanged(auth, async (fUser) => {
+            // 1. Cleanup previous profile listener if user switches
+            if (profileUnsub) {
+                profileUnsub();
+                profileUnsub = undefined;
+            }
+
+            console.log("👤 [AUTH] Change Detected:", fUser?.email || "Guest");
+
+            if (!fUser) {
+                // LOGGED OUT
+                setFirebaseUser(null);
+                setUser(null);
+                setActiveTeam(null);
+                setRoleLoading(false);
                 setAuthLoading(false);
+                setAuthReady(true);
+                setRoleReady(true);
                 return;
             }
 
-            try {
-                await setPersistence(auth, browserLocalPersistence);
-                const result = await getRedirectResult(auth);
-                if (result) setFirebaseUser(result.user);
-            } catch (e: any) {
-                console.error("Auth Init Error", e);
-            }
+            // LOGGED IN
+            setFirebaseUser(fUser);
+            setRoleLoading(true);
 
-            // B. Listen for Auth Changes
-            authUnsub = onAuthStateChanged(auth, async (fUser) => {
-                // 1. Cleanup previous profile listener if user switches
-                if (profileUnsub) {
-                    profileUnsub();
-                    profileUnsub = undefined;
-                }
+            // 2. Setup Real-time Profile Listener
+            const ref = doc(db, "users", fUser.uid);
 
-                console.log("👤 [AUTH] Change Detected:", fUser?.email || "Guest");
+            profileUnsub = onSnapshot(ref, async (snap) => {
+                let userData: any;
 
-                if (!fUser) {
-                    // LOGGED OUT
-                    setFirebaseUser(null);
-                    setUser(null);
-                    setActiveTeam(null);
-                    setRoleLoading(false);
-                    setAuthLoading(false);
-                    setAuthReady(true);
-                    setRoleReady(true);
-                    return;
-                }
+                if (!snap.exists()) {
+                    console.log("🆕 [AUTH] Creating New Profile...");
+                    userData = {
+                        uid: fUser.uid,
+                        email: fUser.email || "",
+                        displayName: fUser.displayName || "New User",
+                        role: "USER",
+                        status: "active",
+                        teamId: null,
+                        provider: fUser.providerData[0]?.providerId || 'unknown',
+                        createdAt: serverTimestamp(),
+                        lastLogin: serverTimestamp(),
+                        photoURL: fUser.photoURL || ""
+                    };
+                    await setDoc(ref, userData);
 
-                // LOGGED IN
-                setFirebaseUser(fUser);
-                setRoleLoading(true);
-
-                // 2. Setup Real-time Profile Listener
-                const ref = doc(db, "users", fUser.uid);
-
-                profileUnsub = onSnapshot(ref, async (snap) => {
-                    let userData: any;
-
-                    if (!snap.exists()) {
-                        console.log("🆕 [AUTH] Creating New Profile...");
-                        userData = {
-                            uid: fUser.uid,
-                            email: fUser.email || "",
-                            displayName: fUser.displayName || "New User",
-                            role: "USER",
-                            status: "active",
-                            teamId: null,
-                            provider: fUser.providerData[0]?.providerId || 'unknown',
-                            createdAt: serverTimestamp(),
-                            lastLogin: serverTimestamp(),
-                            photoURL: fUser.photoURL || ""
-                        };
-                        await setDoc(ref, userData);
-
-                        // TRACK EVENT: USER_CREATED
-                        // We use a dynamic import to avoid circular deps if any
-                        import('../lib/events').then(m => m.trackEvent(fUser.uid, 'USER_CREATED', {
-                            provider: userData.provider,
-                            email: userData.email
-                        }));
-                    } else {
-                        // console.log("✅ [AUTH] Profile Update Received");
-                        userData = snap.data();
+                    // TRACK EVENT: USER_CREATED
+                    // We use a dynamic import to avoid circular deps if any
+                    import('../lib/events').then(m => m.trackEvent(fUser.uid, 'USER_CREATED', {
+                        provider: userData.provider,
+                        email: userData.email
+                    }));
+                } else {
+                    // console.log("✅ [AUTH] Profile Update Received");
+                    userData = snap.data();
 
 
-                        // 🔄 SYNC: Ensure PhotoURL is up to date if missing in DB but present in Auth
-                        // This fixes the Avatar issue in Rankings
-                        if (!userData.photoURL && fUser.photoURL) {
-                            console.log("🔄 [AUTH] Syncing PhotoURL to Firestore...");
-                            await updateDoc(ref, { photoURL: fUser.photoURL });
-                        }
-
-                        // 📅 DAILY LOGIN TRACKER
-                        const now = new Date();
-                        const lastLogin = userData.lastLogin?.toDate ? userData.lastLogin.toDate() : new Date(0);
-                        const isNewDay = now.getDate() !== lastLogin.getDate() || now.getMonth() !== lastLogin.getMonth();
-
-                        if (isNewDay) {
-                            import('../lib/events').then(m => {
-                                m.trackEvent(fUser.uid, 'DAILY_LOGIN');
-
-                                // Streak Logic could be here or backend. 
-                                // Let's send STREAK event so backend calculates it strictly.
-                                m.trackEvent(fUser.uid, 'LOGIN_STREAK');
-                            });
-
-                            // Update lastLogin to now preventing double trigger
-                            await updateDoc(ref, { lastLogin: serverTimestamp() });
-                        }
+                    // 🔄 SYNC: Ensure PhotoURL is up to date if missing in DB but present in Auth
+                    // This fixes the Avatar issue in Rankings
+                    if (!userData.photoURL && fUser.photoURL) {
+                        console.log("🔄 [AUTH] Syncing PhotoURL to Firestore...");
+                        await updateDoc(ref, { photoURL: fUser.photoURL });
                     }
 
-                    // Map to App User
-                    const appUser: User = {
-                        id: fUser.uid,
-                        name: userData.nickname || userData.name || userData.displayName || fUser.displayName || "User", // Prefer Nickname
-                        email: fUser.email || "",
-                        role: (userData.role === 'admin' || userData.role === 'ADMIN') ? 'ADMIN' : 'USER',
-                        avatar: userData.avatarUrl || userData.photoURL || fUser.photoURL || "",
-                        isDisabled: userData.isDisabled === true,
-                        teamId: userData.teamId,
-                        isOnboarded: userData.isOnboarded === true || !!userData.teamId,
+                    // 📅 DAILY LOGIN TRACKER
+                    const now = new Date();
+                    const lastLogin = userData.lastLogin?.toDate ? userData.lastLogin.toDate() : new Date(0);
+                    const isNewDay = now.getDate() !== lastLogin.getDate() || now.getMonth() !== lastLogin.getMonth();
 
-                        // New Settings Architecture Mapping
-                        profile: userData.profile || {},
-                        preferences: userData.preferences || {},
-                        privacy: userData.privacy || {},
-                        notifications: userData.notifications || {},
-                        createdAt: userData.createdAt,
+                    if (isNewDay) {
+                        import('../lib/events').then(m => {
+                            m.trackEvent(fUser.uid, 'DAILY_LOGIN');
 
-                        // Gamification Mapping
-                        xp: userData.xp || 0,
-                        level: userData.level || 1,
-                        unlockedAchievements: userData.unlockedAchievements || [],
-                        achievementProgress: userData.achievementProgress || {},
-                        lastDailyAction: userData.lastDailyAction || {}
-                    };
+                            // Streak Logic could be here or backend. 
+                            // Let's send STREAK event so backend calculates it strictly.
+                            m.trackEvent(fUser.uid, 'LOGIN_STREAK');
+                        });
 
-                    // Backwards Compat / Priority Logic for Display Fields
-                    // 1. profile.displayName -> 2. userData.nickname -> 3. userData.name -> 4. Auth.displayName
-                    appUser.name = userData.profile?.displayName || userData.nickname || userData.name || userData.displayName || fUser.displayName || "User";
+                        // Update lastLogin to now preventing double trigger
+                        await updateDoc(ref, { lastLogin: serverTimestamp() });
+                    }
+                }
 
-                    // 1. profile.photoURL -> 2. userData.avatarUrl -> 3. Auth.photoURL
-                    appUser.avatar = userData.profile?.photoURL || userData.avatarUrl || userData.photoURL || fUser.photoURL || "";
+                // Map to App User
+                const appUser: User = {
+                    id: fUser.uid,
+                    name: userData.nickname || userData.name || userData.displayName || fUser.displayName || "User", // Prefer Nickname
+                    email: fUser.email || "",
+                    role: (userData.role === 'admin' || userData.role === 'ADMIN') ? 'ADMIN' : 'USER',
+                    avatar: userData.avatarUrl || userData.photoURL || fUser.photoURL || "",
+                    isDisabled: userData.isDisabled === true,
+                    teamId: userData.teamId,
+                    isOnboarded: userData.isOnboarded === true || !!userData.teamId,
 
-                    // 1. profile.mobile -> 2. userData.mobile
-                    appUser.mobile = userData.profile?.mobile || userData.mobile;
+                    // New Settings Architecture Mapping
+                    profile: userData.profile || {},
+                    preferences: userData.preferences || {},
+                    privacy: userData.privacy || {},
+                    notifications: userData.notifications || {},
+                    createdAt: userData.createdAt,
 
-                    setUser(appUser);
+                    // Gamification Mapping
+                    xp: userData.xp || 0,
+                    level: userData.level || 1,
+                    unlockedAchievements: userData.unlockedAchievements || [],
+                    achievementProgress: userData.achievementProgress || {},
+                    lastDailyAction: userData.lastDailyAction || {}
+                };
 
-                    // Team Logic
-                    // We REMOVED the one-time fetch here because the new useEffect handles real-time updates based on user.teamId
-                    // This prevents double-fetching and ensures data is always fresh.
+                // Backwards Compat / Priority Logic for Display Fields
+                // 1. profile.displayName -> 2. userData.nickname -> 3. userData.name -> 4. Auth.displayName
+                appUser.name = userData.profile?.displayName || userData.nickname || userData.name || userData.displayName || fUser.displayName || "User";
 
-                    setRoleLoading(false);
-                    setRoleReady(true);
-                    setAuthLoading(false);
-                    setAuthReady(true);
-                }, (err) => {
-                    console.error("❌ [AUTH] Profile Snapshot Error:", err);
-                    setRoleLoading(false);
-                    setAuthLoading(false);
-                });
+                // 1. profile.photoURL -> 2. userData.avatarUrl -> 3. Auth.photoURL
+                appUser.avatar = userData.profile?.photoURL || userData.avatarUrl || userData.photoURL || fUser.photoURL || "";
+
+                // 1. profile.mobile -> 2. userData.mobile
+                appUser.mobile = userData.profile?.mobile || userData.mobile;
+
+                setUser(appUser);
+
+                // Team Logic
+                // We REMOVED the one-time fetch here because the new useEffect handles real-time updates based on user.teamId
+                // This prevents double-fetching and ensures data is always fresh.
+
+                setRoleLoading(false);
+                setRoleReady(true);
+                setAuthLoading(false);
+                setAuthReady(true);
+            }, (err) => {
+                console.error("❌ [AUTH] Profile Snapshot Error:", err);
+                setRoleLoading(false);
+                setAuthLoading(false);
             });
-        };
+        });
 
-        initAuth();
         return () => {
             if (authUnsub) authUnsub();
             if (profileUnsub) profileUnsub();
