@@ -38,7 +38,7 @@ const TripAnthem: React.FC = () => {
 
   // SoundCloud Link Logic
   const { user, isAdmin } = useAuth();
-  const [soundcloudLink, setSoundcloudLink] = React.useState("https://soundcloud.com/ahmed-ismail-19/ekadoli-nubian-song");
+  const [soundcloudLink, setSoundcloudLink] = React.useState("https://soundcloud.com/stmary-church-faggala/2026a1");
   const [isEditing, setIsEditing] = React.useState(false);
   const [newLink, setNewLink] = React.useState("");
 
