@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, limit, onSnapshot, where } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { useAuth } from '../../context/AuthContext';
 import { User, TEAMS } from '../../types/auth'; // Ensure this has the new fields
@@ -20,11 +20,12 @@ const Leaderboard: React.FC = () => {
         if (activeTab === 'teams') return;
 
         setLoading(true);
-        // Query: Users with points > 0, sorted by points desc, limit 50
-        // We handle Admin filtering client side.
+        // Query: Users with points > 0, sorted by points desc, limit 50, filter out Admins
         const q = query(
             collection(db, "users"),
-            orderBy("scoreTotal", "desc"), // ⚡ UNIFIED: Sort by ScoreTotal
+            where("role", "!=", "ADMIN"), // Server-side filtering
+            orderBy("role"), // FireStore requires the field in equality/inequality to be the first order
+            orderBy("scoreTotal", "desc"),
             limit(50)
         );
 
@@ -32,8 +33,8 @@ const Leaderboard: React.FC = () => {
             const users: User[] = [];
             snap.forEach((doc) => {
                 const data = doc.data();
-                // Filter Admins client-side (CRITICAL RULE)
-                if (data.role === 'ADMIN' || data.role === 'admin') return;
+                // Double check just in case legacy 'admin' lowercase exists
+                if (data.role === 'admin') return;
 
                 // Resolve Avatar Priorities:
                 // 1. Uploaded Profile Photo (profile.photoURL)
@@ -58,6 +59,9 @@ const Leaderboard: React.FC = () => {
                     teamId: data.teamId
                 } as User);
             });
+            // Re-sort client side because of the 'orderBy(role)' requirement potentially messing up exact score order if not composite indexed properly yet
+            users.sort((a, b) => (b.points || 0) - (a.points || 0));
+
             setTopUsers(users);
             setLoading(false);
         }, (err) => {

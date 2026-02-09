@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { collection, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit, where, getCountFromServer, getAggregateFromServer, sum } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { TeamProfile, User } from '../../types/auth'; // Ensure User is imported
 import { LedgerEntry } from '../../lib/ledger';
@@ -40,25 +40,33 @@ const AnalyticsDashboard = () => {
         setLoading(true);
         try {
             // 1. Fetch Stats (Total Users, Total Points, Active Teams)
-            // Note: For large datasets, use aggregation queries or counters. Here we snap for MVP (<1000 docs)
-            const usersSnap = await getDocs(collection(db, 'users'));
-            const teamsSnap = await getDocs(collection(db, 'teams'));
+            // Optimized: Use Aggregation Queries avoid downloading thousands of docs
 
-            const totalUsers = usersSnap.size;
-            const totalTeams = teamsSnap.size;
+            // Count Users
+            const usersColl = collection(db, 'users');
+            const usersSnapshot = await getCountFromServer(usersColl);
+            const totalUsers = usersSnapshot.data().count;
 
-            // Calculate Total System Points (Sum of users or teams?)
-            // Teams points is simpler proxy for "Score" in ranking
-            let totalPoints = 0;
-            const teamsData: TeamProfile[] = [];
-            teamsSnap.forEach(doc => {
-                const data = doc.data() as TeamProfile;
-                totalPoints += (data.points || 0);
-                teamsData.push(data);
+            // Count Teams
+            const teamsColl = collection(db, 'teams');
+            const teamsSnapshot = await getCountFromServer(teamsColl);
+            const totalTeams = teamsSnapshot.data().count;
+
+            // Calculate Total System Points
+            // We use the teams collection as the source of truth for total points in the system
+            const sumSnapshot = await getAggregateFromServer(teamsColl, {
+                totalScore: sum('scoreTotal')
             });
+            const totalPoints = sumSnapshot.data().totalScore;
+
+            // Fetch Top 5 Teams for the chart (Lightweight query)
+            const teamsQ = query(teamsColl, orderBy('scoreTotal', 'desc'), limit(5));
+            const topTeamsSnap = await getDocs(teamsQ);
+            const teamsData: TeamProfile[] = topTeamsSnap.docs.map(d => d.data() as TeamProfile);
 
             // 2. Fetch Recent Ledger
             const ledgerQ = query(collection(db, 'ledger'), orderBy('timestamp', 'desc'), limit(10));
+            // Ledger might be empty if migration hasn't happened, handle gracefully
             const ledgerSnap = await getDocs(ledgerQ);
             const ledgerData = ledgerSnap.docs.map(d => d.data() as LedgerEntry);
 
@@ -68,7 +76,7 @@ const AnalyticsDashboard = () => {
                 { label: 'عدد اللاعبين', value: totalUsers, color: 'text-green-400' },
             ]);
 
-            setTopTeams(teamsData.sort((a, b) => b.points - a.points).slice(0, 5));
+            setTopTeams(teamsData);
             setRecentActivity(ledgerData);
 
         } catch (err) {

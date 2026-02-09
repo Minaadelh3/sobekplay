@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { db } from '../lib/firebase';
-import { collection, query, orderBy, limit, getDocs, where, Timestamp, doc, setDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, limit, getDocs, where, Timestamp, doc, setDoc, serverTimestamp, onSnapshot, writeBatch } from 'firebase/firestore';
 
 export interface NotificationItem {
     id: string;
@@ -157,9 +157,17 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         setReadIds(newSet);
 
         // Batch write loop
-        unread.forEach(n => {
-            setDoc(doc(db, `users/${user.id}/read_receipts`, n.id), { readAt: serverTimestamp() });
-        });
+        try {
+            const batch = writeBatch(db);
+            unread.forEach(n => {
+                const ref = doc(db, `users/${user.id}/read_receipts`, n.id);
+                batch.set(ref, { readAt: serverTimestamp() });
+            });
+            await batch.commit();
+        } catch (err) {
+            console.error("Failed to mark all as read", err);
+            // Revert optimistic update if needed, but for read receipts it's usually fine
+        }
     };
 
     const unreadCount = notifications.filter(n => !readIds.has(n.id)).length;

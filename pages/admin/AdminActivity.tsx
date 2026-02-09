@@ -1,21 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { useAdminData } from '../../hooks/useAdminData';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 
 export default function AdminActivity() {
-    const { users, teams, fetchUsers, fetchTeams } = useAdminData(); // Get data for resolution
+    // Optimization: Removed useAdminData() to prevent downloading all users/teams on this page.
+    // We will display raw IDs or rely on metadata snapshots if/when implemented in logs.
+
     const [activities, setActivities] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('ALL');
 
     useEffect(() => {
-        // Ensure we have meta data for name resolution
-        fetchUsers();
-        fetchTeams();
-
         const fetchActivity = async () => {
             try {
+                // Optimization: Index 'action' if we want to filter by type server-side.
+                // For now, client-side filter is okay for 50 items.
                 const q = query(collection(db, 'admin_logs'), orderBy('timestamp', 'desc'), limit(50));
                 const snap = await getDocs(q);
                 setActivities(snap.docs.map(d => ({ id: d.id, ...d.data() })));
@@ -60,16 +59,15 @@ export default function AdminActivity() {
         return map[action] || action.replace(/_/g, ' ');
     };
 
-    // Helper: Resolve Name
-    const resolveName = (id: string, type: 'USER' | 'TEAM' | 'ADMIN') => {
+    // Helper: Resolve Name (Optimized)
+    const resolveName = (id: string, type: 'USER' | 'TEAM' | 'ADMIN', docData?: any) => {
         if (!id) return type === 'ADMIN' ? 'System' : 'Unknown';
-        if (type === 'TEAM') {
-            const team = teams.find(t => t.id === id);
-            return team ? team.name : id;
-        }
-        // User/Admin
-        const user = users.find(u => u.id === id);
-        return user ? (user.name || user.displayName || 'Unnamed User') : id.slice(0, 8);
+
+        // If the log itself has cached names, use them (Proposed future improvement)
+        if (docData?.targetName) return docData.targetName;
+        if (docData?.adminName && type === 'ADMIN') return docData.adminName;
+
+        return id.slice(0, 8) + '...'; // Truncate ID to avoid clutter
     };
 
     // Helper: Format Details
@@ -83,7 +81,7 @@ export default function AdminActivity() {
         }
         if (act.action === 'ASSIGN_ROLE') return `New Role: ${act.newRole}`;
         if (act.action === 'TEAM_BROADCAST') return `Msg: "${act.message.slice(0, 20)}..."`;
-        if (act.action === 'ASSIGN_TEAM') return `To: ${resolveName(act.newTeam, 'TEAM')}`;
+        if (act.action === 'ASSIGN_TEAM') return `To: ${resolveName(act.newTeam, 'TEAM', act)}`;
         // Fallback
         if (typeof act.updates === 'object') return JSON.stringify(act.updates).slice(0, 30);
         return '';
@@ -149,11 +147,11 @@ export default function AdminActivity() {
                                                 <p className="text-gray-400 text-xs flex items-center gap-1">
                                                     Target:
                                                     <span className="text-white font-medium">
-                                                        {act.targetTeam ? resolveName(act.targetTeam, 'TEAM') : resolveName(act.targetUid, 'USER')}
+                                                        {act.targetTeam ? resolveName(act.targetTeam, 'TEAM', act) : resolveName(act.targetUid, 'USER', act)}
                                                     </span>
                                                 </p>
                                                 <p className="text-gray-600 text-[10px] mt-1 font-mono flex items-center gap-1">
-                                                    By: <span className="text-purple-400">{resolveName(act.adminId, 'ADMIN')}</span>
+                                                    By: <span className="text-purple-400">{resolveName(act.adminId, 'ADMIN', act)}</span>
                                                 </p>
                                             </div>
                                             <div className="text-right">

@@ -100,6 +100,7 @@ export interface TeamProfile {
     color: string;
     xp?: number;         // ⚡ MAIN SCORE (Migrated from points)
     points: number;      // Legacy / Current Score (Deprecated)
+    scoreTotal?: number; // ⚡ Unified Score Field
     isScorable: boolean; // Eligibility for points
 }
 
