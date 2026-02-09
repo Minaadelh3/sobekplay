@@ -35,7 +35,7 @@ export const getNextLevelConfig = (currentLevel: number): LevelConfig | null => 
 import { GameEventType } from './Events';
 
 export type AchievementType = 'one_time' | 'daily' | 'progressive' | 'admin';
-export type AchievementCategory = 'Onboarding' | 'Daily' | 'Profile' | 'Discovery' | 'Community' | 'Games' | 'Special';
+export type AchievementCategory = 'Onboarding' | 'Daily' | 'Profile' | 'Discovery' | 'Community' | 'Games' | 'Special' | 'JOURNEY';
 
 export interface AchievementTrigger {
     event: GameEventType;

@@ -167,44 +167,44 @@ export default function UserDetailDrawer({ user, onClose, onUpdate, teams }: Use
             <motion.div
                 initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="fixed top-0 right-0 h-full w-full max-w-md bg-[#141414] border-l border-white/10 z-50 shadow-2xl flex flex-col"
+                className="fixed top-0 right-0 h-full w-full sm:max-w-md bg-[#141414] border-l border-white/10 z-50 shadow-2xl flex flex-col"
             >
                 {/* Header */}
-                <div className="p-6 border-b border-white/5 flex justify-between items-start bg-[#0F1218]">
-                    <div className="flex items-center gap-4">
+                <div className="p-4 lg:p-6 border-b border-white/5 flex justify-between items-start bg-[#0F1218] pt-[calc(1rem+env(safe-area-inset-top))] lg:pt-6">
+                    <div className="flex items-center gap-3 lg:gap-4">
                         <UserAvatar src={user.avatar || user.photoURL} name={user.name} size="lg" className="ring-2 ring-accent-gold/50" />
-                        <div>
-                            <h2 className="text-xl font-bold text-white">{user.name}</h2>
+                        <div className="min-w-0">
+                            <h2 className="text-lg lg:text-xl font-bold text-white truncate">{user.name}</h2>
                             <div className="flex items-center gap-2 mt-1">
                                 <span className={`text-[10px] px-2 py-0.5 rounded border ${user.role?.includes('ADMIN') ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'}`}>
                                     {user.role || 'AGENT'}
                                 </span>
-                                <span className="text-xs text-gray-500 font-mono">{user.id.slice(0, 8)}</span>
+                                <span className="text-xs text-gray-500 font-mono hidden sm:inline">{user.id.slice(0, 8)}</span>
                             </div>
                         </div>
                     </div>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white p-1">✕</button>
+                    <button onClick={onClose} className="text-gray-400 hover:text-white p-2 -mr-2">✕</button>
                 </div>
 
                 {/* Body */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
+                <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6 lg:space-y-8 custom-scrollbar pb-[calc(2rem+env(safe-area-inset-bottom))]">
 
                     {/* Quick Tools */}
                     <div className="grid grid-cols-2 gap-3">
                         <button
                             onClick={handleSendMessage}
-                            className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/5 py-3 rounded-lg text-sm text-gray-300 transition-colors"
+                            className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/5 py-3 lg:py-3.5 rounded-lg text-xs lg:text-sm text-gray-300 transition-colors active:scale-95"
                         >
                             <span>💬</span> إرسال رسالة
                         </button>
-                        <button className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/5 py-3 rounded-lg text-sm text-gray-300 transition-colors">
+                        <button className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/5 py-3 lg:py-3.5 rounded-lg text-xs lg:text-sm text-gray-300 transition-colors active:scale-95">
                             <span>📄</span> سجل النشاط
                         </button>
                     </div>
 
                     {/* Identity Section */}
-                    <section className="space-y-4">
-                        <h3 className="text-xs font-bold text-accent-gold uppercase tracking-wider flex items-center gap-2">
+                    <section className="space-y-3 lg:space-y-4">
+                        <h3 className="text-[10px] lg:text-xs font-bold text-accent-gold uppercase tracking-wider flex items-center gap-2">
                             👤 الهوية والبيانات
                         </h3>
                         <div className="space-y-4 bg-black/20 p-4 rounded-xl border border-white/5">
@@ -217,7 +217,7 @@ export default function UserDetailDrawer({ user, onClose, onUpdate, teams }: Use
                                 />
                             </div>
                             <div>
-                                <label className="block text-[10px] text-gray-400 mb-1">Display Name (الاسم الظاهر)</label>
+                                <label className="block text-[10px] text-gray-400 mb-1">Display Name</label>
                                 <input
                                     value={displayName}
                                     onChange={(e) => setDisplayName(e.target.value)}
@@ -227,23 +227,23 @@ export default function UserDetailDrawer({ user, onClose, onUpdate, teams }: Use
                             <button
                                 onClick={handleIdentitySave}
                                 disabled={loading}
-                                className="w-full py-2 bg-white/5 hover:bg-white/10 text-xs font-bold rounded border border-white/5 text-gray-300"
+                                className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-[10px] lg:text-xs font-bold rounded border border-white/5 text-gray-300 active:scale-95"
                             >
                                 {loading ? 'جاري الحفظ...' : 'حفظ التغييرات'}
                             </button>
 
                             <div className="pt-2 border-t border-white/5">
                                 <label className="block text-[10px] text-gray-400 mb-1">البريد الإلكتروني</label>
-                                <input disabled value={user.email} className="w-full bg-transparent border-0 px-0 text-gray-500 cursor-not-allowed text-sm font-mono" />
-                                <p className="text-[10px] text-red-500/50 mt-1">⚠️ الإيميل مربوط بنظام الدخول ومينفعش يتغير من هنا.</p>
+                                <input disabled value={user.email} className="w-full bg-transparent border-0 px-0 text-gray-500 cursor-not-allowed text-xs lg:text-sm font-mono truncate" />
+                                <p className="text-[8px] lg:text-[10px] text-red-500/50 mt-1">⚠️ الإيميل مربوط بنظام الدخول ومينفعش يتغير من هنا.</p>
                             </div>
                         </div>
                     </section>
 
                     {/* Roles & Permissions Section - ONLY UNCLE JOY TEAM */}
                     {can(adminUser, 'manage_users') && adminUser?.teamId === 'uncle_joy' && (
-                        <section className="space-y-4">
-                            <h3 className="text-xs font-bold text-purple-400 uppercase tracking-wider flex items-center gap-2">
+                        <section className="space-y-3 lg:space-y-4">
+                            <h3 className="text-[10px] lg:text-xs font-bold text-purple-400 uppercase tracking-wider flex items-center gap-2">
                                 🛡️ الصلاحيات (Admin Access)
                             </h3>
                             <div className="bg-purple-900/10 p-4 rounded-xl border border-purple-500/20">
@@ -271,8 +271,8 @@ export default function UserDetailDrawer({ user, onClose, onUpdate, teams }: Use
                     )}
 
                     {/* Organization Section */}
-                    <section className="space-y-4">
-                        <h3 className="text-xs font-bold text-accent-gold uppercase tracking-wider flex items-center gap-2">
+                    <section className="space-y-3 lg:space-y-4">
+                        <h3 className="text-[10px] lg:text-xs font-bold text-accent-gold uppercase tracking-wider flex items-center gap-2">
                             🏢 التنظيم والفريق
                         </h3>
                         <div className="bg-black/20 p-4 rounded-xl border border-white/5">
@@ -299,7 +299,7 @@ export default function UserDetailDrawer({ user, onClose, onUpdate, teams }: Use
                                     <p className="text-[10px] text-gray-500">نقل العضو هيأثر على نقاط الفريق.</p>
                                 </>
                             ) : (
-                                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded text-red-500 text-xs font-bold flex items-center gap-2">
+                                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded text-red-500 text-[10px] lg:text-xs font-bold flex items-center gap-2">
                                     <span>🔒</span>
                                     <span>نقل الأعضاء متاح فقط لفريق "Uncle Joy"</span>
                                 </div>
@@ -309,25 +309,25 @@ export default function UserDetailDrawer({ user, onClose, onUpdate, teams }: Use
                     </section>
 
                     {/* PROGRESSION - NEW SECTION */}
-                    <section className="space-y-4">
-                        <h3 className="text-xs font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
+                    <section className="space-y-3 lg:space-y-4">
+                        <h3 className="text-[10px] lg:text-xs font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
                             📊 التاريخ والإنجازات
                         </h3>
                         <AdminUserProgression userId={user.id} userName={user.name || 'User'} unlockedIds={user.unlockedAchievements || []} />
                     </section>
 
                     {/* Points & XP - DIRECT EDIT MODE */}
-                    <section className="space-y-4">
+                    <section className="space-y-3 lg:space-y-4">
                         <div className="flex justify-between items-center">
-                            <h3 className="text-xs font-bold text-accent-gold uppercase tracking-wider flex items-center gap-2">
-                                ⚡ الرصيد والخبرة (Direct Edit)
+                            <h3 className="text-[10px] lg:text-xs font-bold text-accent-gold uppercase tracking-wider flex items-center gap-2">
+                                ⚡ الرصيد والخبرة
                             </h3>
                             {can(adminUser, 'adjust_points') && (
                                 <button
                                     onClick={() => setShowPointsPanel(true)}
                                     className="text-[10px] bg-accent-gold/10 text-accent-gold px-2 py-1 rounded hover:bg-accent-gold hover:text-black transition-colors"
                                 >
-                                    ⚙️ Transaction Mode
+                                    ⚙️ Transaction
                                 </button>
                             )}
                         </div>
@@ -356,21 +356,21 @@ export default function UserDetailDrawer({ user, onClose, onUpdate, teams }: Use
                     </section>
 
                     {/* Danger Zone */}
-                    <section className="space-y-4 pt-6 mt-6 border-t border-white/5">
-                        <h3 className="text-xs font-bold text-red-500 uppercase tracking-wider flex items-center gap-2">
+                    <section className="space-y-3 lg:space-y-4 pt-6 mt-6 border-t border-white/5">
+                        <h3 className="text-[10px] lg:text-xs font-bold text-red-500 uppercase tracking-wider flex items-center gap-2">
                             ☠️ منطقة الخطر
                         </h3>
                         <div className="space-y-3">
                             <button
                                 onClick={() => setShowPasswordReset(true)}
-                                className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-bold text-gray-300 transition-colors flex items-center justify-center gap-2"
+                                className="w-full py-3 lg:py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs lg:text-sm font-bold text-gray-300 transition-colors flex items-center justify-center gap-2 active:scale-95"
                             >
-                                <span>🔒</span> إعادة تعيين كلمة المرور (Reset Password)
+                                <span>🔒</span> إعادة تعيين كلمة المرور
                             </button>
 
                             <button
                                 onClick={handleSuspend}
-                                className={`w-full py-3 rounded-xl border text-sm font-bold transition-all flex items-center justify-center gap-2 ${user.isDisabled
+                                className={`w-full py-3 lg:py-3.5 rounded-xl border text-xs lg:text-sm font-bold transition-all flex items-center justify-center gap-2 active:scale-95 ${user.isDisabled
                                     ? 'bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20'
                                     : 'bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20'
                                     }`}
@@ -381,11 +381,11 @@ export default function UserDetailDrawer({ user, onClose, onUpdate, teams }: Use
 
                             <button
                                 onClick={handleDelete}
-                                className="w-full py-3 bg-red-900/20 text-red-400 border border-red-500/30 rounded-xl text-sm hover:bg-red-900/40 transition-colors flex items-center justify-center gap-2"
+                                className="w-full py-3 lg:py-3.5 bg-red-900/20 text-red-400 border border-red-500/30 rounded-xl text-xs lg:text-sm hover:bg-red-900/40 transition-colors flex items-center justify-center gap-2 active:scale-95"
                             >
                                 <span>🗑️</span> حذف نهائي من النظام
                             </button>
-                            <p className="text-[10px] text-center text-gray-600">كل الإجراءات دي بتتسجل في سجل الرقابة.</p>
+                            <p className="text-[8px] lg:text-[10px] text-center text-gray-600">كل الإجراءات دي بتتسجل في سجل الرقابة.</p>
                         </div>
                     </section>
 

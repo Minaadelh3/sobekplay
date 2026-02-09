@@ -74,56 +74,59 @@ export default function AdminOverview() {
     );
 
     return (
-        <div className="space-y-10 animate-fade-in max-w-7xl mx-auto pb-20">
+        <div className="space-y-6 lg:space-y-10 animate-fade-in max-w-7xl mx-auto pb-20 px-4 sm:px-0">
             {/* 1. HERO METRICS */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
                 {stats.map((stat, idx) => (
-                    <div key={idx} className={`p-6 rounded-xl border ${stat.border} ${stat.bg} backdrop-blur-sm transition-transform hover:-translate-y-1`}>
-                        <div className="flex justify-between items-start mb-4">
-                            <h3 className={`font-bold uppercase text-xs tracking-wider opacity-70 ${stat.color}`}>{stat.label}</h3>
-                            <span className="text-xl opacity-50">{stat.icon}</span>
+                    <div key={idx} className={`p-4 lg:p-6 rounded-xl border ${stat.border} ${stat.bg} backdrop-blur-sm transition-transform active:scale-95 group`}>
+                        <div className="flex justify-between items-start mb-2 lg:mb-4">
+                            <h3 className={`font-bold uppercase text-[8px] lg:text-xs tracking-wider opacity-70 ${stat.color}`}>{stat.label}</h3>
+                            <span className="text-sm lg:text-xl opacity-50 group-hover:scale-110 transition-transform">{stat.icon}</span>
                         </div>
-                        <div className="text-4xl font-black text-white">{stat.value}</div>
+                        <div className="text-2xl lg:text-4xl font-black text-white">{stat.value}</div>
                     </div>
                 ))}
             </div>
 
             {/* 2. NAVIGATION CARDS BY SECTION */}
-            <div className="space-y-12">
+            <div className="space-y-10 lg:space-y-12">
                 {sections.map((section, idx) => (
-                    <div key={idx} className="space-y-4">
-                        <h2 className="text-xl font-bold text-white/80 border-b border-white/10 pb-2 flex items-center gap-2">
+                    <div key={idx} className="space-y-3 lg:space-y-4">
+                        <h2 className="text-lg lg:text-xl font-bold text-white/80 border-b border-white/10 pb-2 flex items-center gap-2">
                             {section.title}
                         </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
                             {section.items.map((item, i) => (
                                 <button
                                     key={i}
                                     onClick={() => navigate(item.path)}
-                                    className="group relative flex flex-col p-5 bg-[#0F1218] border border-white/5 rounded-xl hover:bg-[#1A1D24] hover:border-accent-gold/30 hover:shadow-[0_0_20px_rgba(191,160,90,0.1)] transition-all text-left overflow-hidden"
+                                    className="group relative flex flex-col p-4 lg:p-5 bg-[#0F1218] border border-white/5 rounded-xl hover:bg-[#1A1D24] hover:border-accent-gold/30 transition-all text-left overflow-hidden active:scale-[0.98]"
                                 >
-                                    <div className={`text-4xl mb-4 transform group-hover:scale-110 transition-transform duration-300`}>
-                                        {/* Map icon names to emojis if needed, or use them directly if they are emojis */}
-                                        {item.icon === 'busts_in_silhouette' ? '👥' :
-                                            item.icon === 'trophy' ? '🏆' :
-                                                item.icon === 'medal' ? '🥇' :
-                                                    item.icon === 'shield' ? '🛡️' :
-                                                        item.icon === 'video_game' ? '🎮' :
-                                                            item.icon === 'test_tube' ? '🧪' :
-                                                                item.icon === 'scroll' ? '📜' :
-                                                                    item.icon === 'gear' ? '⚙️' :
-                                                                        item.icon === 'bell' ? '🔔' :
-                                                                            item.icon === 'newspaper' ? '📰' :
-                                                                                item.icon === 'praying_hands' ? '🙏' :
-                                                                                    item.icon === 'film_frames' ? '🎬' :
-                                                                                        item.icon}
+                                    <div className="flex items-center gap-4 lg:block">
+                                        <div className={`text-2xl lg:text-4xl lg:mb-4 transform group-hover:scale-110 transition-transform duration-300 shrink-0`}>
+                                            {item.icon === 'busts_in_silhouette' ? '👥' :
+                                                item.icon === 'trophy' ? '🏆' :
+                                                    item.icon === 'medal' ? '🥇' :
+                                                        item.icon === 'shield' ? '🛡️' :
+                                                            item.icon === 'video_game' ? '🎮' :
+                                                                item.icon === 'test_tube' ? '🧪' :
+                                                                    item.icon === 'scroll' ? '📜' :
+                                                                        item.icon === 'gear' ? '⚙️' :
+                                                                            item.icon === 'bell' ? '🔔' :
+                                                                                item.icon === 'newspaper' ? '📰' :
+                                                                                    item.icon === 'praying_hands' ? '🙏' :
+                                                                                        item.icon === 'film_frames' ? '🎬' :
+                                                                                            item.icon}
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-base lg:text-lg text-white group-hover:text-accent-gold transition-colors truncate">
+                                                {item.label}
+                                            </h3>
+                                            <p className="text-[10px] lg:text-sm text-gray-500 group-hover:text-gray-400 transition-colors line-clamp-1">
+                                                {item.desc}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <h3 className="font-bold text-lg text-white mb-1 group-hover:text-accent-gold transition-colors">
-                                        {item.label}
-                                    </h3>
-                                    <p className="text-sm text-gray-500 group-hover:text-gray-400 transition-colors">
-                                        {item.desc}
-                                    </p>
 
                                     {/* Hover Effect Light */}
                                     <div className="absolute top-0 right-0 w-24 h-24 bg-accent-gold/5 rounded-full blur-2xl -mr-12 -mt-12 transition-opacity opacity-0 group-hover:opacity-100" />
@@ -135,13 +138,13 @@ export default function AdminOverview() {
             </div>
 
             {/* System Status Footer */}
-            <div className="mt-12 p-6 rounded-xl bg-white/5 border border-white/10 flex flex-wrap gap-6 items-center justify-between text-xs text-gray-500 font-mono">
-                <div className='flex gap-4'>
+            <div className="mt-8 lg:mt-12 p-4 lg:p-6 rounded-xl bg-white/5 border border-white/10 flex flex-col sm:flex-row gap-4 items-center justify-between text-[10px] text-gray-500 font-mono">
+                <div className='flex flex-wrap justify-center sm:justify-start gap-4'>
                     <span>STATUS: <span className="text-green-500">OPERATIONAL</span></span>
                     <span>DB: <span className={loading ? "text-yellow-500" : "text-green-500"}>{loading ? "SYNCING" : "CONNECTED"}</span></span>
                     <span>STORAGE: {storageQuote}</span>
                 </div>
-                <div>
+                <div className="opacity-50">
                     SOBEKPLAY ADMIN v2.5
                 </div>
             </div>

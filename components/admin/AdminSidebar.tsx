@@ -51,10 +51,10 @@ export default function AdminSidebar({ mobile = false, onClose }: { mobile?: boo
         <aside className={`
             ${mobile ? 'w-full h-full' : 'w-72 h-screen sticky top-0'}
             bg-[#0F1218] border-r border-white/5 flex flex-col
-            transition-all duration-300
+            transition-all duration-300 overflow-hidden
         `}>
             {/* Header */}
-            <div className="p-6 border-b border-white/5 flex items-center justify-between">
+            <div className="p-6 border-b border-white/5 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-accent-gold flex items-center justify-center text-black font-black text-sm shadow-[0_0_15px_rgba(191,160,90,0.4)]">
                         GM
@@ -65,7 +65,12 @@ export default function AdminSidebar({ mobile = false, onClose }: { mobile?: boo
                     </div>
                 </div>
                 {mobile && (
-                    <button onClick={onClose} className="text-gray-400 hover:text-white">✕</button>
+                    <button
+                        onClick={onClose}
+                        className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white bg-white/5 rounded-full active:scale-90 transition-transform"
+                    >
+                        ✕
+                    </button>
                 )}
             </div>
 
@@ -82,14 +87,14 @@ export default function AdminSidebar({ mobile = false, onClose }: { mobile?: boo
                                     end={item.end}
                                     onClick={onClose}
                                     className={({ isActive }) => `
-                                        flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all group
+                                        flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all group
                                         ${isActive
                                             ? 'bg-accent-gold/10 text-accent-gold border border-accent-gold/20 shadow-[0_0_10px_rgba(191,160,90,0.1)]'
                                             : 'text-gray-400 hover:text-white hover:bg-white/5'
                                         }
                                     `}
                                 >
-                                    <span className="opacity-70 group-hover:opacity-100 text-lg">
+                                    <span className="opacity-70 group-hover:opacity-100 text-lg shrink-0">
                                         {/* Simple Emoji Icons for now, replacing with SVG icons later if needed */}
                                         {item.icon === 'busts_in_silhouette' ? '👥' :
                                             item.icon === 'trophy' ? '🏆' :
@@ -108,7 +113,7 @@ export default function AdminSidebar({ mobile = false, onClose }: { mobile?: boo
                                                                                                 item.icon === 'whatsapp' ? '💬' :
                                                                                                     item.icon}
                                     </span>
-                                    <span className="font-medium">{item.label}</span>
+                                    <span className="font-medium truncate">{item.label}</span>
                                 </NavLink>
                             ))}
                         </div>
@@ -117,11 +122,11 @@ export default function AdminSidebar({ mobile = false, onClose }: { mobile?: boo
             </nav>
 
             {/* User Footer */}
-            <div className="p-4 border-t border-white/5 bg-[#0A0C10]">
+            <div className="p-4 border-t border-white/5 bg-[#0A0C10] shrink-0">
                 <div className="flex items-center gap-3 mb-4">
                     <img
                         src={user?.avatar || '/assets/brand/logo.png'}
-                        className="w-9 h-9 rounded-full bg-gray-800 object-cover border border-white/10"
+                        className="w-10 h-10 rounded-full bg-gray-800 object-cover border border-white/10"
                     />
                     <div className="flex-1 min-w-0">
                         <div className="text-sm font-bold text-white truncate">{user?.name || "Admin"}</div>
@@ -135,13 +140,13 @@ export default function AdminSidebar({ mobile = false, onClose }: { mobile?: boo
                 <div className="flex gap-2">
                     <button
                         onClick={() => navigate('/app/home')}
-                        className="flex-1 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white text-xs py-2 rounded-md transition-colors border border-white/5"
+                        className="flex-1 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white text-xs py-2.5 rounded-lg transition-colors border border-white/5 font-bold"
                     >
                         Exit Mode
                     </button>
                     <button
                         onClick={handleLogout}
-                        className="px-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs py-2 rounded-md transition-colors border border-red-500/20"
+                        className="px-4 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs py-2.5 rounded-lg transition-colors border border-red-500/20 font-bold"
                     >
                         Logout
                     </button>

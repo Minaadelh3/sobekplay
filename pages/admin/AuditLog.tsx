@@ -76,8 +76,8 @@ export default function AuditLog() {
                                 key={type}
                                 onClick={() => setFilterType(type)}
                                 className={`text-[10px] uppercase font-bold px-3 py-1.5 rounded-lg transition-all ${filterType === type
-                                        ? 'bg-accent-gold text-black shadow-[0_0_10px_rgba(191,160,90,0.2)]'
-                                        : 'bg-white/5 text-gray-400 hover:text-white'
+                                    ? 'bg-accent-gold text-black shadow-[0_0_10px_rgba(191,160,90,0.2)]'
+                                    : 'bg-white/5 text-gray-400 hover:text-white'
                                     }`}
                             >
                                 {type.replace('_', ' ')}
@@ -100,68 +100,70 @@ export default function AuditLog() {
             </div>
 
             {/* Log Stream */}
-            <div className="bg-[#0A0C10] border-x border-b border-white/5 rounded-b-xl overflow-hidden min-h-[600px] font-mono text-xs">
+            <div className="bg-[#0A0C10] border-x border-b border-white/5 rounded-b-xl overflow-hidden min-h-[500px] font-mono text-xs shadow-2xl">
                 {loading ? (
-                    <div className="p-12 text-center text-green-500 animate-pulse">
+                    <div className="p-12 text-center text-green-500 animate-pulse text-[10px] lg:text-xs">
                         &gt; ESTABLISHING UPLINK... <br />
                         &gt; FETCHING SECURITY AUDIT...
                     </div>
                 ) : filteredEntries.length === 0 ? (
-                    <div className="p-12 text-center text-gray-600">
+                    <div className="p-12 text-center text-gray-600 text-[10px] lg:text-xs">
                         &gt; NO SIGNALS DETECTED.
                     </div>
                 ) : (
-                    <table className="w-full text-left border-collapse">
-                        <thead className="bg-[#141414] text-gray-500 uppercase tracking-wider sticky top-0 z-0">
-                            <tr>
-                                <th className="px-4 py-3 border-b border-white/5 w-40">Timestamp</th>
-                                <th className="px-4 py-3 border-b border-white/5 w-32">Type</th>
-                                <th className="px-4 py-3 border-b border-white/5">Details</th>
-                                <th className="px-4 py-3 border-b border-white/5 w-48 text-right">Actor</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5">
-                            {filteredEntries.map(entry => (
-                                <tr key={entry.id} className="hover:bg-white/[0.02] group transition-colors">
-                                    <td className="px-4 py-3 text-gray-500">
-                                        {entry.timestamp?.seconds
-                                            ? new Date(entry.timestamp.seconds * 1000).toLocaleString('en-US', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })
-                                            : '--:--:--'}
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${entry.type === 'ADJUSTMENT' ? 'bg-blue-900/20 text-blue-400 border-blue-900/30' :
+                    <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                        <table className="w-full text-left border-collapse min-w-[600px] lg:min-w-full">
+                            <thead className="bg-[#141414] text-gray-500 uppercase tracking-wider sticky top-0 z-10 text-[8px] lg:text-[10px]">
+                                <tr>
+                                    <th className="px-3 lg:px-4 py-3 border-b border-white/5 w-24 lg:w-40">Timestamp</th>
+                                    <th className="px-3 lg:px-4 py-3 border-b border-white/5 w-24 lg:w-32">Type</th>
+                                    <th className="px-3 lg:px-4 py-3 border-b border-white/5">Details</th>
+                                    <th className="px-3 lg:px-4 py-3 border-b border-white/5 w-32 lg:w-48 text-right hidden sm:table-cell">Actor</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                                {filteredEntries.map(entry => (
+                                    <tr key={entry.id} className="hover:bg-white/[0.02] group transition-colors text-[10px] lg:text-xs">
+                                        <td className="px-3 lg:px-4 py-3 text-gray-500 whitespace-nowrap font-mono">
+                                            {entry.timestamp?.seconds
+                                                ? new Date(entry.timestamp.seconds * 1000).toLocaleString('en-US', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+                                                : '--:--:--'}
+                                        </td>
+                                        <td className="px-3 lg:px-4 py-3">
+                                            <span className={`px-1.5 py-0.5 rounded text-[8px] lg:text-[10px] font-bold border truncate block max-w-[80px] lg:max-w-none ${entry.type === 'ADJUSTMENT' ? 'bg-blue-900/20 text-blue-400 border-blue-900/30' :
                                                 entry.type === 'TRANSFER' ? 'bg-purple-900/20 text-purple-400 border-purple-900/30' :
                                                     entry.type.includes('BAN') ? 'bg-red-900/20 text-red-500 border-red-900/30' :
                                                         'bg-gray-800 text-gray-400 border-white/5'
-                                            }`}>
-                                            {entry.type}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-gray-300">
-                                                {entry.fromName && <span className="text-gray-500">{entry.fromName} → </span>}
-                                                <span className="text-white font-bold">{entry.toName || 'System'}</span>
+                                                }`}>
+                                                {entry.type}
                                             </span>
-                                            {entry.amount > 0 && (
-                                                <span className="text-accent-gold font-bold">
-                                                    [{entry.amount.toLocaleString()} SP]
+                                        </td>
+                                        <td className="px-3 lg:px-4 py-3">
+                                            <div className="flex flex-wrap items-center gap-1 LG:gap-2">
+                                                <span className="text-gray-300">
+                                                    {entry.fromName && <span className="text-gray-500 text-[8px] lg:text-xs">{entry.fromName} → </span>}
+                                                    <span className="text-white font-bold">{entry.toName || 'System'}</span>
                                                 </span>
-                                            )}
-                                        </div>
-                                        <div className="text-gray-600 mt-0.5 italic">
-                                            &gt; {entry.reason || 'No details provided'}
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-3 text-right text-gray-500">
-                                        <div className="truncate w-40 ml-auto" title={entry.adminId}>
-                                            {entry.adminId ? `admin:${entry.adminId.slice(0, 8)}...` : 'system:automated'}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                                {entry.amount !== undefined && (
+                                                    <span className="text-accent-gold font-bold">
+                                                        [{entry.amount.toLocaleString()} SP]
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="text-gray-600 mt-0.5 italic text-[8px] lg:text-[10px] truncate max-w-[200px] lg:max-w-md">
+                                                &gt; {entry.reason || 'No details provided'}
+                                            </div>
+                                        </td>
+                                        <td className="px-3 lg:px-4 py-3 text-right text-gray-500 hidden sm:table-cell">
+                                            <div className="truncate w-32 md:w-40 ml-auto" title={entry.adminId}>
+                                                {entry.adminId ? `admin:${entry.adminId.slice(0, 8)}...` : 'system:automated'}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
             </div>
         </div>
