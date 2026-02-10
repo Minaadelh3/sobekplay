@@ -129,7 +129,7 @@ export function useOneSignal() {
         if (!isInitialized || !firebaseUser) return;
 
         // Login logic
-        const currentExternalId = OneSignal.User.getExternalId();
+        const currentExternalId = OneSignal.User.externalId;
         if (currentExternalId !== firebaseUser.uid) {
             addLog(`Logging in as ${firebaseUser.uid}`);
             OneSignal.login(firebaseUser.uid);
@@ -145,7 +145,7 @@ export function useOneSignal() {
         if (!isInitialized || firebaseUser) return;
 
         // If no user, but we have an external ID, logout
-        const currentExternalId = OneSignal.User.getExternalId();
+        const currentExternalId = OneSignal.User.externalId;
         if (currentExternalId) {
             addLog("Logging out");
             OneSignal.logout();
