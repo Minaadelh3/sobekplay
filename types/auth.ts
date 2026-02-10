@@ -102,15 +102,16 @@ export interface TeamProfile {
     points: number;      // Legacy / Current Score (Deprecated)
     scoreTotal?: number; // ⚡ Unified Score Field
     isScorable: boolean; // Eligibility for points
+    passwordHint?: string; // Hint for the password
 }
 
 export const TEAMS: TeamProfile[] = [
-    { id: 'tout', name: 'توت', avatar: '/profile/toot.png', color: 'from-[#1a237e] to-[#0d47a1]', points: 0, isScorable: true },
-    { id: 'ptah', name: 'بتاح', avatar: '/profile/ankh.png', color: 'from-[#1b5e20] to-[#004d40]', points: 0, isScorable: true },
-    { id: 'amon', name: 'آمون', avatar: '/profile/amoun.png', color: 'from-[#4a148c] to-[#311b92]', points: 0, isScorable: true },
-    { id: 'ra', name: 'رع', avatar: '/profile/raa.png', color: 'from-[#ff6f00] to-[#ffca28]', points: 0, isScorable: true },
+    { id: 'tout', name: 'توت', avatar: '/profile/toot.png', color: 'from-[#1a237e] to-[#0d47a1]', points: 0, isScorable: true, passwordHint: 'حكمه٣' },
+    { id: 'ptah', name: 'بتاح', avatar: '/profile/ankh.png', color: 'from-[#1b5e20] to-[#004d40]', points: 0, isScorable: true, passwordHint: 'صنع٤' },
+    { id: 'amon', name: 'آمون', avatar: '/profile/amoun.png', color: 'from-[#4a148c] to-[#311b92]', points: 0, isScorable: true, passwordHint: 'هيبه٤' },
+    { id: 'ra', name: 'رع', avatar: '/profile/raa.png', color: 'from-[#ff6f00] to-[#ffca28]', points: 0, isScorable: true, passwordHint: 'نور٢' },
     // Uncle Joy is NOT Scorable
-    { id: 'uncle_joy', name: 'Uncle Joy', avatar: '/profile/joy.png', color: 'from-[#b71c1c] to-[#880e4f]', points: 0, isScorable: false },
+    { id: 'uncle_joy', name: 'Uncle Joy', avatar: '/profile/joy.png', color: 'from-[#b71c1c] to-[#880e4f]', points: 0, isScorable: false, passwordHint: '1234' },
 ];
 
 export interface AuthState {

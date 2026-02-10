@@ -73,6 +73,14 @@ export default function PinModal({ team, onClose }: PinModalProps) {
                         ده الكود الخاص بالفريق (حروف أو أرقام)<br />
                         تأكد من كتابته بشكل صحيح
                     </p>
+
+                    {team.passwordHint && (
+                        <div className="mt-4 py-2 px-3 bg-accent-gold/10 rounded-lg border border-accent-gold/20 inline-block">
+                            <p className="text-accent-gold text-xs font-bold">
+                                💡 تلميح: {team.passwordHint}
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 <form onSubmit={handleSubmit} className="relative z-10">
