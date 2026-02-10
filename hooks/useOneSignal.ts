@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import OneSignal from 'react-onesignal';
 import { useAuth } from '../context/AuthContext';
 
@@ -6,22 +6,33 @@ const ONESIGNAL_APP_ID = import.meta.env.VITE_ONESIGNAL_APP_ID || "71f9b370-fb2a
 
 type PermissionState = 'default' | 'granted' | 'denied';
 
-// Module-level flag to prevent double init across multiple component mounts
-let didInitOneSignal = false;
+// Global initialization flag to prevent double-init in React Strict Mode
+let isOneSignalInitializing = false;
+let isOneSignalInitialized = false;
 
 export function useOneSignal() {
     const { firebaseUser } = useAuth();
-    const [isInitialized, setIsInitialized] = useState(didInitOneSignal);
+    const [isInitialized, setIsInitialized] = useState(isOneSignalInitialized);
     const [isOptedIn, setIsOptedIn] = useState(false);
     const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
-    const [permission, setPermission] = useState<PermissionState>('default');
+    const [permission, setPermission] = useState<PermissionState>(() => {
+        if (typeof window !== 'undefined' && 'Notification' in window) {
+            return Notification.permission as PermissionState;
+        }
+        return 'default';
+    });
     const [isSupported, setIsSupported] = useState(true);
     const [logs, setLogs] = useState<string[]>([]);
 
+    // Use refs to track latest state for event listeners
+    const isInitializedRef = useRef(isInitialized);
+    isInitializedRef.current = isInitialized;
+
     const addLog = useCallback((msg: string) => {
         const timestamp = new Date().toLocaleTimeString();
-        setLogs(prev => [`[${timestamp}] ${msg}`, ...prev]);
-        console.log(`[PushDebug] ${msg}`);
+        const logMsg = `[${timestamp}] ${msg}`;
+        setLogs(prev => [logMsg, ...prev]);
+        console.log(`🔔 [OneSignal] ${msg}`);
     }, []);
 
     const updateState = useCallback(async () => {
@@ -31,172 +42,161 @@ export function useOneSignal() {
             setPermission(rawPermission as PermissionState);
 
             // Subscription
-            const subId = OneSignal.User.PushSubscription.id;
-            const optedIn = OneSignal.User.PushSubscription.optedIn;
+            // Note: We access these safely. if OneSignal isn't loaded, these might throw or be undefined depending on the SDK version, 
+            // but react-onesignal usually handles the shim.
+            if (OneSignal.User?.PushSubscription) {
+                const subId = OneSignal.User.PushSubscription.id;
+                const optedIn = OneSignal.User.PushSubscription.optedIn;
 
-            setIsOptedIn(!!optedIn);
-
-            if (subId) {
-                setSubscriptionId(subId);
-            } else {
-                setSubscriptionId(null);
+                setIsOptedIn(!!optedIn);
+                setSubscriptionId(subId || null);
             }
 
-            setIsSupported(OneSignal.Notifications.isPushSupported());
+            if (OneSignal.Notifications) {
+                setIsSupported(OneSignal.Notifications.isPushSupported());
+            }
 
         } catch (e) {
             console.warn("OneSignal State Update Error", e);
         }
     }, []);
 
-    // ... (rest of the file)
-
-
     // Initialize OneSignal
-    const initOneSignal = useCallback(async () => {
-        // 1. Abort if Offline
-        if (typeof window !== 'undefined' && !navigator.onLine) {
-            console.log("📴 [OneSignal] Offline, skipping init.");
-            return;
-        }
-
-        console.log("🔔 [OneSignal] Initializing...");
-        didInitOneSignal = true; // Mark as started to prevent race conditions
-
-        try {
-            // 2. Initialize with specific worker path
-            await OneSignal.init({
-                appId: ONESIGNAL_APP_ID,
-                allowLocalhostAsSecureOrigin: true,
-                // IMPORTANT: We use the main sw.js which imports OneSignal scripts
-                serviceWorkerPath: '/sw.js',
-                serviceWorkerParam: { scope: '/' },
-                promptOptions: {
-                    slidedown: {
-                        prompts: [
-                            {
-                                type: "push",
-                                autoPrompt: false,
-                                text: {
-                                    actionMessage: "Get notified about new games and updates!",
-                                    acceptButton: "Allow",
-                                    cancelButton: "Later"
-                                },
-                                delay: {
-                                    pageViews: 1,
-                                    timeDelay: 30
-                                }
-                            }
-                        ]
-                    }
-                }
-            });
-
-            if (addLog) addLog("OneSignal.init completed");
-            setIsInitialized(true);
-            setIsSupported(OneSignal.Notifications.isPushSupported());
-
-            // Initial State
-            updateState();
-
-            // Listeners
-            OneSignal.User.PushSubscription.addEventListener("change", (e) => {
-                if (addLog) addLog("Subscription Changed Event");
-                updateState();
-            });
-            OneSignal.Notifications.addEventListener("permissionChange", (permission) => {
-                if (addLog) addLog(`Permission Changed: ${permission}`);
-                updateState();
-            });
-
-        } catch (error: any) {
-            console.warn("⚠️ [OneSignal] Init Failed:", error);
-
-            // If it failed because already initialized, recovers gracefully
-            if (error?.message?.includes("already initialized") || error?.includes?.("already initialized")) {
-                console.log("Recovering from double-init...");
-                setIsInitialized(true);
-                updateState();
-            } else {
-                if (addLog) addLog(`Init Failed: ${error}`);
-                didInitOneSignal = false; // Reset on genuine failure so we can try again
-            }
-        }
-    }, [ONESIGNAL_APP_ID, addLog, updateState]);
-
     useEffect(() => {
         if (!ONESIGNAL_APP_ID) {
             console.error("OneSignal App ID is missing. Check .env");
             return;
         }
 
-        // If already initialized globally, just update local state
-        if (didInitOneSignal) {
+        // If already initialized, just ensure local state is up to date
+        if (isOneSignalInitialized) {
             setIsInitialized(true);
             updateState();
             return;
         }
 
-        if (typeof window !== 'undefined' && !didInitOneSignal) {
-            // Small delay to ensure page load
-            setTimeout(initOneSignal, 1000);
-        }
+        // If currently initializing, wait for it (simplified: just return, local state will update when re-rendered or we can poll)
+        if (isOneSignalInitializing) return;
 
-    }, [isInitialized, updateState, initOneSignal]);
+        const init = async () => {
+            if (typeof window === 'undefined') return;
+            if (!navigator.onLine) {
+                addLog("Offline, skipping init.");
+                return;
+            }
+
+            isOneSignalInitializing = true;
+            addLog("Initializing...");
+
+            try {
+                await OneSignal.init({
+                    appId: ONESIGNAL_APP_ID,
+                    allowLocalhostAsSecureOrigin: true,
+                    serviceWorkerPath: '/OneSignalSDKWorker.js', // Explicit path to public worker
+                    // serviceWorkerParam: { scope: '/' }, // Usually not needed if worker is at root
+                });
+
+                isOneSignalInitialized = true;
+                setIsInitialized(true);
+                addLog("Init verified.");
+
+                // Initial update
+                updateState();
+
+                // Setup Listeners
+                OneSignal.User.PushSubscription.addEventListener("change", (e) => {
+                    addLog(`Subscription Changed: ${JSON.stringify(e)}`);
+                    updateState();
+                });
+
+                OneSignal.Notifications.addEventListener("permissionChange", (permission) => {
+                    addLog(`Permission Changed: ${permission}`);
+                    updateState();
+                });
+
+            } catch (error: any) {
+                console.error("OneSignal Init Failed:", error);
+                addLog(`Init Failed: ${error?.message || error}`);
+                isOneSignalInitializing = false; // Allow retry
+            }
+        };
+
+        init();
+    }, [addLog, updateState]);
 
     // Handle User Identification (Login/Logout)
     useEffect(() => {
-        if (!isInitialized) return;
+        if (!isInitialized || !firebaseUser) return;
 
-        if (firebaseUser?.uid) {
-            // Identify user
+        // Login logic
+        const currentExternalId = OneSignal.User.getExternalId();
+        if (currentExternalId !== firebaseUser.uid) {
             addLog(`Logging in as ${firebaseUser.uid}`);
-            try {
-                OneSignal.login(firebaseUser.uid);
-                // Add default tags
-                OneSignal.User.addTags({
-                    user_type: 'registered',
-                    last_login: new Date().toISOString()
-                });
-            } catch (e) {
-                console.warn("OneSignal login error", e);
-                addLog(`Login Error: ${e}`);
-            }
-        } else {
-            // Logout
-            try {
-                OneSignal.logout();
-            } catch (e) {
-                console.warn("OneSignal logout error", e);
-            }
+            OneSignal.login(firebaseUser.uid);
+            OneSignal.User.addTags({
+                user_type: 'registered',
+                last_login: new Date().toISOString()
+            });
         }
-    }, [firebaseUser, isInitialized, addLog]);
+    }, [isInitialized, firebaseUser, addLog]);
+
+    // Handle Logout
+    useEffect(() => {
+        if (!isInitialized || firebaseUser) return;
+
+        // If no user, but we have an external ID, logout
+        const currentExternalId = OneSignal.User.getExternalId();
+        if (currentExternalId) {
+            addLog("Logging out");
+            OneSignal.logout();
+        }
+    }, [isInitialized, firebaseUser, addLog]);
+
 
     // Manual Permission Prompt
     const enableNotifications = useCallback(async () => {
-        if (!isInitialized) return;
+        if (!isInitialized) {
+            addLog("Cannot enable: Not initialized yet");
+            return;
+        }
 
-        addLog("Requesting Notification Permission/Subscription...");
-        console.log("Debug Subscription State:", OneSignal.User.PushSubscription);
-        addLog(`Current State - ID: ${OneSignal.User.PushSubscription.id}, OptedIn: ${OneSignal.User.PushSubscription.optedIn}`);
+        addLog("Requesting Permission...");
 
         try {
-            if (permission === 'granted') {
-                addLog("Permission already granted. Attempting opt-in...");
-                await OneSignal.User.PushSubscription.optIn();
+            // If already granted but opted out, opt back in
+            if (Notification.permission === 'granted') {
+                const isOptedIn = OneSignal.User.PushSubscription.optedIn;
+                if (!isOptedIn) {
+                    addLog("Permission granted, opting in...");
+                    await OneSignal.User.PushSubscription.optIn();
+                } else {
+                    addLog("Already granted and opted in.");
+                }
             } else {
+                // Request permission
                 await OneSignal.Notifications.requestPermission();
             }
-            await updateState();
+
+            // Force update state after a short delay to allow SDK to propagate
+            setTimeout(updateState, 500);
+
         } catch (e) {
             console.error("OneSignal Prompt Error", e);
             addLog(`Prompt Error: ${e}`);
         }
-    }, [isInitialized, permission, updateState, addLog]);
+    }, [isInitialized, updateState, addLog]);
+
+    const disableNotifications = useCallback(async () => {
+        if (!isInitialized) return;
+        addLog("Opting out...");
+        await OneSignal.User.PushSubscription.optOut();
+        updateState();
+    }, [isInitialized, updateState, addLog]);
 
     return {
         isInitialized,
         enableNotifications,
+        disableNotifications,
         subscriptionId,
         isOptedIn,
         permission,

@@ -6,12 +6,13 @@ import PushComposer from '../../components/admin/push/PushComposer';
 import AudienceSelector from '../../components/admin/push/AudienceSelector';
 import PushScheduler from '../../components/admin/push/PushScheduler';
 import PushHistory from '../../components/admin/push/PushHistory';
+import SubscribedUsersList from '../../components/admin/push/SubscribedUsersList';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../../lib/firebase';
 
 const PushNotifications: React.FC = () => {
     const { sendPush, schedulePush, loading, error } = usePushNotifications();
-    const [activeTab, setActiveTab] = useState<'compose' | 'history'>('compose');
+    const [activeTab, setActiveTab] = useState<'compose' | 'history' | 'users'>('compose');
 
     // Form State
     const [formData, setFormData] = useState({
@@ -87,6 +88,12 @@ const PushNotifications: React.FC = () => {
                         className={`px-4 py-2 rounded-lg font-bold transition-all ${activeTab === 'history' ? 'bg-accent-gold text-black' : 'bg-white/5 text-gray-400 hover:text-white'}`}
                     >
                         History
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('users')}
+                        className={`px-4 py-2 rounded-lg font-bold transition-all ${activeTab === 'users' ? 'bg-accent-gold text-black' : 'bg-white/5 text-gray-400 hover:text-white'}`}
+                    >
+                        Subscribed Users
                     </button>
                 </div>
             </div>
@@ -195,9 +202,13 @@ const PushNotifications: React.FC = () => {
                             </div>
                         </div>
                     </>
-                ) : (
+                ) : activeTab === 'history' ? (
                     <div className="lg:col-span-3">
                         <PushHistory />
+                    </div>
+                ) : (
+                    <div className="lg:col-span-3">
+                        <SubscribedUsersList />
                     </div>
                 )}
             </div>

@@ -1,51 +1,51 @@
 import React, { useEffect } from 'react';
 import { useOneSignal } from '../hooks/useOneSignal';
 import { useAuth } from '../context/AuthContext';
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import OneSignal from 'react-onesignal';
 
 /**
  * Headless component to manage OneSignal Lifecycle
  * Must be placed inside AuthProvider
  */
 export default function OneSignalManager() {
-    useOneSignal();
+    const { subscriptionId, isOptedIn, isInitialized, permission } = useOneSignal();
     const { user } = useAuth();
 
     useEffect(() => {
-        if (!user) return;
+        if (!user || !isInitialized || !subscriptionId) return;
 
         const syncSubscription = async () => {
             try {
-                // Wait for OneSignal to be ready
-                await new Promise(resolve => setTimeout(resolve, 3000));
+                // Determine actual push status
+                // If permission is granted AND OneSignal says optedIn, then we are good.
+                const isPushEnabled = isOptedIn && permission === 'granted';
 
-                const id = OneSignal.User.PushSubscription.id;
-                const optIn = OneSignal.User.PushSubscription.optedIn;
-                // Native check as OneSignal wrapper can be tricky async
-                const isPushEnabled = optIn && Notification.permission === 'granted';
+                console.log(`🔔 [OneSignalManager] Syncing User: ${user.id} -> ${subscriptionId} (Enabled: ${isPushEnabled})`);
 
-                if (id) {
-                    console.log(`🔔 [OneSignal] Syncing User: ${user.id} -> ${id}`);
-                    await updateDoc(doc(db, "users", user.id), {
-                        oneSignalId: id,
-                        pushEnabled: isPushEnabled,
-                        lastSeenAt: serverTimestamp()
-                    });
-                }
+                // We use setDoc with merge: true to ensure we don't overwrite other fields but create if missing (though user doc should exist)
+                // Using updateDoc is safer if we want to fail if user doesn't exist, but here we assume user exists.
+                await setDoc(doc(db, "users", user.id), {
+                    oneSignalId: subscriptionId,
+                    pushEnabled: isPushEnabled,
+                    pushPermission: permission,
+                    lastSeenAt: serverTimestamp(),
+                    device: {
+                        params: {
+                            userAgent: navigator.userAgent,
+                            platform: navigator.platform
+                        }
+                    }
+                }, { merge: true });
+
             } catch (e) {
-                console.warn("[OneSignal] Sync Failed", e);
+                console.warn("[OneSignalManager] Sync Failed", e);
             }
         };
 
-        // Sync on mount and periodically check
         syncSubscription();
 
-        // Optional: Listen for subscription changes if OneSignal SDK supports it event-based, 
-        // but for now simple sync on load is sufficient for MVP.
-
-    }, [user?.id]);
+    }, [user, subscriptionId, isOptedIn, permission, isInitialized]);
 
     return null;
 }
