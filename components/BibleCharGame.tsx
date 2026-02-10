@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BIBLE_CHARACTERS, getCharactersByTag, BibleCharCategory, BibleCharacter } from '../data/bibleCharactersData';
+import { GameScoreSaver } from './games/GameScoreSaver';
 
 type Team = 'A' | 'B';
 
@@ -179,6 +180,16 @@ export const BibleCharGame: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                         <span className="text-xs opacity-50 block mb-1">TEAM B</span>
                         <span className="text-3xl font-bold">{scores.B}</span>
                     </div>
+                </div>
+
+                {/* Score Saver Integration */}
+                <div className="w-full max-w-lg mb-8">
+                    <GameScoreSaver
+                        gameId="bible_char"
+                        gameName="Bible Characters (مين ده؟)"
+                        scoreA={scores.A}
+                        scoreB={scores.B}
+                    />
                 </div>
 
                 <button

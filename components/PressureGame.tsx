@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getPressurePrompt, PressurePrompt } from '../data/pressureData';
+import { GameScoreSaver } from './games/GameScoreSaver';
 
 export const PressureGame: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     const [gameState, setGameState] = useState<'INTRO' | 'REVEAL' | 'REACTION'>('INTRO');
     const [currentPrompt, setCurrentPrompt] = useState<PressurePrompt | null>(null);
     const [round, setRound] = useState(1);
     const [isCardVisible, setIsCardVisible] = useState(false);
+    const [showScoreSaver, setShowScoreSaver] = useState(false);
 
     // Actions
     const startGame = () => {
@@ -122,7 +124,25 @@ export const PressureGame: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                                 >
                                     Next Card ➜
                                 </button>
+                                <button
+                                    onClick={() => setShowScoreSaver(!showScoreSaver)}
+                                    className="w-full mt-2 py-3 bg-white/5 hover:bg-white/10 text-white/50 hover:text-white font-bold rounded-xl transition-all text-xs"
+                                >
+                                    💾 Save Scores
+                                </button>
                             </div>
+
+                            {showScoreSaver && (
+                                <div className="mt-4 border-t border-white/10 pt-4">
+                                    <GameScoreSaver
+                                        gameId="pressure"
+                                        gameName="Pressure (إنتو شايفينه إزاي)"
+                                        scoreA={0}
+                                        scoreB={0}
+                                        onSaved={() => setShowScoreSaver(false)}
+                                    />
+                                </div>
+                            )}
                         </motion.div>
                     )}
                 </AnimatePresence>

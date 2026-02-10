@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { STORY_STARTERS, getCurvedPrompt, StoryPrompt } from '../data/storyData';
+import { GameScoreSaver } from './games/GameScoreSaver';
 
 export const StoryGame: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     const [gameState, setGameState] = useState<'SETUP' | 'PLAYING' | 'PASSING' | 'REVEAL'>('SETUP');
@@ -152,8 +153,8 @@ export const StoryGame: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: idx * 0.4 }}
                                 className={`relative p-6 rounded-3xl ${idx === 0
-                                        ? 'bg-indigo-900/10 border border-indigo-500/20 text-indigo-100 font-bold'
-                                        : 'bg-white/5 border border-white/5 text-gray-200'
+                                    ? 'bg-indigo-900/10 border border-indigo-500/20 text-indigo-100 font-bold'
+                                    : 'bg-white/5 border border-white/5 text-gray-200'
                                     }`}
                             >
                                 {/* Avatar / Number */}
@@ -172,6 +173,17 @@ export const StoryGame: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                         >
                             New Story 🔄
                         </button>
+
+                        <div className="mt-12 border-t border-white/10 pt-12 max-w-md mx-auto">
+                            <h3 className="text-white/30 text-xs uppercase tracking-widest mb-6">Award Creative Points</h3>
+                            <GameScoreSaver
+                                gameId="story"
+                                gameName="Story Game (كمّلها)"
+                                scoreA={0}
+                                scoreB={0}
+                                onSaved={() => { }}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>

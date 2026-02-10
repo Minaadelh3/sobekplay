@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PROVERBS_LIST, splitProverb } from '../data/proverbsData';
+import { GameScoreSaver } from './games/GameScoreSaver';
 
 type Team = 'A' | 'B';
 
@@ -137,6 +138,17 @@ export const ProverbsGame: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                 >
                     GO! 🚀
                 </button>
+
+                <div className="mt-8 w-full max-w-md border-t border-white/10 pt-8">
+                    <p className="text-xs text-white/30 mb-4 uppercase tracking-widest">End Game & Save Scores</p>
+                    <GameScoreSaver
+                        gameId="proverbs"
+                        gameName="Proverbs (أمثال)"
+                        scoreA={scores.A}
+                        scoreB={scores.B}
+                        onSaved={onExit}
+                    />
+                </div>
             </div>
         );
     }

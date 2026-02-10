@@ -6,6 +6,8 @@ import PushComposer from '../../components/admin/push/PushComposer';
 import AudienceSelector from '../../components/admin/push/AudienceSelector';
 import PushScheduler from '../../components/admin/push/PushScheduler';
 import PushHistory from '../../components/admin/push/PushHistory';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db, auth } from '../../lib/firebase';
 
 const PushNotifications: React.FC = () => {
     const { sendPush, schedulePush, loading, error } = usePushNotifications();
@@ -43,6 +45,21 @@ const PushNotifications: React.FC = () => {
         }
     };
 
+    const handleTriggerSubscription = async () => {
+        if (!confirm("⚠️ Are you sure? This will pop up on EVERY user's screen asking them to subscribe.")) return;
+
+        try {
+            await setDoc(doc(db, 'system_states', 'notifications'), {
+                triggerTimestamp: serverTimestamp(),
+                triggeredBy: auth.currentUser?.uid
+            });
+            setSuccessMsg("Subscription Request Broadcasted! 📡");
+        } catch (e) {
+            console.error(e);
+            alert("Failed to trigger subscription request.");
+        }
+    };
+
     return (
         <div className="space-y-8 relative">
             {/* Header */}
@@ -52,6 +69,13 @@ const PushNotifications: React.FC = () => {
                     <p className="text-gray-400">Manage targeting, schedule campaigns, and track delivery.</p>
                 </div>
                 <div className="flex gap-2">
+                    <button
+                        onClick={handleTriggerSubscription}
+                        className="px-4 py-2 rounded-lg font-bold transition-all bg-white/5 text-accent-gold border border-accent-gold/20 hover:bg-accent-gold/10 hover:border-accent-gold"
+                    >
+                        🔔 Ask Users to Subscribe
+                    </button>
+                    <div className="w-px bg-white/10 mx-2"></div>
                     <button
                         onClick={() => setActiveTab('compose')}
                         className={`px-4 py-2 rounded-lg font-bold transition-all ${activeTab === 'compose' ? 'bg-accent-gold text-black' : 'bg-white/5 text-gray-400 hover:text-white'}`}

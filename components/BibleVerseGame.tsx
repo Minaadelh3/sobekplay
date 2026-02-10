@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BIBLE_VERSES_DATA, splitVerse, BibleCategory } from '../data/bibleVersesData';
-import { BackButton } from './BackButton';
+import BackButton from './BackButton';
+import { GameScoreSaver } from './games/GameScoreSaver';
 
 type Team = 'A' | 'B';
 
@@ -179,6 +180,17 @@ export const BibleVerseGame: React.FC<{ onExit: () => void }> = ({ onExit }) => 
                 >
                     START 📖
                 </button>
+
+                <div className="mt-8 w-full max-w-md border-t border-white/10 pt-8">
+                    <p className="text-xs text-white/30 mb-4 uppercase tracking-widest">End Game & Save Scores</p>
+                    <GameScoreSaver
+                        gameId="bible_verse"
+                        gameName="Bible Verse (كمل الآية)"
+                        scoreA={scores.A}
+                        scoreB={scores.B}
+                        onSaved={onExit}
+                    />
+                </div>
             </div>
         );
     }

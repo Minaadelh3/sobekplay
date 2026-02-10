@@ -22,7 +22,7 @@ const PosterCard: React.FC<PosterCardProps> = ({ poster }) => {
       className="relative flex-shrink-0 w-40 md:w-56 aspect-[2/3] rounded-xl overflow-hidden shadow-lg hover:shadow-accent-green/20 transition-shadow duration-300"
     >
       <Link
-        to={`/app/movies/${poster.id}`} // Link to Details Page
+        to={poster.id === 'sobek_universe_cover' ? `/app/watch/${poster.id}` : `/app/movies/${poster.id}`} // Link to Details Page
         className="group block w-full h-full relative"
       >
         <ImageWithFallback

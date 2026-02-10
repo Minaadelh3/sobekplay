@@ -21,9 +21,8 @@ export default function LoginPage() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Loop Safeguard
-    const rawNext = location?.state?.from ?? "/profiles";
-    const next = rawNext === "/login" ? "/profiles" : rawNext;
+    // Force Profile Selection
+    const next = "/profiles";
 
     // Auto Redirect
     React.useEffect(() => {
@@ -103,8 +102,8 @@ export default function LoginPage() {
                     <button
                         onClick={() => { setActiveTab('login'); setError(""); }}
                         className={`flex-1 pb-3 text-sm font-bold transition-all ${activeTab === 'login'
-                                ? 'text-accent-gold border-b-2 border-accent-gold'
-                                : 'text-gray-500 hover:text-white'
+                            ? 'text-accent-gold border-b-2 border-accent-gold'
+                            : 'text-gray-500 hover:text-white'
                             }`}
                     >
                         تسجيل الدخول
@@ -112,8 +111,8 @@ export default function LoginPage() {
                     <button
                         onClick={() => { setActiveTab('register'); setError(""); }}
                         className={`flex-1 pb-3 text-sm font-bold transition-all ${activeTab === 'register'
-                                ? 'text-accent-gold border-b-2 border-accent-gold'
-                                : 'text-gray-500 hover:text-white'
+                            ? 'text-accent-gold border-b-2 border-accent-gold'
+                            : 'text-gray-500 hover:text-white'
                             }`}
                     >
                         حساب جديد

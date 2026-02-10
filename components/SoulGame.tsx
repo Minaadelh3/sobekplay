@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getSoulPrompt, SoulPrompt } from '../data/soulData';
+import { GameScoreSaver } from './games/GameScoreSaver';
 
 export const SoulGame: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     const [gameState, setGameState] = useState<'INTRO' | 'BREATHE' | 'QUESTION'>('INTRO');
     const [currentPrompt, setCurrentPrompt] = useState<SoulPrompt | null>(null);
     const [round, setRound] = useState(1);
+    const [showScoreSaver, setShowScoreSaver] = useState(false);
 
     // Actions
     const startGame = () => {
@@ -111,9 +113,28 @@ export const SoulGame: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                             Next Question
                             <span className="w-12 h-[1px] bg-current" />
                         </motion.button>
+
+                        <button
+                            onClick={() => setShowScoreSaver(!showScoreSaver)}
+                            className="mt-8 text-[10px] text-white/20 hover:text-white/50 transition-colors uppercase tracking-widest"
+                        >
+                            Save Session Points
+                        </button>
+
+                        {showScoreSaver && (
+                            <div className="mt-6 border-t border-white/5 pt-6">
+                                <GameScoreSaver
+                                    gameId="soul"
+                                    gameName="Soul (أسئلة عميقة)"
+                                    scoreA={0}
+                                    scoreB={0}
+                                    onSaved={() => setShowScoreSaver(false)}
+                                />
+                            </div>
+                        )}
                     </motion.div>
                 </AnimatePresence>
             </div>
-        </div>
+        </div >
     );
 };

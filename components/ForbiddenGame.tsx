@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getForbiddenPrompt, ForbiddenPrompt } from '../data/forbiddenData';
+import { GameScoreSaver } from './games/GameScoreSaver';
 
 export const ForbiddenGame: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     const [gameState, setGameState] = useState<'WARNING' | 'AGREEMENT' | 'PLAYING' | 'END'>('WARNING');
@@ -106,6 +107,15 @@ export const ForbiddenGame: React.FC<{ onExit: () => void }> = ({ onExit }) => {
             <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white p-6 text-center">
                 <h2 className="text-3xl font-light mb-4">Game Over.</h2>
                 <p className="text-stone-500 mb-8 max-w-sm">Take a breath. Remember: What happens in the game, helps us understand reality.</p>
+                <div className="w-full max-w-lg mb-8">
+                    <GameScoreSaver
+                        gameId="forbidden"
+                        gameName="Forbidden (الممنوع)"
+                        scoreA={0}
+                        scoreB={0}
+                        onSaved={() => { }}
+                    />
+                </div>
                 <button
                     onClick={onExit}
                     className="px-8 py-3 bg-white text-black font-bold rounded-full"

@@ -201,29 +201,42 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
                   <div className="hidden md:block">
                     {/* User Identity & Rank */}
                     <div className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 justify-end mb-0.5">
-                      {userLevel && (
-                        <>
-                          <span className={`${userLevel.color} drop-shadow-sm`}>{userLevel.title}</span>
-                          <span className="text-gray-500">|</span>
-                        </>
+                      {isAdmin ? (
+                        <span className="text-accent-gold drop-shadow-sm">ADMIN</span>
+                      ) : (
+                        userLevel && (
+                          <>
+                            <span className={`${userLevel.color} drop-shadow-sm`}>{userLevel.title}</span>
+                            <span className="text-gray-500">|</span>
+                          </>
+                        )
                       )}
-                      <span className="text-gray-400">{user.name}</span>
+
+                      <span className="text-gray-400">
+                        {/* Smart Name Display for Admin */}
+                        {(isAdmin && (user.name === 'New User' || !user.name))
+                          ? (selectedTeam.name || 'Admin')
+                          : user.name}
+                      </span>
                     </div>
 
                     {/* Team Identity & XP */}
                     <div className="text-sm font-black text-white flex items-center gap-3 justify-end">
-                      {/* User XP */}
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-accent-gold font-mono">{liveUserScore.toLocaleString()}</span>
-                        <span className="text-[9px] text-gray-500 font-bold uppercase">XP</span>
-                      </div>
-
-                      <div className="w-[1px] h-3 bg-white/20" />
+                      {/* User XP - HIDDEN FOR ADMINS */}
+                      {!isAdmin && (
+                        <>
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-accent-gold font-mono">{liveUserScore.toLocaleString()}</span>
+                            <span className="text-[9px] text-gray-500 font-bold uppercase">XP</span>
+                          </div>
+                          <div className="w-[1px] h-3 bg-white/20" />
+                        </>
+                      )}
 
                       {/* Team Name */}
                       <div className="flex items-center gap-2">
                         {selectedTeam.name}
-                        {/* Show Points if Scorable */}
+                        {/* Show Points if Scorable AND NOT ADMIN (optional, but let's keep team points for admins to see) */}
                         {selectedTeam.isScorable !== false && (
                           <span className="bg-accent-gold/10 text-accent-gold px-1.5 py-0.5 rounded text-[9px] border border-accent-gold/20 flex items-center gap-1">
                             🏆 {liveTeamScore.toLocaleString()}
@@ -235,9 +248,11 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
 
                   <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${selectedTeam.color} p-0.5 shadow-lg ring-2 ring-transparent transition-all hover:ring-white/20 overflow-hidden relative`}>
                     <img src={avatarUrl} alt={selectedTeam.name} className="w-full h-full object-cover" />
-                    <div className="absolute bottom-0 right-0 bg-black/60 backdrop-blur-sm text-[8px] px-1 rounded-tl-md text-white font-bold border-l border-t border-white/10">
-                      LVL {userLevel?.level || 1}
-                    </div>
+                    {!isAdmin && (
+                      <div className="absolute bottom-0 right-0 bg-black/60 backdrop-blur-sm text-[8px] px-1 rounded-tl-md text-white font-bold border-l border-t border-white/10">
+                        LVL {userLevel?.level || 1}
+                      </div>
+                    )}
                   </div>
                 </button>
 
@@ -254,11 +269,19 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
 
                       <div className="px-5 py-4 border-b border-white/5 bg-black/20">
                         <p className="text-xs text-gray-400">حساب العائلة</p>
-                        <p className="text-sm font-bold text-white truncate">{user.name}</p>
+                        <p className="text-sm font-bold text-white truncate">
+                          {(isAdmin && (user.name === 'New User' || !user.name)) ? (selectedTeam.name || 'Admin') : user.name}
+                        </p>
                         <div className="mt-2 flex items-center gap-2 text-xs">
-                          <span className={`font-bold ${userLevel?.color}`}>{userLevel?.title}</span>
-                          <span className="text-gray-500">•</span>
-                          <span className="text-white font-mono">{liveUserScore.toLocaleString()} XP</span>
+                          {isAdmin ? (
+                            <span className="font-bold text-accent-gold">ADMIN ACCOUNT</span>
+                          ) : (
+                            <>
+                              <span className={`font-bold ${userLevel?.color}`}>{userLevel?.title}</span>
+                              <span className="text-gray-500">•</span>
+                              <span className="text-white font-mono">{liveUserScore.toLocaleString()} XP</span>
+                            </>
+                          )}
                         </div>
                       </div>
 
@@ -326,19 +349,25 @@ const Navbar: React.FC<NavbarProps> = ({ onSearchOpen }) => {
                     <div className="flex items-center gap-4 mb-6 p-4 bg-white/5 rounded-2xl border border-white/5">
                       <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${selectedTeam.color} p-0.5 overflow-hidden shadow-lg relative`}>
                         <img src={avatarUrl} alt={selectedTeam.name} className="w-full h-full object-cover rounded-lg" />
-                        <div className="absolute bottom-0 right-0 bg-black/70 backdrop-blur-sm text-[9px] px-1.5 py-0.5 rounded-tl-lg text-white font-bold border-l border-t border-white/10">
-                          LVL {userLevel?.level || 1}
-                        </div>
+                        {!isAdmin && (
+                          <div className="absolute bottom-0 right-0 bg-black/70 backdrop-blur-sm text-[9px] px-1.5 py-0.5 rounded-tl-lg text-white font-bold border-l border-t border-white/10">
+                            LVL {userLevel?.level || 1}
+                          </div>
+                        )}
                       </div>
                       <div className="flex-1">
-                        <div className="text-gray-400 text-xs uppercase font-bold tracking-wider mb-1">{user.name}</div>
+                        <div className="text-gray-400 text-xs uppercase font-bold tracking-wider mb-1">
+                          {(isAdmin && (user.name === 'New User' || !user.name)) ? (selectedTeam.name || 'Admin') : user.name}
+                        </div>
 
                         {/* Mobile User Rank & XP */}
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className={`text-xs font-bold ${userLevel?.color}`}>{userLevel?.title}</span>
-                          <span className="text-white/20">|</span>
-                          <span className="text-accent-gold font-mono text-xs font-bold">{liveUserScore.toLocaleString()} XP</span>
-                        </div>
+                        {!isAdmin && (
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className={`text-xs font-bold ${userLevel?.color}`}>{userLevel?.title}</span>
+                            <span className="text-white/20">|</span>
+                            <span className="text-accent-gold font-mono text-xs font-bold">{liveUserScore.toLocaleString()} XP</span>
+                          </div>
+                        )}
 
                         <div className="text-white font-bold text-sm flex items-center gap-2 bg-black/20 p-2 rounded-lg border border-white/5">
                           {selectedTeam.name}

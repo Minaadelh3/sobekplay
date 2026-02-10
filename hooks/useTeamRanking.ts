@@ -16,10 +16,10 @@ export function useTeamRanking() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // 1. Subscribe to Teams (Optimized: Sorted by scoreTotal server-side)
+    // 1. Subscribe to Teams (Client-side sorting fallback for missing fields)
     useEffect(() => {
-        // Query: Teams sorted by scoreTotal desc
-        const qTeams = query(collection(db, "teams"), orderBy("scoreTotal", "desc"));
+        // Query: Fetch ALL teams (safer for small count, guarantees no missing docs due to missing sort field)
+        const qTeams = query(collection(db, "teams"));
 
         const unsub = onSnapshot(qTeams, (snap) => {
             const teams: TeamProfile[] = [];

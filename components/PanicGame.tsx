@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getPanicPrompt, getJudgment, PanicPrompt } from '../data/panicData';
+import { GameScoreSaver } from './games/GameScoreSaver';
 
 export const PanicGame: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     const [gameState, setGameState] = useState<'INTRO' | 'PLAYING' | 'RESULT'>('INTRO');
@@ -105,6 +106,16 @@ export const PanicGame: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                             السرعة مش للجميع برضو..
                         </p>
                     )}
+
+                    <div className="w-full max-w-lg mb-4">
+                        <GameScoreSaver
+                            gameId="panic"
+                            gameName="Panic (قول بسرعة)"
+                            scoreA={isSuccess ? 1 : 0}
+                            scoreB={0}
+                            onSaved={() => { }}
+                        />
+                    </div>
 
                     <button
                         onClick={handleNextPlayer}

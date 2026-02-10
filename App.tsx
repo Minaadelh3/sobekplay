@@ -17,6 +17,7 @@ import { usePosterMetrics } from './hooks/usePosterMetrics';
 
 import TeamChatPopup from './components/TeamChatPopup';
 import TeamBroadcastListener from './components/TeamBroadcastListener';
+import NotificationSubscriptionPrompt from './components/NotificationSubscriptionPrompt';
 import LoadingSpinner from './components/LoadingSpinner';
 
 // Lazy Load Pages
@@ -249,6 +250,7 @@ const App: React.FC = () => {
                   </Suspense>
                   <TeamChatPopup />
                   <TeamBroadcastListener />
+                  <NotificationSubscriptionPrompt />
                 </NotificationProvider>
               </GameProvider>
             </AchievementsProvider>

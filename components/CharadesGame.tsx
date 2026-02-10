@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CHARADES_DATA, CharadesCategory } from '../data/charadesData';
+import { GameScoreSaver } from './games/GameScoreSaver';
 
 type Team = 'A' | 'B';
 
@@ -260,8 +261,8 @@ export const CharadesGame: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     // 6. RESULT
     if (gameState === 'RESULT') {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-900 text-white text-center">
-                <div className="mb-12 w-full max-w-md bg-white/5 p-8 rounded-3xl border border-white/10">
+            <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-900 text-white text-center overflow-y-auto">
+                <div className="mb-8 w-full max-w-md bg-white/5 p-8 rounded-3xl border border-white/10">
                     <h2 className="text-sm font-bold uppercase tracking-widest text-white/40 mb-6">Current Score</h2>
                     <div className="flex justify-between items-center text-5xl font-black">
                         <div className="text-blue-400">
@@ -276,17 +277,31 @@ export const CharadesGame: React.FC<{ onExit: () => void }> = ({ onExit }) => {
                     </div>
                 </div>
 
-                <button
-                    onClick={nextTurn}
-                    className="w-full max-w-xs py-4 bg-yellow-500 text-black font-bold text-xl rounded-full shadow-xl hover:scale-105 transition-transform"
-                >
-                    Next Round ➜
-                </button>
+                {/* Score Saver Integration */}
+                <div className="w-full max-w-lg mb-8">
+                    <GameScoreSaver
+                        gameId="charades"
+                        gameName="Charades (مثّلها)"
+                        scoreA={scores.A}
+                        scoreB={scores.B}
+                        onSaved={nextTurn}
+                    />
+                </div>
 
-                <button onClick={onExit} className="mt-8 text-white/30 text-sm hover:text-white">End Game</button>
+                <div className="flex gap-4 w-full max-w-xs flex-col">
+                    <button
+                        onClick={nextTurn}
+                        className="w-full py-4 bg-yellow-500 text-black font-bold text-xl rounded-full shadow-xl hover:scale-105 transition-transform"
+                    >
+                        Next Round ➜
+                    </button>
+
+                    <button onClick={onExit} className="text-white/30 text-sm hover:text-white py-2">End Game</button>
+                </div>
             </div>
         );
     }
 
     return <div />;
 };
+
