@@ -13,7 +13,7 @@ export const RoomsDetails: React.FC<RoomsDetailsProps> = ({ assignment, onBack }
     const [showMap, setShowMap] = useState(false);
     const roommates = getRoommates(assignment.floor, assignment.room, assignment.personName);
 
-    const roomName = assignment.room.replace('R.', 'Room ');
+    const roomName = assignment.room;
 
     return (
         <div className="min-h-screen pt-12 pb-32 px-4 flex flex-col items-center max-w-2xl mx-auto">
@@ -43,7 +43,7 @@ export const RoomsDetails: React.FC<RoomsDetailsProps> = ({ assignment, onBack }
                     <div className="bg-black/20 p-4 rounded-xl text-center">
                         <p className="text-xs text-white/30 font-bold uppercase mb-1">الدور</p>
                         <p className="text-xl font-bold text-white">
-                            {assignment.floor === 1 ? 'الأول' : assignment.floor === 2 ? 'الثاني' : 'الثالث'}
+                            {assignment.floor === 1 ? 'الأول' : assignment.floor === 2 ? 'الثاني' : assignment.floor === 3 ? 'الثالث' : 'الرابع'}
                         </p>
                     </div>
                     <div className="bg-black/20 p-4 rounded-xl text-center">

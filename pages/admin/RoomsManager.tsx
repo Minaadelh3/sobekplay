@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { HotelMapSVG } from '../../components/Rooms/HotelMapSVG';
 import { Assignment, RoomMeta } from '../../data/rooms/types';
-import { ALL_PEOPLE } from '../../data/rooms/people';
 import { ALL_ROOMS } from '../../data/rooms/layout';
 import { RoomService } from '../../services/roomService';
 import { Search, RotateCcw, Save } from 'lucide-react';
@@ -9,7 +8,7 @@ import { toast } from 'react-hot-toast';
 
 const RoomsManager: React.FC = () => {
     const [assignments, setAssignments] = useState<Assignment[]>([]);
-    const [activeFloor, setActiveFloor] = useState<1 | 2 | 3>(1);
+    const [activeFloor, setActiveFloor] = useState<1 | 2 | 3 | 4>(1);
     const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
     const [searchQ, setSearchQ] = useState('');
     const [isLoading, setIsLoading] = useState(true);
@@ -111,7 +110,7 @@ const RoomsManager: React.FC = () => {
                         إعادة تعيين
                     </button>
                     <div className="text-sm bg-white/5 px-4 py-2 rounded-lg">
-                        Total: {assignments.length} / {ALL_PEOPLE.length}
+                        Total: {assignments.length}
                     </div>
                 </div>
             </div>
@@ -121,10 +120,10 @@ const RoomsManager: React.FC = () => {
                 <div className="lg:col-span-3 space-y-6">
                     {/* Floor Selector */}
                     <div className="flex gap-2">
-                        {[1, 2, 3].map(f => (
+                        {[1, 2, 3, 4].map(f => (
                             <button
                                 key={f}
-                                onClick={() => setActiveFloor(f as 1 | 2 | 3)}
+                                onClick={() => setActiveFloor(f as 1 | 2 | 3 | 4)}
                                 className={`flex-1 py-3 rounded-lg font-bold transition-colors ${activeFloor === f ? 'bg-accent-gold text-black' : 'bg-white/10 text-white/50'}`}
                             >
                                 الدور {f}

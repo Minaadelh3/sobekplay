@@ -1,4 +1,4 @@
-import { ALL_PEOPLE } from '../data/rooms/people';
+// import { ALL_PEOPLE } from '../data/rooms/people';
 import { getAllAssignments, getRoommates as getAllRoommates } from '../data/rooms/allocate';
 import { buildIndex, searchIndexedPeople, SearchablePerson } from '../data/rooms/search.ts';
 import { Assignment } from '../data/rooms/types';
@@ -7,8 +7,9 @@ import { Assignment } from '../data/rooms/types';
 let searchIndex: SearchablePerson[] | null = null;
 const getIndex = () => {
     if (!searchIndex) {
-        // Build index from all people names
-        searchIndex = buildIndex(ALL_PEOPLE.map(p => p.name));
+        // Build index from ACTUAL assignments, not legacy list
+        const assignments = getAllAssignments();
+        searchIndex = buildIndex(assignments.map(a => a.personName));
     }
     return searchIndex;
 };
@@ -57,6 +58,7 @@ export const getFloorLabel = (floor: number): string => {
         case 1: return "الدور الأول";
         case 2: return "الدور الثاني";
         case 3: return "الدور الثالث";
+        case 4: return "الدور الرابع";
         default: return `الدور ${floor}`;
     }
 };

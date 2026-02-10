@@ -3,16 +3,25 @@ import { HotelMapSVG } from './HotelMapSVG';
 import { Assignment, RoomMeta } from '../../data/rooms/types';
 import { getAllAssignments } from '../../data/rooms/allocate';
 import { ALL_ROOMS } from '../../data/rooms/layout';
+import { RoomService } from '../../services/roomService';
 
 export const RoomsAdmin: React.FC<{ onExit: () => void }> = ({ onExit }) => {
     const [auth, setAuth] = useState(false);
     const [pass, setPass] = useState('');
-    const [activeFloor, setActiveFloor] = useState<1 | 2 | 3>(1);
+    const [activeFloor, setActiveFloor] = useState<1 | 2 | 3 | 4>(1);
     const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
     const [searchQ, setSearchQ] = useState('');
 
     const verify = () => {
         if (pass.toLowerCase() === 'fratello') setAuth(true);
+    };
+
+    const handleReset = async () => {
+        if (window.confirm("Are you sure you want to RESET all room assignments to the defaults? This cannot be undone.")) {
+            await RoomService.resetToDefaults();
+            alert("Data reset complete!");
+            window.location.reload();
+        }
     };
 
     if (!auth) {
@@ -45,12 +54,15 @@ export const RoomsAdmin: React.FC<{ onExit: () => void }> = ({ onExit }) => {
         <div className="min-h-screen bg-[#101010] p-4 text-white pb-32">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-black">لوحة تحكم العمدة</h2>
-                <button onClick={onExit} className="text-red-400 font-bold text-sm">خروج</button>
+                <div className="flex gap-4">
+                    <button onClick={handleReset} className="text-red-500 font-bold text-sm bg-red-500/10 px-3 py-1 rounded-full">RESET DATA</button>
+                    <button onClick={onExit} className="text-white/50 font-bold text-sm">خروج</button>
+                </div>
             </div>
 
             {/* Floor Selector */}
             <div className="flex gap-2 mb-6">
-                {[1, 2, 3].map(f => (
+                {[1, 2, 3, 4].map(f => (
                     <button
                         key={f}
                         onClick={() => setActiveFloor(f as 1 | 2 | 3)}

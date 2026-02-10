@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 interface HotelMapSVGProps {
-    floor: 1 | 2 | 3;
+    floor: 1 | 2 | 3 | 4;
     highlightRoom?: string; // e.g. "Room 5"
     onRoomClick?: (room: string) => void;
     interactive?: boolean;
@@ -115,23 +115,36 @@ export const HotelMapSVG: React.FC<HotelMapSVGProps> = ({ floor, highlightRoom, 
     // COL Left (Below R7): R8 (y=20), R9 (y=40), R10 (y=60).
     // This creates a U-shape.
 
-    const REVISED_ROOMS = [
+    const ALL_LAYOUT_ROOMS = [
         // Top Row
-        { id: "Room 7", x: 2, y: 2, w: 18, h: 18 },
-        { id: "Room 6", x: 22, y: 2, w: 18, h: 18 },
-        { id: "Room 5", x: 42, y: 2, w: 18, h: 18, hasKing: true },
-        { id: "Room 4", x: 62, y: 2, w: 18, h: 18 },
-        { id: "Room 3", x: 82, y: 2, w: 18, h: 18, hasKing: true },
+        { id: "R1-7", x: 2, y: 2, w: 18, h: 18 },
+        { id: "R1-6", x: 22, y: 2, w: 18, h: 18 },
+        { id: "R1-5", x: 42, y: 2, w: 18, h: 18, hasKing: true },
+        { id: "R1-4", x: 62, y: 2, w: 18, h: 18 },
+        { id: "R1-3", x: 82, y: 2, w: 18, h: 18, hasKing: true },
 
         // Right Col
-        { id: "Room 1", x: 82, y: 22, w: 18, h: 18 },
-        { id: "Room 2", x: 82, y: 42, w: 18, h: 18 },
+        { id: "R1-1", x: 82, y: 22, w: 18, h: 18 },
+        { id: "R1-2", x: 82, y: 42, w: 18, h: 18 },
 
         // Left Col
-        { id: "Room 8", x: 2, y: 22, w: 18, h: 28 }, // "Big" as per desc?
-        { id: "Room 9", x: 2, y: 52, w: 18, h: 18 },
-        { id: "Room 10", x: 2, y: 72, w: 18, h: 18 },
+        { id: "R1-8", x: 2, y: 22, w: 18, h: 28 },
+        { id: "R1-9", x: 2, y: 52, w: 18, h: 18 },
+        { id: "R1-10", x: 2, y: 72, w: 18, h: 18 },
     ];
+
+    // Floor 4 has unique codes (R4-8, R4-9, R4-10) but shares layout slots of R1-8, R1-9, R1-10
+    // We need to remap the IDs for Floor 4
+    let displayRooms = ALL_LAYOUT_ROOMS;
+
+    if (floor === 4) {
+        displayRooms = ALL_LAYOUT_ROOMS
+            .filter(r => ["R1-8", "R1-9", "R1-10"].includes(r.id))
+            .map(r => ({
+                ...r,
+                id: r.id.replace("R1-", "R4-") // specific re-map for Floor 4 codes
+            }));
+    }
 
     return (
         <div className="w-full aspect-[4/3] relative bg-[#121214] rounded-xl overflow-hidden shadow-2xl border border-white/10 p-4">
@@ -150,12 +163,12 @@ export const HotelMapSVG: React.FC<HotelMapSVGProps> = ({ floor, highlightRoom, 
                 </defs>
                 <rect width="100%" height="100%" fill="url(#grid)" />
 
-                {REVISED_ROOMS.map(r => (
+                {displayRooms.map(r => (
                     <RoomPath
                         key={r.id}
                         {...r}
                         d=""
-                        label={r.id.replace('Room ', '')}
+                        label={r.id}
                         isHighlighted={highlightRoom === r.id}
                         interactive={interactive}
                         onClick={() => onRoomClick && onRoomClick(r.id)}

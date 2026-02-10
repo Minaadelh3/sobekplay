@@ -21,6 +21,7 @@ import LoadingSpinner from './components/LoadingSpinner';
 
 // Lazy Load Pages
 const LoginPage = lazy(() => import('./pages/LoginPage'));
+const RestoreDataPage = lazy(() => import('./pages/admin/RestoreDataPage'));
 
 const ProfileSelectionPage = lazy(() => import('./pages/ProfileSelectionPage'));
 
@@ -137,6 +138,8 @@ const App: React.FC = () => {
 
 
                       <Route path="/login" element={<LoginPage />} />
+
+                      <Route path="/restore" element={<RestoreDataPage />} />
 
                       {/* Admin Routes with Nested Layout */}
                       <Route path="/admin" element={
