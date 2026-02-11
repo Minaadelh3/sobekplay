@@ -97,6 +97,8 @@ const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const TeamChatPage = lazy(() => import('./pages/TeamChatPage'));
 const RankingsPage = lazy(() => import('./pages/RankingsPage'));
 
+const GameLogicTest = lazy(() => import('./pages/GameLogicTest'));
+
 const App: React.FC = () => {
   // Data Fetching at Root Level
   const { posters } = useMedia();
@@ -243,9 +245,12 @@ const App: React.FC = () => {
                         </ProtectedRoute>
                       } />
 
+
+
+                      <Route path="/game-test" element={<GameLogicTest />} />
+
                       {/* Catch-all Redirect */}
                       <Route path="*" element={<Navigate to="/login" replace />} />
-
                     </Routes>
                   </Suspense>
                   <TeamChatPopup />
