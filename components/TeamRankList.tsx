@@ -3,9 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTeamRanking } from '../hooks/useTeamRanking';
 
 const TeamRankList = () => {
-    const { sortedTeams, loading, error } = useTeamRanking();
-    // Fallback for teamMembers since we optimized it out (prevents crash)
-    const teamMembers: Record<string, any[]> = {};
+    const { sortedTeams, teamMembers, loading, error } = useTeamRanking();
 
     if (loading) {
         return (
@@ -93,7 +91,7 @@ const TeamRankList = () => {
                                     ) : (
                                         <>
                                             <span className="text-lg font-black text-accent-gold font-mono">
-                                                {(team.points || 0).toLocaleString()}
+                                                {(team.scoreTotal ?? team.points ?? 0).toLocaleString()}
                                             </span>
                                             <span className="text-[9px] text-gray-500 font-bold uppercase">PTS</span>
                                         </>
@@ -230,7 +228,7 @@ const TeamRankList = () => {
                                     ) : (
                                         <div className="flex items-baseline gap-1.5 group-hover:scale-105 transition-transform origin-left">
                                             <span className="text-2xl font-black text-accent-gold font-mono tracking-tight leading-none drop-shadow-lg">
-                                                {(team.points || 0).toLocaleString()}
+                                                {(team.scoreTotal ?? team.points ?? 0).toLocaleString()}
                                             </span>
                                             <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">
                                                 PTS

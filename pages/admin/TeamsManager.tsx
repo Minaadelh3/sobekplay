@@ -13,7 +13,7 @@ import TeamMessageDialog from '../../components/admin/TeamMessageDialog';
 
 export default function TeamsManager() {
     const { teams, users, fetchTeams, fetchUsers } = useAdminData();
-    const { updateTeamScore, resetTeam, resetSeason, loading: godLoading } = useGodMode();
+    const { updateTeamScore, resetTeam, resetSeason, resetAllChats, loading: godLoading } = useGodMode();
     const { user } = useAuth();
 
     const [selectedTeam, setSelectedTeam] = useState<any | null>(null);
@@ -28,21 +28,29 @@ export default function TeamsManager() {
 
     const displayTeams = teams.length > 0 ? teams : TEAMS;
 
-    // Sort: Uncle Joy last, then by Rank/Points
+    // Sort: Uncle Joy last, then by Rank/Score (scoreTotal)
     const sortedTeams = [...displayTeams].sort((a, b) => {
         if (a.id === 'uncle_joy') return 1;
         if (b.id === 'uncle_joy') return -1;
-        return (b.points || 0) - (a.points || 0);
+        // USE scoreTotal AS PRIMARY SOURCE OF TRUTH
+        const scoreA = a.scoreTotal ?? a.points ?? 0;
+        const scoreB = b.scoreTotal ?? b.points ?? 0;
+        return scoreB - scoreA;
     });
 
     const handleCustomPointChange = (teamId: string, value: string) => {
         setCustomPoints(prev => ({ ...prev, [teamId]: value }));
     };
 
-    const applyCustomPoints = (teamId: string, multiplier: number) => {
+    const handleUpdateScore = async (teamId: string, delta: number) => {
+        await updateTeamScore(teamId, delta);
+        fetchTeams(); // Immediate Refresh
+    };
+
+    const applyCustomPoints = async (teamId: string, multiplier: number) => {
         const val = parseInt(customPoints[teamId] || '0');
         if (!val || isNaN(val)) return;
-        updateTeamScore(teamId, val * multiplier);
+        await handleUpdateScore(teamId, val * multiplier);
         setCustomPoints(prev => ({ ...prev, [teamId]: '' }));
     };
 
@@ -65,7 +73,11 @@ export default function TeamsManager() {
                 {can(user, 'manage_teams') && (
                     <div className="text-center group relative w-full md:w-auto">
                         <button
-                            onClick={resetSeason}
+                            onClick={async () => {
+                                await resetSeason();
+                                fetchTeams();
+                                fetchUsers();
+                            }}
                             disabled={godLoading}
                             className="w-full md:w-auto bg-red-600 hover:bg-red-500 text-white px-6 lg:px-8 py-3 lg:py-4 rounded-xl font-bold shadow-[0_0_30px_rgba(220,38,38,0.4)] hover:shadow-[0_0_50px_rgba(220,38,38,0.6)] transition-all flex items-center justify-center gap-3 border border-red-400 disabled:opacity-50 disabled:cursor-not-allowed group"
                         >
@@ -88,7 +100,7 @@ export default function TeamsManager() {
                      `}>
                         <div className="text-[10px] text-gray-500 font-mono mb-0.5 lg:mb-1">#{idx + 1}</div>
                         <div className="font-bold text-gray-300 text-xs lg:text-sm truncate w-full text-center">{team.name}</div>
-                        <div className="text-lg lg:text-2xl font-black text-white font-mono">{(team.points || 0).toLocaleString()}</div>
+                        <div className="text-lg lg:text-2xl font-black text-white font-mono">{(team.scoreTotal ?? team.points ?? 0).toLocaleString()}</div>
                     </div>
                 ))}
             </div>
@@ -126,7 +138,7 @@ export default function TeamsManager() {
                                     <div className="bg-white/5 p-3 lg:p-4 rounded-xl lg:rounded-2xl border border-white/5 hover:bg-white/10 transition-colors group/stat relative cursor-help">
                                         <div className="text-[8px] lg:text-[10px] uppercase text-gray-500 font-bold mb-0.5 lg:mb-1">Score</div>
                                         <div className="text-xl lg:text-3xl font-black text-white font-mono">
-                                            {(team.points || 0).toLocaleString()}
+                                            {(team.scoreTotal ?? team.points ?? 0).toLocaleString()}
                                         </div>
                                     </div>
                                     <div className="bg-white/5 p-3 lg:p-4 rounded-xl lg:rounded-2xl border border-white/5 hover:bg-white/10 transition-colors group/stat relative cursor-help">
@@ -195,6 +207,18 @@ export default function TeamsManager() {
 
                                     <div className="flex gap-2 pt-2 border-t border-white/5 mt-4">
                                         <button
+                                            onClick={async () => {
+                                                await resetAllChats();
+                                                // Chat reset doesn't affect scores, but good to refresh just in case
+                                                fetchTeams();
+                                            }}
+                                            disabled={godLoading}
+                                            className="flex items-center gap-2 px-4 py-2 bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 rounded-lg border border-orange-500/20 transition-colors"
+                                        >
+                                            <span className="text-lg">💬</span>
+                                            <span className="text-[10px] lg:text-xs font-bold uppercase">Reset Chats</span>
+                                        </button>
+                                        <button
                                             onClick={() => setSelectedTeam(team)}
                                             className="flex-1 py-3 lg:py-3.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-[10px] lg:text-sm transition-colors active:scale-95"
                                         >
@@ -208,7 +232,10 @@ export default function TeamsManager() {
                                             📢
                                         </button>
                                         <button
-                                            onClick={() => resetTeam(team.id)}
+                                            onClick={async () => {
+                                                await resetTeam(team.id);
+                                                fetchTeams();
+                                            }}
                                             disabled={godLoading}
                                             className="px-4 lg:px-5 py-3 lg:py-3.5 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500 hover:text-white text-red-500 font-bold transition-all disabled:opacity-50 active:scale-95"
                                             title="Reset Team"
@@ -228,7 +255,11 @@ export default function TeamsManager() {
                     <TeamDetailDrawer
                         team={selectedTeam}
                         onClose={() => setSelectedTeam(null)}
-                        onUpdate={() => { fetchTeams(); fetchUsers(); setSelectedTeam(null); }}
+                        onUpdate={(shouldClose = true) => {
+                            fetchTeams();
+                            fetchUsers();
+                            if (shouldClose) setSelectedTeam(null);
+                        }}
                     />
                 )}
             </AnimatePresence>
