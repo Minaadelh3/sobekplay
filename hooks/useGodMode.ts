@@ -34,7 +34,8 @@ export function useGodMode() {
 
             const teamRef = doc(db, 'teams', teamId);
             await updateDoc(teamRef, {
-                points: increment(delta)
+                points: increment(delta),
+                scoreTotal: increment(delta) // Sync with new system
             });
 
             await logAction('MANUAL_SCORE_ADJUST', { teamId, delta });
@@ -52,7 +53,7 @@ export function useGodMode() {
 
         setLoading(true);
         try {
-            await updateDoc(doc(db, 'teams', teamId), { points: 0 });
+            await updateDoc(doc(db, 'teams', teamId), { points: 0, scoreTotal: 0 });
             await logAction('TEAM_RESET', { teamId });
         } catch (error) {
             console.error("Team Reset Failed:", error);
@@ -78,7 +79,7 @@ export function useGodMode() {
             const teamBatch = writeBatch(db);
             const teamsSnap = await getDocs(collection(db, 'teams'));
             teamsSnap.docs.forEach(d => {
-                teamBatch.update(d.ref, { points: 0 });
+                teamBatch.update(d.ref, { points: 0, scoreTotal: 0 });
             });
             await teamBatch.commit();
 
@@ -93,6 +94,8 @@ export function useGodMode() {
             usersSnap.docs.forEach((doc) => {
                 currentBatch.update(doc.ref, {
                     points: 0,
+                    scoreTotal: 0, // Sync
+                    xp: 0,         // Sync
                     badges: [], // Wipe badges
                     // unlockedAchievements? Maybe keep legacy? User said "each team" and "achievements page kaman kol al plyers yat3amlha reset"
                     unlockedAchievements: []
