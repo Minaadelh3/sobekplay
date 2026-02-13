@@ -6,11 +6,11 @@ import MafiaNight from '../../components/games/mafia/MafiaNight';
 import MafiaDay from '../../components/games/mafia/MafiaDay';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { GAMES_CONFIG } from '../../lib/games';
-import { performTransaction } from '../../lib/ledger';
+import { GameConfig } from '../../lib/games';
 import ExitButton from '../../components/games/ExitButton';
+import GameContainer from '../../components/games/GameContainer';
 
-const MafiaGame = () => {
+const MafiaGameContent = ({ config }: { config: GameConfig }) => {
     const navigate = useNavigate();
     const {
         settings,
@@ -32,10 +32,10 @@ const MafiaGame = () => {
 
     // --- SCORING ---
     const { user } = useAuth();
-    const gameConfig = GAMES_CONFIG.find(g => g.id === 'mafia');
+    // Using passed config instead of static lookup
 
     useEffect(() => {
-        if (state.phase === 'GAME_OVER' && user && gameConfig) {
+        if (state.phase === 'GAME_OVER' && user && config) {
             const awardPoints = async () => {
                 if (user.role === 'ADMIN') return;
                 try {
@@ -45,16 +45,17 @@ const MafiaGame = () => {
                         (state.winner === 'VILLAGERS' && myPlayer?.role !== 'MAFIA');
 
                     await import('../../lib/events').then(m => m.trackEvent(user.id, 'GAME_COMPLETED', {
-                        gameId: gameConfig.id,
+                        gameId: config.id,
                         result: isWinner ? 'WIN' : 'LOSS',
                         role: myPlayer?.role,
-                        winnerSide: state.winner
+                        winnerSide: state.winner,
+                        reward: isWinner ? config.rewards.win : 0 // Dynamic Reward
                     }));
                 } catch (e) { console.error(e); }
             };
             awardPoints();
         }
-    }, [state.phase, user, gameConfig, state.winner]);
+    }, [state.phase, user, config, state.winner]);
 
     // --- Phase Router ---
     const renderPhase = () => {
@@ -149,6 +150,14 @@ const MafiaGame = () => {
             {/* Quit Button (Top Left) */}
             <ExitButton className="absolute top-4 left-4 z-50" confirmMessage="Are you sure you want to quit the game? The game will end for everyone." />
         </div>
+    );
+};
+
+const MafiaGame = () => {
+    return (
+        <GameContainer gameId="mafia">
+            {(config) => <MafiaGameContent config={config} />}
+        </GameContainer>
     );
 };
 

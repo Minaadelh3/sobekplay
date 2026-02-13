@@ -5,9 +5,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { GAMES_CONFIG } from '../../lib/games';
 import { performTransaction } from '../../lib/ledger';
+import GameContainer from '../../components/games/GameContainer'; // New import
 
-const ForbiddenGame = () => {
-    const navigate = useNavigate();
+// Renamed the original component to ForbiddenGameContent
+const ForbiddenGameContent = ({ onExit }) => { // Added onExit prop
+    const navigate = useNavigate(); // Keep navigate for internal game navigation
     const { state, startGame, nextCard, nextLevel, resetGame } = useForbidden();
     const { user } = useAuth();
     const gameConfig = GAMES_CONFIG.find(g => g.id === 'mamno3at');
@@ -22,7 +24,7 @@ const ForbiddenGame = () => {
                         amount: gameConfig.rewards.win,
                         from: { type: 'SYSTEM', id: 'game_engine', name: gameConfig.title },
                         to: { type: 'USER', id: user.id, name: user.name },
-                        reason: `Game Reward: ${gameConfig.title}`,
+                        reason: `Game Reward: ${gameConfig.title} `,
                         metadata: { gameId: gameConfig.id }
                     });
                 } catch (e) { console.error(e); }
@@ -94,13 +96,13 @@ const ForbiddenGame = () => {
                             exit={{ opacity: 0, y: -50, rotateX: -90 }}
                             transition={{ type: "spring", damping: 20 }}
                             className={`
-                                w-full max-w-md aspect-[3/4] 
-                                bg-[#0A0A0A] border-2 ${currentStyle.split(' ')[1]} 
+                                w-full max-w-md aspect-[3/4]
+                                bg-[#0A0A0A] border-2 ${currentStyle.split(' ')[1]}
                                 rounded-3xl p-8 flex flex-col justify-between items-center text-center shadow-2xl
                             `}
                         >
                             <div className={`text-xs font-bold uppercase tracking-[0.2em] ${currentStyle.split(' ')[0]}`}>
-                                {currentName} . {state.currentPrompt?.intensity}
+                                {currentName}. {state.currentPrompt?.intensity}
                             </div>
 
                             <h2 className="text-2xl md:text-3xl font-bold leading-relaxed text-white/90" style={{ direction: 'rtl' }}>
@@ -152,6 +154,15 @@ const ForbiddenGame = () => {
     }
 
     return null;
+};
+
+const ForbiddenGame = () => {
+    const navigate = useNavigate();
+    return (
+        <GameContainer gameId="mamno3at">
+            {() => <ForbiddenGameContent onExit={() => navigate('/app/games')} />}
+        </GameContainer>
+    );
 };
 
 export default ForbiddenGame;

@@ -6,9 +6,9 @@ import { useAuth } from '../../context/AuthContext';
 import { GAMES_CONFIG } from '../../lib/games';
 import { performTransaction } from '../../lib/ledger';
 import ExitButton from '../../components/games/ExitButton';
+import GameContainer from '../../components/games/GameContainer';
 
-const StoryGame = () => {
-    const navigate = useNavigate();
+const _StoryGameComponent = ({ onExit }) => {
     const { state, updatePlayers, startGame, startTurn, nextTurn, resetGame } = useStory();
     const { user } = useAuth();
     const gameConfig = GAMES_CONFIG.find(g => g.id === 'hekaya_gama3eya');
@@ -172,6 +172,15 @@ const StoryGame = () => {
     }
 
     return null;
+};
+
+const StoryGame = () => {
+    const navigate = useNavigate();
+    return (
+        <GameContainer gameId="hekaya_gama3eya">
+            {() => <_StoryGameComponent onExit={() => navigate('/app/games')} />}
+        </GameContainer>
+    );
 };
 
 export default StoryGame;

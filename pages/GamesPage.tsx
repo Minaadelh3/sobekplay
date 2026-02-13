@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useEffect } from 'react';
 import BackButton from '../components/BackButton';
 
-import { GAMES_CONFIG } from '../lib/games';
+import { useGameControl } from '../hooks/useGameControl';
 
 interface GameItem {
     id: string;
@@ -102,12 +102,15 @@ const CLASSIC_GAMES: GameItem[] = [
 const GamesPage: React.FC = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { games, loading } = useGameControl();
 
     useEffect(() => {
         if (user) {
             import('../lib/events').then(m => m.trackEvent(user.id, 'GAMES_OPENED'));
         }
     }, [user]);
+
+    if (loading) return <div className="min-h-screen bg-[#050505] flex items-center justify-center"><div className="animate-spin text-4xl">🎡</div></div>;
 
     return (
         <div className="min-h-screen bg-[#050505] text-white font-arabic safe-area-pb selection:bg-purple-500/30 overflow-x-hidden" dir="rtl">
@@ -154,7 +157,7 @@ const GamesPage: React.FC = () => {
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                        {GAMES_CONFIG.filter(g => g.id !== 'versus_match').map((game, index) => (
+                        {games.filter(g => g.id !== 'versus_match').map((game, index) => (
                             <motion.button
                                 key={game.id}
                                 initial={{ opacity: 0, y: 20 }}
@@ -163,7 +166,13 @@ const GamesPage: React.FC = () => {
                                 whileHover={{ scale: 1.05, translateY: -5 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => navigate(`/games/${game.id}`)}
-                                className="relative aspect-square rounded-2xl overflow-hidden group border border-white/5 bg-white/5 hover:border-white/20 transition-all duration-300"
+                                disabled={!game.isEnabled}
+                                className={`
+                                    relative aspect-square rounded-2xl overflow-hidden group border transition-all duration-300
+                                    ${game.isEnabled
+                                        ? 'bg-white/5 border-white/5 hover:border-white/20'
+                                        : 'bg-black/50 border-white/5 opacity-50 grayscale cursor-not-allowed'}
+                                `}
                             >
                                 {/* Background Gradient */}
                                 <div className={`absolute inset-0 bg-gradient-to-br ${game.bgGradient} opacity-20 group-hover:opacity-30 transition-opacity duration-300`} />
@@ -179,6 +188,13 @@ const GamesPage: React.FC = () => {
                                     <p className="text-[10px] md:text-xs text-white/60 line-clamp-2">
                                         {game.description}
                                     </p>
+                                    {!game.isEnabled && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-[2px]">
+                                            <span className="bg-red-500/80 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg transform -rotate-12 border border-red-500">
+                                                Maintenance
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Multiplayer Badge */}

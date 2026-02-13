@@ -47,6 +47,7 @@ export const GameScoreSaver: React.FC<GameScoreSaverProps> = ({ gameId, gameName
             if (teamAId && finalScoreA !== 0) {
                 await awardPoints({
                     teamId: teamAId,
+                    userId: user?.teamId === teamAId ? user.id : undefined, // Auto-attribute to user if in team
                     actionType: `GAME_${gameId.toUpperCase()}_RESULT`,
                     points: finalScoreA,
                     idempotencyKey: `GAME:${gameId}:${teamAId}:${timestamp}`,
@@ -59,6 +60,7 @@ export const GameScoreSaver: React.FC<GameScoreSaverProps> = ({ gameId, gameName
             if (teamBId && finalScoreB !== 0) {
                 await awardPoints({
                     teamId: teamBId,
+                    userId: user?.teamId === teamBId ? user.id : undefined, // Auto-attribute to user if in team
                     actionType: `GAME_${gameId.toUpperCase()}_RESULT`,
                     points: finalScoreB,
                     idempotencyKey: `GAME:${gameId}:${teamBId}:${timestamp}`,

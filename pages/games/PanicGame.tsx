@@ -3,18 +3,18 @@ import { usePanic } from '../../hooks/gamification/usePanic';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
-import { GAMES_CONFIG } from '../../lib/games';
+import { GameConfig } from '../../lib/games';
 import { performTransaction } from '../../lib/ledger';
 import ExitButton from '../../components/games/ExitButton';
+import GameContainer from '../../components/games/GameContainer';
 
-const PanicGame = () => {
+const PanicGameContent = ({ config }: { config: GameConfig }) => {
     const navigate = useNavigate();
     const {
         state, updatePlayers, startGame, startTurn,
         handleSuccess, handleFail, nextTurn, resetGame
     } = usePanic();
     const { user } = useAuth();
-    const gameConfig = GAMES_CONFIG.find(g => g.id === 'oul_besor3a');
 
     // Setup state
     const [playerNames, setPlayerNames] = useState(['', '', '', '']);
@@ -27,23 +27,23 @@ const PanicGame = () => {
 
     // --- EFFECT: AWARD POINTS ---
     useEffect(() => {
-        if (state.phase === 'GAME_OVER' && user && gameConfig) {
+        if (state.phase === 'GAME_OVER' && user && config) {
             const awardPoints = async () => {
                 if (user.role === 'ADMIN') return;
                 try {
                     await performTransaction({
                         type: 'GAME_REWARD',
-                        amount: gameConfig.rewards.win,
-                        from: { type: 'SYSTEM', id: 'game_engine', name: gameConfig.title },
+                        amount: config.rewards.win, // Dynamic Reward
+                        from: { type: 'SYSTEM', id: 'game_engine', name: config.title },
                         to: { type: 'USER', id: user.id, name: user.name },
-                        reason: `Game Reward: ${gameConfig.title}`,
-                        metadata: { gameId: gameConfig.id }
+                        reason: `Game Reward: ${config.title} `,
+                        metadata: { gameId: config.id }
                     });
                 } catch (e) { console.error(e); }
             };
             awardPoints();
         }
-    }, [state.phase, user, gameConfig]);
+    }, [state.phase, user, config]);
 
     // --- RENDERERS ---
 
@@ -62,7 +62,7 @@ const PanicGame = () => {
                             key={i}
                             value={name}
                             onChange={(e) => handlePlayerNameChange(i, e.target.value)}
-                            placeholder={`Player ${i + 1}`}
+                            placeholder={`Player ${i + 1} `}
                             className="w-full bg-[#1A1D24] border border-white/10 rounded-xl p-4 text-center font-bold focus:border-red-500 outline-none transition-all"
                         />
                     ))}
@@ -85,7 +85,7 @@ const PanicGame = () => {
     if (state.phase === 'READY') {
         const currentPlayer = state.players[state.currentPlayerIndex];
         return (
-            <div className={`min-h-screen flex flex-col items-center justify-center text-center p-6 space-y-8 bg-red-950 safe-area-pb`}>
+            <div className={`min - h - screen flex flex - col items - center justify - center text - center p - 6 space - y - 8 bg - red - 950 safe - area - pb`}>
                 <h2 className="text-2xl font-bold text-red-200">الدور على</h2>
                 <h1 className="text-6xl font-black text-white mb-4 animate-bounce">{currentPlayer.name}</h1>
                 <div className="bg-black/30 p-6 rounded-2xl border border-red-500/30 max-w-xs">
@@ -114,7 +114,7 @@ const PanicGame = () => {
                 <div className="w-full h-4 bg-black/30">
                     <div
                         className="h-full bg-white transition-all duration-100 ease-linear"
-                        style={{ width: `${progress}%` }}
+                        style={{ width: `${progress}% ` }}
                     />
                 </div>
 
@@ -166,7 +166,7 @@ const PanicGame = () => {
 
                 <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
                     {state.players.map(p => (
-                        <div key={p.id} className={`p-4 rounded-xl border border-white/10 ${p.id === state.players[state.currentPlayerIndex].id ? 'bg-white/10' : ''}`}>
+                        <div key={p.id} className={`p - 4 rounded - xl border border - white / 10 ${p.id === state.players[state.currentPlayerIndex].id ? 'bg-white/10' : ''} `}>
                             <div className="text-gray-400 text-sm">{p.name}</div>
                             <div className="text-2xl font-bold">{p.score}</div>
                         </div>
@@ -190,15 +190,15 @@ const PanicGame = () => {
                 <div className="text-6xl mb-6">🏁</div>
                 <h1 className="text-5xl font-black text-white mb-4">Game Over</h1>
                 <div className="text-red-400 font-bold mb-8 flex items-center gap-2 bg-red-900/20 px-4 py-2 rounded-full border border-red-900/50">
-                    <span>+{gameConfig?.rewards.win} PTS</span>
+                    <span>+{config.rewards.win} PTS</span>
                     <span className="text-xs text-gray-400">(Host Reward)</span>
                 </div>
 
                 <div className="w-full max-w-md space-y-4 mb-12">
                     {sortedPlayers.map((p, i) => (
-                        <div key={p.id} className={`flex justify-between items-center p-6 rounded-2xl ${i === 0 ? 'bg-yellow-500/20 border border-yellow-500' : 'bg-white/5'}`}>
+                        <div key={p.id} className={`flex justify - between items - center p - 6 rounded - 2xl ${i === 0 ? 'bg-yellow-500/20 border border-yellow-500' : 'bg-white/5'} `}>
                             <div className="flex items-center gap-4">
-                                <span className={`text-2xl font-black ${i === 0 ? 'text-yellow-500' : 'text-gray-500'}`}>#{i + 1}</span>
+                                <span className={`text - 2xl font - black ${i === 0 ? 'text-yellow-500' : 'text-gray-500'} `}>#{i + 1}</span>
                                 <span className="font-bold text-xl">{p.name}</span>
                             </div>
                             <span className="font-black text-3xl font-mono">{p.score}</span>
@@ -215,6 +215,14 @@ const PanicGame = () => {
     }
 
     return null;
+};
+
+const PanicGame = () => {
+    return (
+        <GameContainer gameId="oul_besor3a">
+            {(config) => <PanicGameContent config={config} />}
+        </GameContainer>
+    );
 };
 
 export default PanicGame;

@@ -170,22 +170,37 @@ const MalahyEngine: React.FC<MalahyEngineProps> = ({ gameConfig, questions, onEx
             confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 } });
         }
 
-        // Calculate Final Level Result (Standard Games)
-        let finalScore = score;
-        let finalXp = xp;
+        // Determine outcome for dynamic rewards
+        const outcome: 'WIN' | 'LOSS' | 'DRAW' = won ? 'WIN' : 'LOSS'; // Assuming no 'DRAW' for now
 
-        if (!isSobekLogic) {
-            const res = calculateGameResult({
-                mode: 'SOLO',
-                outcome: won ? 'WIN' : 'LOSS',
-                isPerfect: correctCount === filteredQuestions.length,
-                isFast: false // TODO: Track total time
-            });
-            finalScore = res.score;
-            finalXp = res.xp;
-            setScore(finalScore);
-            setXp(finalXp);
+        // Dynamic Rewards from Config
+        const baseWinReward = gameConfig.rewards?.win || 20;
+        const baseLossReward = gameConfig.rewards?.loss || 5;
+
+        let finalScore = 0;
+        let finalXp = 0;
+
+        if (isSobekLogic) {
+            // Sobek Logic (existing logic preserved but using dynamic base if applicable)
+            // The existing `score` and `xp` state already accumulate for Sobek logic.
+            // We just need to assign them to finalScore/finalXp for the awardPoints call.
+            finalScore = score;
+            finalXp = xp;
+
+        } else {
+            // Standard Logic - Use Config Rewards
+            finalScore = outcome === 'WIN' ? baseWinReward : baseLossReward;
+
+            // Add Streak Bonus
+            if (streak > 1) { // Using the component's streak state
+                finalScore += (streak * (gameConfig.rewards?.streak || 2));
+            }
+
+            finalXp = Math.floor(finalScore * 1.5); // XP Multiplier
         }
+
+        setScore(finalScore); // Update competitive score state
+        setXp(finalXp);       // Update progression XP state
 
         // SAVE (Accumulate)
         if (user && (finalScore !== 0 || finalXp !== 0)) {

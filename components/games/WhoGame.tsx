@@ -70,17 +70,45 @@ export default function WhoGame() {
 
     const [lastRoundPoints, setLastRoundPoints] = useState(0);
 
-    const handleAnswer = async (correct: boolean) => {
-        if (correct) {
-            // Scoring logic
-            let points = 1;
-            if (visibleClues === 1) points = 10;
-            if (visibleClues === 2) points = 5;
-            if (visibleClues === 3) points = 3;
+    // Placeholder for gameConfig, assuming it will be defined elsewhere or passed as prop/context
+    // For now, using a dummy config to make the provided code syntactically correct.
+    const gameConfig = {
+        rewards: {
+            win: 15,
+            streak: 1
+        }
+    };
+
+    const handleAnswer = async (answer: string) => {
+        if (!gameConfig || !currentChar) return; // Ensure gameConfig and currentChar are available
+
+        const isCorrect = answer === currentChar.name;
+
+        if (isCorrect) {
+            // Dynamic Scoring based on clues used + Config Base Reward
+            // Fewer clues = Higher percentage of base reward
+
+            const totalClues = currentChar.clues.length;
+            const cluesused = visibleClues;
+
+            // Base reward from admin config
+            const baseReward = gameConfig.rewards.win || 15;
+
+            // Bonus for using fewer clues
+            // 1 clue = 100% of base + bonus
+            // All clues = 50% of base
+
+            let points = Math.floor(baseReward * (1 - (cluesused - 1) / totalClues));
+            if (points < 1) points = 1;
+
+            // Streak Bonus
+            if (streak > 0) {
+                points += (streak * (gameConfig.rewards.streak || 1));
+            }
 
             setLastRoundPoints(points);
-            setScore(prev => prev + points);
-            setStreak(prev => prev + 1);
+            setScore(s => s + points);
+            setStreak(s => s + 1);
             setGameState('RESULT'); // New state for round result
             confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
 
@@ -233,13 +261,13 @@ export default function WhoGame() {
                                 {gameState === 'REVEAL' && (
                                     <div className="grid grid-cols-2 gap-4">
                                         <button
-                                            onClick={() => handleAnswer(false)}
+                                            onClick={() => handleAnswer('')}
                                             className="py-4 bg-red-500/80 hover:bg-red-500 text-white font-bold rounded-xl"
                                         >
                                             Wrong ❌
                                         </button>
                                         <button
-                                            onClick={() => handleAnswer(true)}
+                                            onClick={() => handleAnswer(currentChar.name)}
                                             className="py-4 bg-green-500 hover:bg-green-400 text-black font-bold rounded-xl"
                                         >
                                             Correct ✅
