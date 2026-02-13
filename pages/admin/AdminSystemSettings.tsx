@@ -6,8 +6,10 @@ import { db } from '../../lib/firebase';
 
 export function AdminSystemSettings() {
     // This could also hook into FeatureFlags logic if unified, but handling separately for clear UX here.
+    const { triggerForceRefresh } = useAdminData();
     const [maintenance, setMaintenance] = useState(false);
     const [clearingCache, setClearingCache] = useState(false);
+    const [refreshingClients, setRefreshingClients] = useState(false);
 
     const handleClearCache = () => {
         if (!confirm("Flush System Cache? This may slow down initial loads.")) return;
@@ -16,6 +18,17 @@ export function AdminSystemSettings() {
             setClearingCache(false);
             alert("Cache Flush Signal Sent.");
         }, 1500);
+    };
+
+    const handleForceRefresh = async () => {
+        if (!confirm("🚧 WARNING 🚧\n\nThis will force a RELOAD for ALL active users immediately.\nUse this only if you pushed a critical update.\n\nContinue?")) return;
+
+        setRefreshingClients(true);
+        const success = await triggerForceRefresh();
+        if (success) {
+            alert("✅ Refresh Signal Broadcasted.\nClients will reload within 5 seconds.");
+        }
+        setRefreshingClients(false);
     };
 
     return (
@@ -84,6 +97,23 @@ export function AdminSystemSettings() {
                                 <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{clearingCache ? 'Executing...' : 'Run'}</span>
                             </div>
                         </button>
+
+                        <button
+                            onClick={handleForceRefresh}
+                            disabled={refreshingClients}
+                            className="w-full h-14 px-4 flex justify-between items-center bg-red-500/10 hover:bg-red-500/20 active:bg-red-500/30 active:scale-[0.98] rounded-xl text-sm transition-all border border-red-500/20"
+                        >
+                            <span className="text-red-400 font-bold flex items-center gap-2">
+                                <span>🔄</span> Force Client Refresh
+                            </span>
+                            <div className="flex items-center gap-2">
+                                {refreshingClients && <div className="w-3 h-3 border-2 border-red-400 border-t-transparent animate-spin rounded-full" />}
+                                <span className={`text-[10px] font-bold uppercase tracking-widest ${refreshingClients ? 'text-red-400' : 'text-gray-500'}`}>
+                                    {refreshingClients ? 'Broadcasting...' : 'Execute'}
+                                </span>
+                            </div>
+                        </button>
+
                         <button className="w-full h-14 px-4 flex justify-between items-center bg-white/5 hover:bg-white/10 active:bg-white/20 active:scale-[0.98] rounded-xl text-sm transition-all border border-white/5">
                             <span className="text-gray-200 font-bold">Prune Audit Logs</span>
                             <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Execute</span>

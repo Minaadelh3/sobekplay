@@ -404,6 +404,18 @@ export function useAdminData() {
         uploadUserAvatar,
         updateUserName,
         updateTeamProfile,
-        deleteUser
+        deleteUser,
+        triggerForceRefresh: async () => {
+            try {
+                await setDoc(doc(db, "system_settings", "global_config"), {
+                    forceRefreshAt: serverTimestamp()
+                }, { merge: true });
+                return true;
+            } catch (e) {
+                console.error("Force Refresh Trigger Failed", e);
+                alert("فشل إرسال أمر التحديث");
+                return false;
+            }
+        }
     };
 }

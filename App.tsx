@@ -17,6 +17,7 @@ import { usePosterMetrics } from './hooks/usePosterMetrics';
 
 import TeamChatPopup from './components/TeamChatPopup';
 import TeamBroadcastListener from './components/TeamBroadcastListener';
+import ForceRefreshListener from './components/ForceRefreshListener';
 import NotificationSubscriptionPrompt from './components/NotificationSubscriptionPrompt';
 import LoadingSpinner from './components/LoadingSpinner';
 
@@ -255,6 +256,7 @@ const App: React.FC = () => {
                   </Suspense>
                   <TeamChatPopup />
                   <TeamBroadcastListener />
+                  <ForceRefreshListener />
                   <NotificationSubscriptionPrompt />
                 </NotificationProvider>
               </GameProvider>
