@@ -3,16 +3,16 @@ import { useForbidden } from '../../hooks/gamification/useForbidden';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
-import { GAMES_CONFIG } from '../../lib/games';
+import { GAMES_CONFIG, GameConfig } from '../../lib/games';
 import { performTransaction } from '../../lib/ledger';
 import GameContainer from '../../components/games/GameContainer'; // New import
 
 // Renamed the original component to ForbiddenGameContent
-const ForbiddenGameContent = ({ onExit }) => { // Added onExit prop
-    const navigate = useNavigate(); // Keep navigate for internal game navigation
+const ForbiddenGameContent = ({ config, onExit }: { config: GameConfig, onExit: () => void }) => {
+    const navigate = useNavigate();
     const { state, startGame, nextCard, nextLevel, resetGame } = useForbidden();
     const { user } = useAuth();
-    const gameConfig = GAMES_CONFIG.find(g => g.id === 'mamno3at');
+    const gameConfig = config;
 
     useEffect(() => {
         if (state.phase === 'GAME_OVER' && user && gameConfig) {
@@ -160,7 +160,7 @@ const ForbiddenGame = () => {
     const navigate = useNavigate();
     return (
         <GameContainer gameId="mamno3at">
-            {() => <ForbiddenGameContent onExit={() => navigate('/app/games')} />}
+            {(config) => <ForbiddenGameContent config={config} onExit={() => navigate('/app/games')} />}
         </GameContainer>
     );
 };

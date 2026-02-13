@@ -3,15 +3,15 @@ import { useStory } from '../../hooks/gamification/useStory';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
-import { GAMES_CONFIG } from '../../lib/games';
+import { GAMES_CONFIG, GameConfig } from '../../lib/games';
 import { performTransaction } from '../../lib/ledger';
 import ExitButton from '../../components/games/ExitButton';
 import GameContainer from '../../components/games/GameContainer';
 
-const _StoryGameComponent = ({ onExit }) => {
+const _StoryGameComponent = ({ config, onExit }: { config: GameConfig, onExit: () => void }) => {
     const { state, updatePlayers, startGame, startTurn, nextTurn, resetGame } = useStory();
     const { user } = useAuth();
-    const gameConfig = GAMES_CONFIG.find(g => g.id === 'hekaya_gama3eya');
+    const gameConfig = config;
     const [playerNames, setPlayerNames] = useState(['', '', '']);
 
     useEffect(() => {
@@ -178,7 +178,7 @@ const StoryGame = () => {
     const navigate = useNavigate();
     return (
         <GameContainer gameId="hekaya_gama3eya">
-            {() => <_StoryGameComponent onExit={() => navigate('/app/games')} />}
+            {(config) => <_StoryGameComponent config={config} onExit={() => navigate('/app/games')} />}
         </GameContainer>
     );
 };

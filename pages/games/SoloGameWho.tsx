@@ -5,8 +5,8 @@ import WhoGame from '../../components/games/WhoGame';
 const SoloGameWho = () => {
     return (
         <GameContainer gameId="who">
-            {() => (
-                <WhoGame />
+            {(config) => (
+                <WhoGame config={config} />
             )}
         </GameContainer>
     );

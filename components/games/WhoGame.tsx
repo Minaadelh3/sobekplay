@@ -7,11 +7,17 @@ import { awardPoints } from '../../services/scoring/scoreEngine';
 import { doc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import confetti from 'canvas-confetti';
+import { GameConfig } from '../../lib/games';
 
 // --- GAME CONFIG & HELPERS ---
 const START_TIME = 60; // Default time
 
-export default function WhoGame() {
+interface WhoGameProps {
+    config?: GameConfig;
+    onExit?: () => void;
+}
+
+const WhoGame: React.FC<WhoGameProps> = ({ config, onExit }) => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [gameState, setGameState] = useState<'SETUP' | 'CATEGORY' | 'PLAYING' | 'REVEAL' | 'RESULT'>('SETUP');
