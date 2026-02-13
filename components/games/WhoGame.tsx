@@ -308,3 +308,5 @@ const WhoGame: React.FC<WhoGameProps> = ({ config, onExit }) => {
         </div>
     );
 }
+
+export default WhoGame;
